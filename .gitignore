@@ -1,0 +1,9 @@
+bin/
+obj/
+.idea/
+.vscode/
+
+# Compilation modes
+.release_mode
+.debug_mode
+.sanitize_mode
