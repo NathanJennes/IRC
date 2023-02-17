@@ -9,6 +9,7 @@
 #include <cerrno>
 #include <fcntl.h>
 #include "Server.h"
+#include "Command.h"
 
 const int	Server::m_server_backlog = 10;
 const int	Server::m_timeout = 1000;
@@ -87,8 +88,8 @@ void Server::poll_events()
 
 	int result = poll(pollfds.data(), (unsigned int)pollfds.size(), m_timeout);
 	if (result < 0) {
-        std::cerr << "Error: poll: " << strerror(errno) << std::endl;
-    }
+		std::cerr << "Error: poll: " << strerror(errno) << std::endl;
+	}
 
 	i = 0;
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
@@ -100,7 +101,52 @@ void Server::poll_events()
 void Server::handle_events()
 {
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
-		if (user->is_readable())
-			;
-    }
+		if (user->is_readable()) {
+			if (user->receive_message() <= 0)
+				user->disconnect();
+			return ;
+		}
+		else if (user->is_writable()) {
+			return ;
+		}
+	}
+	accept_new_connections();
+}
+
+void Server::handle_messages()
+{
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
+		if (!user->is_readable() || user->is_disconnected())
+			continue ;
+
+		std::string command_str = user->get_next_command_str();
+		while (!command_str.empty()) {
+			std::cout << "Received command [" << command_str << "] from: " << user->username() << std::endl;
+			//Command command(command_str);
+			//if (command.is_valid())
+			//	command.execute(*user);
+		}
+	}
+}
+
+void Server::execute_command(User &user)
+{
+	(void)user;
+}
+
+bool Server::initialize_config_file()
+{
+	std::fstream banlist_file("banlist.txt", std::ios::in | std::ios::out | std::ios::app);
+	if (!banlist_file.is_open()) {
+		std::cerr << "Error: banlist.txt: " << strerror(errno) << std::endl;
+		return false;
+	}
+
+	std::fstream whitelist_file("whitelist.txt", std::ios::in | std::ios::out | std::ios::app);
+	if (!whitelist_file.is_open()) {
+		std::cerr << "Error: whitelist.txt: " << strerror(errno) << std::endl;
+		return false;
+	}
+
+	return false;
 }
