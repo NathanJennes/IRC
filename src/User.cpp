@@ -7,7 +7,7 @@
 #include "IRC.h"
 
 User::User(const std::string &username, const std::string &real_name, const std::string &server_name, int fd)
-	: m_username(username), m_real_name(real_name), m_server_name(server_name), m_is_afk(false), m_is_disconnected(false), m_fd(fd)
+	: m_username(username), m_real_name(real_name), m_server_name(server_name), m_is_afk(false), m_is_disconnected(false), m_fd(fd), m_is_readable(), m_is_writable()
 {
 }
 

@@ -49,7 +49,7 @@ SRC_DIR			:=		src
 # ==============================================================================
 #	Project sources
 # ==============================================================================
-SRCS				:=		$(shell find $(SRC_DIR) -type f -name *.cpp)
+SRCS				:=		src/main.cpp src/Channel.cpp src/Server.cpp src/User.cpp src/tests.cpp
 OBJS				:=		$(SRCS:.cpp=.o)
 RELEASE_OBJS		:=		$(addprefix $(RELEASE_OBJDIR)/, $(OBJS))
 DEBUG_OBJS			:=		$(addprefix $(DEBUG_OBJDIR)/, $(OBJS))
@@ -110,9 +110,9 @@ all: $(RELEASE_MODE_FILE) $(BIN_DIR)/$(RELEASE_NAME) $(BIN_DIR)/$(DEBUG_NAME) $(
 
 .PHONY: run
 run: default
-	@if [ -f "$(RELEASE_MODE_FILE)" ]; then ./$(BIN_DIR)/$(RELEASE_NAME); fi
-	@if [ -f "$(DEBUG_MODE_FILE)" ]; then ./$(BIN_DIR)/$(DEBUG_NAME); fi
-	@if [ -f "$(SANITIZE_MODE_FILE)" ]; then ./$(BIN_DIR)/$(SANITIZE_NAME); fi
+	@if [ -f "$(RELEASE_MODE_FILE)" ]; then ./$(BIN_DIR)/$(RELEASE_NAME) 54000 42; fi
+	@if [ -f "$(DEBUG_MODE_FILE)" ]; then ./$(BIN_DIR)/$(DEBUG_NAME) 54000 42; fi
+	@if [ -f "$(SANITIZE_MODE_FILE)" ]; then ./$(BIN_DIR)/$(SANITIZE_NAME) 54000 42; fi
 
 .PHONY: clean
 clean:

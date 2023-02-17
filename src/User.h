@@ -5,6 +5,7 @@
 #ifndef USER_H
 #define USER_H
 
+#include <vector>
 #include <string>
 #include <netinet/in.h>
 #include <sys/poll.h>
@@ -29,15 +30,15 @@ public:
 	void	set_is_writable(bool is_writable) { m_is_writable = is_writable; }
 
 private:
-	std::string m_username;
-	std::string m_real_name;
-	std::string m_server_name;
+	std::string	m_username;
+	std::string	m_real_name;
+	std::string	m_server_name;
 
 	int			m_is_afk;
 	int			m_is_disconnected;
 
 	int			m_fd;
-	sockaddr_in	m_address;
+//	sockaddr_in	m_address;
 
 	bool		m_is_readable;
 	bool		m_is_writable;

@@ -2,6 +2,7 @@
 // Created by nathan on 2/16/23.
 //
 
+#include <fstream>
 #include <iostream>
 #include <cstring>
 #include <arpa/inet.h>
@@ -20,8 +21,8 @@ bool Server::initialize(uint16_t port)
 		return false;
 	}
 
-	bool is_active = true;
-	if (setsockopt(m_server_socket, SOL_SOCKET, SO_REUSEADDR, &is_active, sizeof(bool)) == -1) {
+	int is_active = 0;
+	if (setsockopt(m_server_socket, SOL_SOCKET, SO_REUSEADDR, &is_active, sizeof(int)) == -1) {
 		std::cerr << "Error: setsockopt: " << strerror(errno) << std::endl;
 		return false;
 	}
@@ -48,12 +49,13 @@ bool Server::initialize(uint16_t port)
 
 	m_is_running = true;
 
+	initialize_config_file();
+
 	return true;
 }
 
 bool Server::update()
 {
-	accept_new_connections();
 	poll_events();
 	handle_events();
 	return true;
@@ -83,7 +85,7 @@ void Server::poll_events()
 		pollfds[i].revents = 0;
 	}
 
-	int result = poll(pollfds.data(), pollfds.size(), m_timeout);
+	int result = poll(pollfds.data(), (unsigned int)pollfds.size(), m_timeout);
 	if (result < 0) {
         std::cerr << "Error: poll: " << strerror(errno) << std::endl;
     }
