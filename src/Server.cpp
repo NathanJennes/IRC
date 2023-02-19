@@ -9,12 +9,20 @@
 #include <arpa/inet.h>
 #include <cerrno>
 #include <fcntl.h>
+#include <unistd.h>
 #include "IRC.h"
 #include "Server.h"
 #include "Command.h"
 
 const int	Server::m_server_backlog = 10;
 const int	Server::m_timeout = 500;
+bool		Server::m_is_running = true;
+
+void Server::signal_handler(int signal)
+{
+	(void) signal;
+	m_is_running = false;
+}
 
 bool Server::initialize(uint16_t port)
 {
@@ -70,6 +78,8 @@ bool Server::update()
 {
 	poll_events();
 	handle_events();
+//	handle_messages();
+	disconnect_users();
 	return true;
 }
 
@@ -88,7 +98,7 @@ void Server::poll_events()
 	}
 
 	int poll_count = poll(pollfds.data(), (unsigned int)pollfds.size(), m_timeout);
-	if (poll_count < 0) {
+	if (poll_count < 0 && errno != EINTR) {
 		std::cerr << "Error: poll: " << strerror(errno) << std::endl;
 	}
 
@@ -101,7 +111,8 @@ void Server::poll_events()
 
 void Server::handle_events()
 {
-	for (size_t i = 0; i < m_users.size(); ++i)
+	size_t i;
+	for (i = 0; i < m_users.size(); ++i)
 	{
 		if (m_users[i].is_readable())
 		{
@@ -110,11 +121,8 @@ void Server::handle_events()
 				accept_new_connections();
 			}
 			else {
-				if (m_users[i].receive_message() <= 0)
-				{
+				if (m_users[i].receive_message() <= 0) {
 					m_users[i].disconnect();
-					std::cout << RPL_LOGGEDOUT(m_users[i].username());
-					m_users.erase(m_users.begin() + (long)i);
 				}
 			}
 		}
@@ -137,15 +145,12 @@ void Server::accept_new_connections()
 	std::cout << "Incomming connexion from :" << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port) << std::endl;
 
 	std::string username = gethostbyaddr(&client.sin_addr, client.sin_len, AF_INET)->h_name;
-	std::cout << "Username: " << username << std::endl;
 
 	std::stringstream realname;
 	realname << inet_ntoa(client.sin_addr) << ":" << std::to_string(ntohs(client.sin_port));
-	std::cout << "Realname: " << realname.str() << std::endl;
 
 	User user(username, realname.str(), server_name(), new_client_socket_fd);
 	m_users.push_back(user);
-	std::cout << "New user added | Size: " << m_users.size() << std::endl;
 }
 
 void Server::handle_messages()
@@ -156,7 +161,7 @@ void Server::handle_messages()
 
 		std::string command_str = user->get_next_command_str();
 		while (!command_str.empty()) {
-			std::cout << "Received command [" << command_str << "] from: " << user->username() << std::endl;
+			std::cout << "Received command [" << command_str << "] from: " << user->name_on_host() << std::endl;
 			//Command command(command_str);
 			//if (command.is_valid())
 			//	command.execute(*user);
@@ -184,4 +189,27 @@ bool Server::initialize_config_file()
 	}
 
 	return true;
+}
+
+void Server::disconnect_users()
+{
+	for (size_t i = 0; i < m_users.size(); ++i)
+	{
+		if (m_users[i].is_disconnected()) {
+			std::cout << RPL_LOGGEDOUT(m_users[i].name_on_host());
+			close(m_users[i].fd());
+			// TODO: save user data
+			m_users.erase(m_users.begin() + (long)i);
+		}
+	}
+}
+
+void Server::cleanup()
+{
+	std::cout << "Cleaning up" << std::endl;
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
+		close(user->fd());
+	}
+	m_users.clear();
+	close(m_server_socket);
 }

@@ -15,14 +15,17 @@ class Server
 public:
 	bool initialize(uint16_t port);
 	bool update();
+	void cleanup();
 
-	bool is_running()	const { return m_is_running; }
+	static void signal_handler(int signal);
 
 	// getters
 	const std::string&	server_name()	const { return m_server_name; }
+	bool is_running()					const { return m_is_running; }
 
 	// setters
-	void set_server_name(const std::string& server_name) { m_server_name = server_name; }
+	void stop_server() 										{ m_is_running = false; }
+	void set_server_name(const std::string& server_name)	{ m_server_name = server_name; }
 
 private:
 	// Member functions
@@ -32,10 +35,12 @@ private:
 	void handle_events();
 	void handle_messages();
 	void execute_command(User& user);
+	void disconnect_users();
+
 
 	// Member variables
 	std::string				m_server_name;
-	bool					m_is_running;
+	static bool				m_is_running;
 	bool 					m_is_readonly;
 	int						m_server_socket;
 

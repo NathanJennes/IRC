@@ -3,11 +3,19 @@
 //
 
 #include <iostream>
-#include <csignal>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <csignal>
 #include "Server.h"
+
+void initialize_signals()
+{
+	std::signal(SIGINT, Server::signal_handler);
+	std::signal(SIGTERM, Server::signal_handler);
+	std::signal(SIGQUIT, SIG_IGN);
+	std::signal(SIGTSTP, SIG_IGN);
+}
 
 int main(int argc, char* argv[])
 {
@@ -30,14 +38,18 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	initialize_signals();
+
 	Server server;
 	if (!server.initialize(static_cast<uint16_t>(port))) {
 		std::cout << "Error: Couldn't initialize server" << std::endl;
 	}
-
-	std::cout << "Server is running on port " << port << std::endl;
+	else
+		std::cout << "Server is running on port " << port << std::endl;
 
 	while (server.is_running()) {
 		server.update();
 	}
+	server.cleanup();
+	std::cout << "Server stopped" << std::endl;
 }

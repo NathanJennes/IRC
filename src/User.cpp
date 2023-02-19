@@ -8,7 +8,7 @@
 #include "IRC.h"
 
 User::User(const std::string &username, const std::string &real_name, const std::string &server_name, int fd)
-	: m_username(username), m_real_name(real_name), m_server_name(server_name), m_is_afk(false), m_is_disconnected(false), m_fd(fd), m_is_readable(false), m_is_writable(false)
+	: m_name_on_host(username), m_host_address(real_name), m_server_name(server_name), m_fd(fd), m_is_afk(false), m_is_disconnected(false), m_is_readable(false), m_is_writable(false)
 {
 }
 
@@ -20,8 +20,10 @@ ssize_t User::receive_message()
 	while (total_bytes_read < MAX_MESSAGE_LENGTH) {
 		ssize_t bytes_read = read(m_fd, buffer + total_bytes_read, static_cast<size_t>(MAX_MESSAGE_LENGTH - total_bytes_read));
 
-		if (bytes_read < 0)
+		if (bytes_read < 0 && errno != EAGAIN) {
+			std::cerr << "Error: " << strerror(errno) << std::endl;
 			m_is_disconnected = true;
+		}
 		if (bytes_read <= 0)
 			break ;
 
