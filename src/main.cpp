@@ -7,10 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
-#include "IRC.h"
 #include "Server.h"
-
-void test_rpl();
 
 int main(int argc, char* argv[])
 {
@@ -38,7 +35,6 @@ int main(int argc, char* argv[])
 		std::cout << "Error: Couldn't initialize server" << std::endl;
 	}
 
-//	test_rpl();
 	std::cout << "Server is running on port " << port << std::endl;
 
 	while (server.is_running()) {

@@ -14,6 +14,8 @@
 
 void test_rpl()
 {
+	std::string nick = "cybattis";
+
 	std::cout << RPL_WELCOME(SERVER_NAME, NICK);
 	std::cout << RPL_YOURHOST(SERVER_NAME, "0.1");
 	std::cout << RPL_CREATED("2023-02-17");
@@ -91,7 +93,7 @@ void test_rpl()
 	std::cout << ERR_STARTTLS("LE MESSAGE");
 	std::cout << ERR_NOPRIVS("command");
 	std::cout << RPL_LOGGEDIN(NICK, USERNAME, "account");
-	std::cout << RPL_LOGGEDOUT(NICK);
+	std::cout << RPL_LOGGEDOUT(nick);
 	std::cout << ERR_NICKLOCKED;
 	std::cout << RPL_SASLSUCCESS;
 	std::cout << ERR_SASLFAIL;

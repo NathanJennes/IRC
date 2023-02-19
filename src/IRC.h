@@ -120,7 +120,7 @@
 #define RPL_ENDOFHELP 706
 #define ERR_NOPRIVS(priv)													(" " priv " :Insufficient oper privileges.\r\n")
 #define RPL_LOGGEDIN(nickname, username, account)							(" " nickname " " account " :You are now logged in as " username "\r\n")
-#define RPL_LOGGEDOUT(nickname)												(" " nickname " :You are now logged out\r\n")
+#define RPL_LOGGEDOUT(nickname)												(" " + nickname + " :You are now logged out\r\n")
 #define ERR_NICKLOCKED														(" :You must use a nick assigned to you\r\n")
 #define RPL_SASLSUCCESS														(" :SASL authentication successful\r\n")
 #define ERR_SASLFAIL														(" :SASL authentication failed\r\n")
