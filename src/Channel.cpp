@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include "Channel.h"
 
 Channel::Channel(const std::string &name) : m_name(name), m_user_limit(), m_user_count(),

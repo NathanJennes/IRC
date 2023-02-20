@@ -6,7 +6,6 @@
 #include "IRC.h"
 #include "Server.h"
 
-#define NICK "cybattis"
 #define USERNAME "cyril"
 #define HOSTNAME "localhost"
 #define SERVER_NAME "FT_IRC"
@@ -16,7 +15,7 @@ void test_rpl()
 {
 	std::string nick = "cybattis";
 
-	std::cout << RPL_WELCOME(SERVER_NAME, NICK);
+	std::cout << RPL_WELCOME(SERVER_NAME, nick);
 	std::cout << RPL_YOURHOST(SERVER_NAME, "0.1");
 	std::cout << RPL_CREATED("2023-02-17");
 	std::cout << RPL_MYINFO(SERVER_NAME, "0.1", "o", "o", "o");
@@ -34,40 +33,40 @@ void test_rpl()
 	std::cout << RPL_TRYAGAIN("JOIN");
 	std::cout << RPL_LOCALUSERS("1", "1");
 	std::cout << RPL_GLOBALUSERS("1", "1");
-	std::cout << RPL_WHOISCERTFP(NICK, "123456789");
+	std::cout << RPL_WHOISCERTFP(nick, "123456789");
 	std::cout << RPL_NONE;
-	std::cout << RPL_AWAY(NICK, "I'm away");
+	std::cout << RPL_AWAY(nick, "I'm away");
 	//std::cout << RPL_USERHOST();
 	std::cout << RPL_UNAWAY;
 	std::cout << RPL_NOWAWAY;
-	std::cout << RPL_WHOREPLY("*", USERNAME, HOSTNAME, SERVER_NAME, NICK, "H", "0", REALNAME);
+	std::cout << RPL_WHOREPLY("*", USERNAME, HOSTNAME, SERVER_NAME, nick, "H", "0", REALNAME);
 	std::cout << RPL_ENDOFWHO("mask");
-	std::cout << RPL_WHOISREGNICK(NICK);
-	std::cout << RPL_WHOISUSER(NICK, USERNAME, HOSTNAME, REALNAME);
-	std::cout << RPL_WHOISSERVER(NICK, SERVER_NAME, "les info du server!");
-	std::cout << RPL_WHOISOPERATOR(NICK);
-	std::cout << RPL_WHOWASUSER(NICK, USERNAME, HOSTNAME, REALNAME);
-	std::cout << RPL_WHOISIDLE(NICK, "0", "0");
-	std::cout << RPL_ENDOFWHOIS(NICK);
-	std::cout << RPL_WHOISCHANNELS(NICK, "#test");
-	std::cout << RPL_WHOISSPECIAL(NICK, "blablablabla");
+	std::cout << RPL_WHOISREGNICK(nick);
+	std::cout << RPL_WHOISUSER(nick, USERNAME, HOSTNAME, REALNAME);
+	std::cout << RPL_WHOISSERVER(nick, SERVER_NAME, "les info du server!");
+	std::cout << RPL_WHOISOPERATOR(nick);
+	std::cout << RPL_WHOWASUSER(nick, USERNAME, HOSTNAME, REALNAME);
+	std::cout << RPL_WHOISIDLE(nick, "0", "0");
+	std::cout << RPL_ENDOFWHOIS(nick);
+	std::cout << RPL_WHOISCHANNELS();
+	std::cout << RPL_WHOISSPECIAL(nick, "blablablabla");
 
 	// ERRORS
-	std::cout << ERR_NOSUCHNICK(NICK);
+	std::cout << ERR_NOSUCHNICK(nick);
 	std::cout << ERR_NOSUCHSERVER(SERVER_NAME);
 	std::cout << ERR_NOSUCHCHANNEL("#test");
 	std::cout << ERR_CANNOTSENDTOCHAN("#test");
 	std::cout << ERR_TOOMANYCHANNELS("#test");
-	std::cout << ERR_WASNOSUCHNICK(NICK);
+	std::cout << ERR_WASNOSUCHNICK(nick);
 	std::cout << ERR_NOORIGIN;
 	std::cout << ERR_INPUTTOOLONG;
 	std::cout << ERR_UNKNOWNCOMMAND("command");
 	std::cout << ERR_NOMOTD;
 	std::cout << ERR_ERRONEUSNICKNAME("gligli");
-	std::cout << ERR_NICKNAMEINUSE(NICK);
-	std::cout << ERR_USERNOTINCHANNEL(NICK, "#test");
+	std::cout << ERR_NICKNAMEINUSE(nick);
+	std::cout << ERR_USERNOTINCHANNEL(nick, "#test");
 	std::cout << ERR_NOTONCHANNEL("#test");
-	std::cout << ERR_USERONCHANNEL(NICK, "#test");
+	std::cout << ERR_USERONCHANNEL(nick, "#test");
 	std::cout << ERR_NOTREGISTERED;
 	std::cout << ERR_NEEDMOREPARAMS("command");
 	std::cout << ERR_ALREADYREGISTERED;
@@ -88,11 +87,11 @@ void test_rpl()
 	std::cout << ERR_HELPNOTFOUND("dev");
 	std::cout << ERR_INVALIDKEY("key");
 	std::cout << RPL_STARTTLS;
-	std::cout << RPL_WHOISSECURE(NICK);
+	std::cout << RPL_WHOISSECURE(nick);
 
 	std::cout << ERR_STARTTLS("LE MESSAGE");
 	std::cout << ERR_NOPRIVS("command");
-	std::cout << RPL_LOGGEDIN(NICK, USERNAME, "account");
+	std::cout << RPL_LOGGEDIN(nick, USERNAME, "account");
 	std::cout << RPL_LOGGEDOUT(nick);
 	std::cout << ERR_NICKLOCKED;
 	std::cout << RPL_SASLSUCCESS;

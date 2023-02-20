@@ -10,6 +10,7 @@
 #include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string>
 #include "IRC.h"
 #include "Server.h"
 #include "Command.h"
@@ -144,10 +145,10 @@ void Server::accept_new_connections()
 	}
 	std::cout << "Incomming connexion from :" << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port) << std::endl;
 
-	std::string username = gethostbyaddr(&client.sin_addr, client.sin_len, AF_INET)->h_name;
+	std::string username = gethostbyaddr((char *)&client.sin_addr, sizeof(client.sin_addr), AF_INET)->h_name;
 
 	std::stringstream realname;
-	realname << inet_ntoa(client.sin_addr) << ":" << std::to_string(ntohs(client.sin_port));
+	realname << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port);
 
 	User user(username, realname.str(), server_name(), new_client_socket_fd);
 	m_users.push_back(user);

@@ -13,8 +13,7 @@ void initialize_signals()
 {
 	std::signal(SIGINT, Server::signal_handler);
 	std::signal(SIGTERM, Server::signal_handler);
-	std::signal(SIGQUIT, SIG_IGN);
-	std::signal(SIGTSTP, SIG_IGN);
+	std::signal(SIGQUIT, Server::signal_handler);
 }
 
 int main(int argc, char* argv[])
