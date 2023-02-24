@@ -11,9 +11,12 @@
 
 void initialize_signals()
 {
-	std::signal(SIGINT, Server::signal_handler);
-	std::signal(SIGTERM, Server::signal_handler);
-	std::signal(SIGQUIT, Server::signal_handler);
+	struct sigaction action;
+	std::memset(&action, 0, sizeof(action));
+	action.sa_handler = Server::signal_handler;
+	action.sa_flags = 0;
+	sigaction(SIGINT, &action, NULL);
+	sigaction(SIGTERM, &action, NULL);
 }
 
 int main(int argc, char* argv[])
@@ -42,6 +45,8 @@ int main(int argc, char* argv[])
 	Server server;
 	if (!server.initialize(static_cast<uint16_t>(port))) {
 		std::cout << "Error: Couldn't initialize server" << std::endl;
+		server.cleanup();
+		return 1;
 	}
 	else
 		std::cout << "Server is running on port " << port << std::endl;

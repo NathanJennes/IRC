@@ -49,7 +49,8 @@ SRC_DIR			:=		src
 # ==============================================================================
 #	Project sources
 # ==============================================================================
-SRCS				:=		src/main.cpp src/Channel.cpp src/Server.cpp src/User.cpp src/tests.cpp
+SRCS_FILE			:=		main.cpp Channel.cpp Server.cpp User.cpp Command.cpp tests.cpp
+SRCS				:=		$(addprefix $(SRC_DIR)/, $(SRCS_FILE))
 OBJS				:=		$(SRCS:.cpp=.o)
 RELEASE_OBJS		:=		$(addprefix $(RELEASE_OBJDIR)/, $(OBJS))
 DEBUG_OBJS			:=		$(addprefix $(DEBUG_OBJDIR)/, $(OBJS))

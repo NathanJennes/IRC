@@ -16,12 +16,13 @@ public:
 	bool initialize(uint16_t port);
 	bool update();
 	void cleanup();
+	void send_to_client(const User& user, const std::string& message);
 
 	static void signal_handler(int signal);
 
 	// getters
 	const std::string&	server_name()	const { return m_server_name; }
-	bool is_running()					const { return m_is_running; }
+	bool 				is_running()	const { return m_is_running; }
 
 	// setters
 	void stop_server() 										{ m_is_running = false; }
@@ -36,7 +37,6 @@ private:
 	void handle_messages();
 	void execute_command(User& user);
 	void disconnect_users();
-
 
 	// Member variables
 	std::string				m_server_name;

@@ -24,7 +24,6 @@ ssize_t User::receive_message()
 
 		if (bytes_read < 0 && errno != EAGAIN) {
 			std::cerr << "Error: " << std::strerror(errno) << std::endl;
-			m_is_disconnected = true;
 		}
 		if (bytes_read <= 0)
 			break ;
@@ -32,22 +31,41 @@ ssize_t User::receive_message()
 		total_bytes_read += bytes_read;
 	}
 	buffer[total_bytes_read] = 0;
+	m_readbuf.append(buffer);
 
-	m_last_message.append(buffer);
-	std::cout << "Received message: " << m_last_message;
-	m_last_message.clear();
 	return total_bytes_read;
+}
+
+ssize_t User::send_message()
+{
+	ssize_t total_bytes_write = 0;
+
+	while (total_bytes_write < MAX_MESSAGE_LENGTH) {
+		ssize_t bytes_write = write(fd(), m_writebuf.c_str() + total_bytes_write, m_writebuf.size() - (size_t)total_bytes_write);
+
+		if (bytes_write < 0 && errno != EAGAIN) {
+			std::cerr << "Error: " << std::strerror(errno) << std::endl;
+		}
+		if (bytes_write <= 0)
+			break ;
+
+		total_bytes_write += bytes_write;
+	}
+	m_writebuf.clear();
+	std::cout << "Write_buf left: [" << m_writebuf << "]" << std::endl;
+
+	return total_bytes_write;
 }
 
 std::string User::get_next_command_str()
 {
 	std::string command;
-	size_t command_end = m_last_message.find_first_of("\n\r");
+	size_t command_end = m_readbuf.find_first_of("\n\r");
 
 	if (command_end != std::string::npos) {
-		command = m_last_message.substr(0, command_end);
-		m_last_message.erase(0, m_last_message.find_first_not_of("\n\r"));
+		command = m_readbuf.substr(0, m_readbuf.find_first_of("\n\r"));
+		std::cout << "Command: [" << command << "]" << std::endl;
+		m_readbuf.erase(0, command.size() + 1);
 	}
-
 	return command;
 }

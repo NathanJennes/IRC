@@ -29,7 +29,10 @@ private:
 	std::string	m_str;
 	std::size_t	m_index;
 
-	std::vector<Tag>	m_tags;
+	std::vector<Tag>			m_tags;
+	std::string					m_source;
+	std::string					m_command;
+	std::vector<std::string>	m_parameters;
 
 	// Message
 	std::string	parse_message();

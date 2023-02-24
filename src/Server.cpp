@@ -79,7 +79,7 @@ bool Server::update()
 {
 	poll_events();
 	handle_events();
-//	handle_messages();
+	handle_messages();
 	disconnect_users();
 	return true;
 }
@@ -91,10 +91,7 @@ void Server::poll_events()
 	size_t i = 0;
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++, i++) {
 		pollfds[i].fd = user->fd();
-		if (i == 0)
-			pollfds[i].events = POLLIN;
-		else
-			pollfds[i].events = POLLIN | POLLOUT;
+		pollfds[i].events = POLLIN | POLLOUT;
 		pollfds[i].revents = 0;
 	}
 
@@ -117,7 +114,6 @@ void Server::handle_events()
 	{
 		if (m_users[i].is_readable())
 		{
-			std::cout << " is readable" << std::endl;
 			if (m_users[i].fd() == m_server_socket) {
 				accept_new_connections();
 			}
@@ -129,8 +125,11 @@ void Server::handle_events()
 		}
 		else if (m_users[i].is_writable())
 		{
-//			m_users[i].send_message();
+			if (!m_users[i].write_buffer().empty() && m_users[i].send_message() <= 0) {
+				m_users[i].disconnect();
+			}
 		}
+		// TODO: handle errors
 	}
 }
 
@@ -145,27 +144,31 @@ void Server::accept_new_connections()
 	}
 	std::cout << "Incomming connexion from :" << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port) << std::endl;
 
-	std::string username = gethostbyaddr((char *)&client.sin_addr, sizeof(client.sin_addr), AF_INET)->h_name;
+//	std::string username = gethostbyaddr((char *)&client.sin_addr, sizeof(client.sin_addr), AF_INET)->h_name;
 
-	std::stringstream realname;
-	realname << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port);
+//	std::stringstream realname;
+//	realname << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port);
 
-	User user(username, realname.str(), server_name(), new_client_socket_fd);
+	User user("username", "realname.str()", server_name(), new_client_socket_fd);
 	m_users.push_back(user);
 }
 
 void Server::handle_messages()
 {
-	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
+	{
 		if (!user->is_readable() || user->is_disconnected())
 			continue ;
 
 		std::string command_str = user->get_next_command_str();
 		while (!command_str.empty()) {
-			std::cout << "Received command [" << command_str << "] from: " << user->name_on_host() << std::endl;
-			//Command command(command_str);
-			//if (command.is_valid())
-			//	command.execute(*user);
+			Command command(command_str);
+			if (command.is_valid())
+				command.execute(*user);
+
+			command_str.clear();
+			command_str = user->get_next_command_str();
+			std::cout << "Next command: ["<< command_str << "]" << std::endl;
 		}
 	}
 }
@@ -211,6 +214,25 @@ void Server::cleanup()
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
 		close(user->fd());
 	}
-	m_users.clear();
 	close(m_server_socket);
+}
+
+void Server::send_to_client(const User& user, const std::string &message)
+{
+	ssize_t total_bytes_write = 0;
+
+	while (total_bytes_write < MAX_MESSAGE_LENGTH) {
+		ssize_t bytes_write = write(user.fd(), message.c_str() + total_bytes_write, static_cast<size_t>(MAX_MESSAGE_LENGTH - total_bytes_write));
+
+		if (bytes_write < 0 && errno != EAGAIN) {
+			std::cerr << "Error: " << std::strerror(errno) << std::endl;
+		}
+		if (bytes_write <= 0)
+			break ;
+
+		total_bytes_write += bytes_write;
+	}
+	if (total_bytes_write < (ssize_t)message.size()) {
+		std::cerr << "Error: write: message truncated" << std::endl;
+	}
 }

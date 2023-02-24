@@ -9,14 +9,14 @@
 #define MAX_MESSAGE_LENGTH 512
 
 // RPL CODES
-#define RPL_WELCOME(networkname, nickname)									(" :Welcome to the " networkname " Network, " + nickname + "\r\n")
-#define RPL_YOURHOST(servename, version)									(" :Your host is " servename ", running version " SERVER_VERSION "\r\n")
-#define RPL_CREATED(date) 													(" :This server was created " date "\r\n")
+#define RPL_WELCOME(client, networkname, nick)								(client + " :Welcome to the " + networkname + " Network, " + nick + "\r\n")
+#define RPL_YOURHOST(client, servename, version)							(client + " :Your host is " + servename + ", running version " SERVER_VERSION "\r\n")
+#define RPL_CREATED(client, date) 											(client + " :This server was created " date "\r\n")
 
-#define RPL_MYINFO(servename, version, usermodes, channelmodes, chanparam)	(" " servename " " SERVER_VERSION " " usermodes " " channelmodes " " chanparam "\r\n")
+#define RPL_MYINFO(client, servename, version, usermodes, channelmodes, chanparam)	(client + " " + servename + " " SERVER_VERSION " " usermodes " " channelmodes " " chanparam "\r\n")
+
 #define RPL_ISUPPORT														("<TOKENS> :are supported by this server\r\n")
-
-#define RPL_BOUNCE // RECOMMENDED BY RFC TO NOT BE USED
+#define RPL_BOUNCE	// RECOMMENDED BY THE RFC TO NOT BE USED
 #define RPL_UMODEIS(set_usermodes)											(" " set_usermodes "\r\n")
 
 #define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)				(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers\r\n")
@@ -24,7 +24,7 @@
 #define RPL_LUSERUNKNOWN(nbr_unknown)										(" " nbr_unknown " :unknown connection(s)\r\n")
 #define RPL_LUSERCHANNELS(nbr_channels)										(" " nbr_channels " :channels formed\r\n")
 #define RPL_LUSERME(nbr_users, nbr_servers)									(" :I have " nbr_users " clients and " nbr_servers " servers\r\n")
-#define RPL_ADMINME(servename)												(" " servename " :Administrative info\r\n")
+#define RPL_ADMINME(servename)												(" " + servename + " :Administrative info\r\n")
 #define RPL_ADMINLOC1(admin_location)										(" " admin_location "\r\n")
 #define RPL_ADMINLOC2(hosting_location)										(" " hosting_location "\r\n")
 #define RPL_ADMINEMAIL(admin_email)											(" " admin_email "\r\n")
@@ -38,11 +38,11 @@
 #define RPL_UNAWAY															(":You are no longer marked as being away\r\n")
 #define RPL_NOWAWAY															(":You have been marked as being away\r\n")
 #define RPL_WHOREPLY(channel, username, hostname, servername, \
-					 nickname, flags, hopcount, realname)					(" " channel " " username " " hostname " " servername " " + nickname + " " flags " :"hopcount " " realname "\r\n")
+					 nickname, flags, hopcount, realname)					(" " channel " " username " " hostname " " + servername + " " + nickname + " " flags " :"hopcount " " realname "\r\n")
 #define RPL_ENDOFWHO(mask)													(" " mask " :End of /WHO list.\r\n")
 #define RPL_WHOISREGNICK(nickname)											(" " + nickname + " :is a registered nick\r\n")
 #define RPL_WHOISUSER(nickname, username, hostname, realname)				(" " + nickname + " " username " " hostname " * :" realname "\r\n")
-#define RPL_WHOISSERVER(nickname, servername, serverinfo)					(" " + nickname + " " servername " :" serverinfo "\r\n")
+#define RPL_WHOISSERVER(nickname, servername, serverinfo)					(" " + nickname + " " + servername + " :" serverinfo "\r\n")
 #define RPL_WHOISOPERATOR(nickname)											(" " + nickname + " :is an IRC operator\r\n")
 #define RPL_WHOWASUSER(nickname, username, hostname, realname)				(" " + nickname + " " username " " hostname " * :" realname "\r\n")
 #define RPL_WHOISIDLE(nickname, idle_time, signon)							(" " + nickname + " " idle_time " :seconds idle, " signon "\r\n")
@@ -78,7 +78,7 @@
 #define RPL_ENDOFINFO 374
 #define ERR_UNKNOWNERROR(ERRCODE)											(" " ERRCODE " :Unknown error\r\n")
 #define ERR_NOSUCHNICK(nickname)											(" " + nickname + " :No such nick/channel\r\n")
-#define ERR_NOSUCHSERVER(servername)										(" " servername " :No such server\r\n")
+#define ERR_NOSUCHSERVER(servername)										(" " + servername + " :No such server\r\n")
 #define ERR_NOSUCHCHANNEL(channel)											(" " channel " :No such channel\r\n")
 #define ERR_CANNOTSENDTOCHAN(channel)										(" " channel " :Cannot send to channel\r\n")
 #define ERR_TOOMANYCHANNELS(channel)										(" " channel " :You have joined too many channels\r\n")

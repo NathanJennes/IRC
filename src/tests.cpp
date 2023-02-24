@@ -8,17 +8,17 @@
 
 #define USERNAME "cyril"
 #define HOSTNAME "localhost"
-#define SERVER_NAME "FT_IRC"
 #define REALNAME "10.10.10.1"
 
 void test_rpl()
 {
 	std::string nick = "cybattis";
+	std::string server_name = "FT_IRC";
 
-	std::cout << RPL_WELCOME(SERVER_NAME, nick);
-	std::cout << RPL_YOURHOST(SERVER_NAME, "0.1");
-	std::cout << RPL_CREATED("2023-02-17");
-	std::cout << RPL_MYINFO(SERVER_NAME, "0.1", "o", "o", "o");
+	std::cout << RPL_WELCOME(nick, server_name, nick);
+	std::cout << RPL_YOURHOST(nick, server_name, "0.1");
+	std::cout << RPL_CREATED(nick, "2023-02-17");
+	std::cout << RPL_MYINFO(nick, server_name, "0.1", "o", "o", "o");
 	std::cout << RPL_ISUPPORT;
 	std::cout << RPL_UMODEIS("o");
 	std::cout << RPL_LUSERCLIENT("1", "0", "1");
@@ -26,7 +26,7 @@ void test_rpl()
 	std::cout << RPL_LUSERUNKNOWN("0");
 	std::cout << RPL_LUSERCHANNELS("1");
 	std::cout << RPL_LUSERME("1", "1");
-	std::cout << RPL_ADMINME(SERVER_NAME);
+	std::cout << RPL_ADMINME(server_name);
 	std::cout << RPL_ADMINLOC1("Lyon");
 	std::cout << RPL_ADMINLOC2("Lyon");
 	std::cout << RPL_ADMINEMAIL("bigboss@ft_irc.com");
@@ -39,11 +39,11 @@ void test_rpl()
 	//std::cout << RPL_USERHOST();
 	std::cout << RPL_UNAWAY;
 	std::cout << RPL_NOWAWAY;
-	std::cout << RPL_WHOREPLY("*", USERNAME, HOSTNAME, SERVER_NAME, nick, "H", "0", REALNAME);
+	std::cout << RPL_WHOREPLY("*", USERNAME, HOSTNAME, server_name, nick, "H", "0", REALNAME);
 	std::cout << RPL_ENDOFWHO("mask");
 	std::cout << RPL_WHOISREGNICK(nick);
 	std::cout << RPL_WHOISUSER(nick, USERNAME, HOSTNAME, REALNAME);
-	std::cout << RPL_WHOISSERVER(nick, SERVER_NAME, "les info du server!");
+	std::cout << RPL_WHOISSERVER(nick, server_name, "les info du server!");
 	std::cout << RPL_WHOISOPERATOR(nick);
 	std::cout << RPL_WHOWASUSER(nick, USERNAME, HOSTNAME, REALNAME);
 	std::cout << RPL_WHOISIDLE(nick, "0", "0");
@@ -53,7 +53,7 @@ void test_rpl()
 
 	// ERRORS
 	std::cout << ERR_NOSUCHNICK(nick);
-	std::cout << ERR_NOSUCHSERVER(SERVER_NAME);
+	std::cout << ERR_NOSUCHSERVER(server_name);
 	std::cout << ERR_NOSUCHCHANNEL("#test");
 	std::cout << ERR_CANNOTSENDTOCHAN("#test");
 	std::cout << ERR_TOOMANYCHANNELS("#test");

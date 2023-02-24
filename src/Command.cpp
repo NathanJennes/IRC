@@ -3,6 +3,8 @@
 //
 
 #include "Command.h"
+#include "IRC.h"
+#include <iostream>
 
 Command::Command(const std::string &command_str)
 	:m_ill_formed(false), m_str(command_str), m_index(0)
@@ -17,6 +19,18 @@ bool Command::is_valid()
 void Command::execute(User& user)
 {
 	(void)user;
+	std::cout << "Executing command: " << m_str << std::endl;
+	if (m_str == "CAP LS 302") {
+		user.update_write_buffer("CAP * LS :\r\n");
+	}
+	else if (m_str == ("CAP REQ")) {
+		user.update_write_buffer("CAP * ACK :\r\n");
+	}
+	else if (m_str == "CAP END")
+		user.update_write_buffer(RPL_WELCOME(user.nickname(), user.name_on_host(), user.nickname()));
+	else if (m_str == ("JOIN")) {
+		user.update_write_buffer("JOINNED\r\n");
+	}
 }
 
 // Message
