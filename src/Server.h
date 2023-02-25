@@ -7,8 +7,11 @@
 
 #include <vector>
 #include <netdb.h>
+#include <map>
+#include <string>
 #include "User.h"
 #include "Channel.h"
+#include "Command.h"
 
 class Server
 {
@@ -35,8 +38,10 @@ private:
 	void poll_events();
 	void handle_events();
 	void handle_messages();
-	void execute_command(User& user);
+	void execute_command(User& user, const Command& command);
 	void disconnect_users();
+
+	void initialize_command_functions();
 
 	// Member variables
 	std::string				m_server_name;
@@ -50,7 +55,12 @@ private:
 	static const int		m_server_backlog;
 	static const int		m_timeout;
 
-	typedef std::vector<User>::iterator	UserIterator;
+	typedef int (*function)(User&, const Command&);
+
+	std::map<std::string, function>	m_commands;
+
+	typedef std::vector<User>::iterator					UserIterator;
+	typedef std::map<std::string, function>::iterator	CommandIterator;
 };
 
 #endif //SERVER_H

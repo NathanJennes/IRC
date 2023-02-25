@@ -13,11 +13,12 @@
 class User
 {
 public:
-	User(const std::string& username, const std::string& real_name, const std::string& server_name, int fd);
+	explicit User(int fd);
 
 	ssize_t		receive_message();
 	ssize_t		send_message();
 	std::string	get_next_command_str();
+	std::string	source();
 
 	// getters
 	const std::string&	nickname()			const	{ return m_nickname; }
@@ -33,8 +34,6 @@ public:
 	const std::string&	read_buffer()		const	{ return m_readbuf; }
 	const std::string&	write_buffer()		const	{ return m_writebuf; }
 
-	const int&			active_channel()	const	{ return m_active_channel; }
-
 	// setters
 	void	set_nickname(const std::string& nickname)	{ m_nickname = nickname; }
 	void	set_is_readable(bool is_readable)			{ m_is_readable = is_readable; }
@@ -44,7 +43,7 @@ public:
 	void	disconnect()								{ m_is_disconnected = true; }
 
 private:
-	std::string m_nickname;
+	std::string	m_nickname;
 	std::string	m_name_on_host;
 	std::string	m_host_address;
 	std::string	m_server_name;
@@ -60,7 +59,6 @@ private:
 	std::string	m_writebuf;
 
 	std::vector<std::string>	m_channels;
-	int							m_active_channel;
 };
 
 #endif //USER_H

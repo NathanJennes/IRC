@@ -49,7 +49,7 @@ SRC_DIR			:=		src
 # ==============================================================================
 #	Project sources
 # ==============================================================================
-SRCS_FILE			:=		main.cpp Channel.cpp Server.cpp User.cpp Command.cpp tests.cpp
+SRCS_FILE			:=		main.cpp Channel.cpp Server.cpp User.cpp Command.cpp tests.cpp log.cpp Server_commands.cpp
 SRCS				:=		$(addprefix $(SRC_DIR)/, $(SRCS_FILE))
 OBJS				:=		$(SRCS:.cpp=.o)
 RELEASE_OBJS		:=		$(addprefix $(RELEASE_OBJDIR)/, $(OBJS))
@@ -114,6 +114,10 @@ run: default
 	@if [ -f "$(RELEASE_MODE_FILE)" ]; then ./$(BIN_DIR)/$(RELEASE_NAME) 54000 42; fi
 	@if [ -f "$(DEBUG_MODE_FILE)" ]; then ./$(BIN_DIR)/$(DEBUG_NAME) 54000 42; fi
 	@if [ -f "$(SANITIZE_MODE_FILE)" ]; then ./$(BIN_DIR)/$(SANITIZE_NAME) 54000 42; fi
+
+.PHONY: test
+test:
+	@echo "NICK stb47" | nc localhost 54000
 
 .PHONY: clean
 clean:

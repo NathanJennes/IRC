@@ -9,19 +9,45 @@
 #include <vector>
 #include "User.h"
 
-struct Tag
-{
-	std::string	key;
-	std::string	value;
-};
-
 class Command
 {
 public:
+	struct TagKey
+	{
+		std::string	client_prefix;
+		std::string	vendor;
+		std::string	key_str;
+	};
+
+	struct Tag
+	{
+		TagKey		key;
+		std::string	value;
+	};
+
+	struct Source
+	{
+		std::string source_name;
+		std::string user;
+		std::string host;
+	};
+
 	Command(const std::string& command_str);
 
 	bool	is_valid();
-	void	execute(User& user);
+
+	// Getters
+	const std::vector<Tag>&			get_tags()			const { return m_tags; }
+	const Source&					get_source()		const { return m_source; }
+	const std::string&				get_command()		const { return m_command; }
+	const std::vector<std::string>&	get_parameters()	const { return m_parameters; }
+
+	// setters
+	void set_command(const std::string& command) 					{ m_command = command; }
+	void set_parameters(const std::vector<std::string>& parameters)	{ m_parameters = parameters; }
+
+	// Debug
+	void print();
 
 private:
 	bool	m_ill_formed;
@@ -30,50 +56,50 @@ private:
 	std::size_t	m_index;
 
 	std::vector<Tag>			m_tags;
-	std::string					m_source;
+	Source						m_source;
 	std::string					m_command;
 	std::vector<std::string>	m_parameters;
 
 	// Message
-	std::string	parse_message();
-	bool		consume_spaces();
-	bool		consume_crlf();
+	void	parse_message();
+	bool	consume_spaces();
+	bool	consume_crlf();
 
 	// Tags
-	void		parse_tags();
-	Tag			parse_tag();
-	std::string	parse_key();
-	std::string	parse_client_prefix();
-	std::string	parse_escaped_value();
-	std::string	parse_vendor();
+	std::vector<Tag>	try_parse_tags();
+	Tag					try_parse_tag();
+	TagKey				try_parse_key();
+	std::string			try_parse_client_prefix();
+	std::string			try_parse_escaped_value();
+	std::string			try_parse_vendor();
 
 	// Source
-	std::string	parse_source();
+	Source		try_parse_source();
 
 	// Command
-	std::string	parse_command();
+	std::string	try_parse_command();
 
 	// Parameters
-	std::string	parse_parameter();
-	std::string	parse_nospcrlfcl();
-	std::string	parse_middle();
-	std::string	parse_trailing();
+	std::vector<std::string>	try_parse_parameter();
+	std::string					try_parse_nospcrlfcl();
+	std::string					try_parse_middle();
+	std::string					try_parse_trailing();
 
 	// Wildcard
-	std::string	parse_mask();
-	std::string	parse_wildone();
-	std::string	parse_wildmany();
-	std::string	parse_nowild();
-	std::string	parse_noesc();
-	std::string	parse_matchone();
-	std::string	parse_matchmany();
+	std::string	try_parse_mask();
+	std::string	try_parse_wildone();
+	std::string	try_parse_wildmany();
+	std::string	try_parse_nowild();
+	std::string	try_parse_noesc();
+	std::string	try_parse_matchone();
+	std::string	try_parse_matchmany();
 
 	// Hostname
-	std::string	parse_host();
-	std::string	parse_hostname();
-	std::string	parse_ipv4_address();
-	std::string	parse_domain_label();
-	bool		contains_top_label(const std::string& hostname);
+	std::string	try_parse_host();
+	std::string	try_parse_hostname();
+	std::string	try_parse_ipv4_address();
+	std::string	try_parse_domain_label();
+	std::string	try_parse_top_label();
 
 	// ABNF
 	bool		consume_char(char c);
@@ -85,7 +111,7 @@ private:
 	std::size_t			characters_left();
 	const std::string&	letters();
 	const std::string&	digits();
+	std::string			return_empty_string_and_restore_index(std::size_t old_index);
 };
-
 
 #endif //COMMAND_H

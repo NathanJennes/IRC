@@ -4,43 +4,87 @@
 
 #include "Command.h"
 #include "IRC.h"
+#include "log.h"
 #include <iostream>
 
 Command::Command(const std::string &command_str)
-	:m_ill_formed(false), m_str(command_str), m_index(0)
+		:m_ill_formed(false), m_str(command_str), m_index(0)
 {
+	parse_message();
 }
 
 bool Command::is_valid()
 {
-	return true;
-}
-
-void Command::execute(User& user)
-{
-	(void)user;
-	std::cout << "Executing command: " << m_str << std::endl;
-	if (m_str == "CAP LS 302") {
-		user.update_write_buffer("CAP * LS :\r\n");
-	}
-	else if (m_str == ("CAP REQ")) {
-		user.update_write_buffer("CAP * ACK :\r\n");
-	}
-	else if (m_str == "CAP END")
-		user.update_write_buffer(RPL_WELCOME(user.nickname(), user.name_on_host(), user.nickname()));
-	else if (m_str == ("JOIN")) {
-		user.update_write_buffer("JOINNED\r\n");
-	}
+	return !m_ill_formed;
 }
 
 // Message
-std::string	Command::parse_message()
+void	Command::parse_message()
 {
-	return "";
+	if (characters_left() == 0)
+		return ;
+
+	// If the first character is an '@'
+	if (consume_char(0x40)) {
+		// Try parsing tags
+		std::vector<Tag> tags = try_parse_tags();
+		if (tags.empty()) {
+			m_ill_formed = true;
+			return ;
+		}
+
+		// If successful, parse the required SPACE characters
+		if (!consume_spaces()) {
+			m_ill_formed = true;
+			return ;
+		}
+
+		// Save the parsed tags
+		m_tags = tags;
+	}
+
+	// Now, if the current character is an ':'
+	if (consume_char(0x3A)) {
+		// Parse the source
+		Source source = try_parse_source();
+		if (source.source_name.empty()) {
+			m_ill_formed = true;
+			return ;
+		}
+
+		// If successful, parse the required SPACE characters
+		if (!consume_spaces()) {
+			m_ill_formed = true;
+			return ;
+		}
+
+		// Save the parsed source
+		m_source = source;
+	}
+
+	// Now, parse the command
+	std::string command = try_parse_command();
+	if (command.empty()) {
+		m_ill_formed = true;
+		return ;
+	} else {
+		// Save the parsed command
+		m_command = command;
+	}
+
+	// Now, parse the parameters
+	m_parameters = try_parse_parameter();
+
+	// Finally, we should end up at the cr-lf field
+	if (!consume_crlf())
+		m_ill_formed = true;
 }
 
 bool	Command::consume_spaces()
 {
+	if (characters_left() == 0)
+		return false;
+
 	if (!consume_char(0x20)) // ' '
 		return false;
 
@@ -51,230 +95,520 @@ bool	Command::consume_spaces()
 
 bool	Command::consume_crlf()
 {
-	if (!consume_char(0x0D)) // '\r'
+	if (characters_left() == 0)
 		return false;
-	if (!consume_char(0x0A)) // '\n'
-		return false;
-	return true;
-}
 
+	std::size_t old_index = m_index;
+
+	// Consume a cr '\r' or lf '\n'
+	if (consume_char(0x0D) || consume_char(0x0A)) // '\r' '\n'
+		return true;
+
+	m_index = old_index;
+	return false;
+}
 
 // Tags
-void Command::parse_tags()
+std::vector<Command::Tag> Command::try_parse_tags()
 {
-	if (!consume_char(0x40)) // '@'
-		return ;
+	if (characters_left() == 0)
+		return std::vector<Command::Tag>();
 
-	Tag tag = parse_tag();
-	while (!tag.key.empty()) {
-		m_tags.push_back(tag);
+	std::vector<Tag> tags;
+	Tag tag = try_parse_tag();
+
+	// If a tag has an empty key, it is ill formed
+	// At least one tag must be present
+	if (tag.key.key_str.empty())
+		return tags;
+
+	// Parse all the following tags
+	while (!tag.key.key_str.empty()) {
+		tags.push_back(tag);
+
+		// If no ';' is found, the last tag parsed was the last
 		if (!consume_char(0x3B)) // ';'
-			return ;
-		tag = parse_tag();
+			return tags;
+		tag = try_parse_tag();
 	}
+
+	// The tags list must finish with a valid tag
+	tags.clear();
+	return tags;
 }
 
-Tag Command::parse_tag()
+Command::Tag Command::try_parse_tag()
 {
+	if (characters_left() == 0)
+		return Tag();
+
 	Tag tag;
-	tag.key = parse_key();
+
+	// A tag must contain a key
+	tag.key = try_parse_key();
+	if (tag.key.key_str.empty())
+		return tag;
+
+	// If no '=' is found, the tag ends here without a value
 	if (!consume_char(0x3D)) // '='
 		return tag;
-	tag.value = parse_escaped_value();
+
+	// Parse the value
+	tag.value = try_parse_escaped_value();
 	return tag;
 }
 
-std::string Command::parse_key()
+Command::TagKey Command::try_parse_key()
 {
-	std::string client_prefix = parse_client_prefix();
-	std::string vendor = parse_vendor();
+	if (characters_left() == 0)
+		return TagKey();
 
-	size_t end_of_key = m_str.find_first_not_of(letters() + digits() + "-", m_index);
+	std::size_t old_index = m_index;
+
+	// Parse optional client prefix and vendor
+	std::string client_prefix = try_parse_client_prefix();
+	std::string vendor = try_parse_vendor();
+
+	// Find the end of the key string
+	std::size_t end_of_key = m_str.find_first_not_of(letters() + digits() + "-", m_index);
 	if (end_of_key == std::string::npos) {
-		m_ill_formed = true;
-		return "";
+		m_index = old_index;
+		return TagKey();
 	}
-	std::string key = m_str.substr(m_index, end_of_key);
+
+	// Extract the key string
+	std::string key_str = m_str.substr(m_index, end_of_key - m_index);
 	m_index = end_of_key;
 
-	return client_prefix + vendor + key;
+	// Populate the TagKey structure
+	TagKey key;
+	key.client_prefix = client_prefix;
+	key.vendor = vendor;
+	key.key_str = key_str;
+
+	return key;
 }
 
-std::string Command::parse_client_prefix()
+std::string Command::try_parse_client_prefix()
 {
+	if (characters_left() == 0)
+		return "";
+
 	std::string client_prefix;
 	if (consume_char(0x2B)) // '+'
 		client_prefix += '+';
 	return client_prefix;
 }
 
-std::string Command::parse_escaped_value()
+std::string Command::try_parse_escaped_value()
 {
-	size_t end_of_escaped_value = m_str.find_first_of("\0\r\n; ", m_index);
-	if (end_of_escaped_value == std::string::npos) {
-		m_ill_formed = true;
+	if (characters_left() == 0)
 		return "";
-	}
-	std::string escaped_value = m_str.substr(m_index, end_of_escaped_value);
+
+	// Find the end of the escaped value
+	std::size_t end_of_escaped_value = m_str.find_first_of("\r\n; ", m_index);
+	if (end_of_escaped_value == std::string::npos)
+		return "";
+
+	// Extract the string
+	std::string escaped_value = m_str.substr(m_index, end_of_escaped_value - m_index);
 	m_index = end_of_escaped_value;
 
 	return escaped_value;
 }
 
-std::string Command::parse_vendor()
+std::string Command::try_parse_vendor()
 {
-	return parse_host();
-}
+	if (characters_left() == 0)
+		return "";
 
+	std::size_t old_index = m_index;
+
+	// Try parsing a host
+	std::string host = try_parse_host();
+	if (host.empty())
+		return return_empty_string_and_restore_index(old_index);
+
+	// If successful, parse an '/'
+	if (!consume_char(0x2F)) { // '/'
+		return return_empty_string_and_restore_index(old_index);
+	}
+
+	return host;
+}
 
 // Source
-std::string Command::parse_source()
+Command::Source Command::try_parse_source()
 {
-	return "";
+	if (characters_left() == 0)
+		return Source();
+
+	// A source must end with a space
+	std::size_t space_position = m_str.find_first_of(' ', m_index);
+	if (space_position == std::string::npos)
+		return Source();
+
+	Source source;
+
+	// Find the end of the source, either a '!', a '@' or a SPACE
+	std::size_t end_of_source = m_str.find_first_of("!@ ", m_index);
+	if (end_of_source == std::string::npos)
+		return Source();
+
+	// Extract the source
+	source.source_name = m_str.substr(m_index, end_of_source - m_index);
+	m_index = end_of_source;
+
+	// If the current character is an '!'
+	if (consume_char(0x21)) { // '!'
+		// Parse a user field
+		std::size_t end_of_user = m_str.find_first_of("@ ", m_index);
+		source.user = m_str.substr(m_index, end_of_user - m_index);
+		m_index = end_of_user;
+	}
+
+	// If the current character is an '@'
+	if (consume_char(0x40)) { // '@'
+		// Parse a host field
+		source.host = m_str.substr(m_index, space_position - m_index);
+		m_index = space_position;
+	}
+
+	return source;
 }
 
-
 // Command
-std::string Command::parse_command()
+std::string Command::try_parse_command()
 {
-	return "";
+	if (characters_left() == 0)
+		return "";
+
+	std::string command;
+
+	// Try parsing letters
+	while (characters_left() && isalpha(current_char())) {
+		command += current_char();
+		m_index++;
+	}
+
+	// If no letters were found, try parsing 3 digits
+	if (command.empty() && characters_left() >= 3) {
+		if (isdigit(m_str[m_index]) && isdigit(m_str[m_index + 1]) && isdigit(m_str[m_index + 2])) {
+			command += m_str.substr(m_index, 3);
+			m_index += 3;
+		}
+	}
+
+	return command;
 }
 
 
 // Parameters
-std::string Command::parse_parameter()
+std::vector<std::string> Command::try_parse_parameter()
 {
-	return "";
+	if (characters_left() == 0)
+		return std::vector<std::string>();
+
+	std::vector<std::string> parameters;
+	std::size_t old_index = m_index;
+	std::size_t index_before_space = m_index;
+
+	// First, parse the "middle" fields
+	while (consume_spaces()) {
+		std::string middle = try_parse_middle();
+
+		// Middle fields must contain at least one character
+		if (middle.empty())
+			break ;
+		parameters.push_back(middle);
+		index_before_space = m_index;
+	}
+
+	// Go back before the spaces consumed
+	m_index = index_before_space;
+
+	// Finally, parse the optional trailing field
+	if (consume_spaces()) {
+		// There must be a ':' before the actual trailing field
+		if (!consume_char(0x3A)) {
+			m_index = old_index;
+			return std::vector<std::string>();
+		}
+
+		std::string trailing = try_parse_trailing();
+		parameters.push_back(trailing);
+	}
+
+	return parameters;
 }
 
-std::string Command::parse_nospcrlfcl()
+std::string Command::try_parse_nospcrlfcl()
 {
-	return "";
+	if (characters_left() == 0)
+		return "";
+
+	// Find the end of the string
+	std::size_t end_of_string = m_str.find_first_of("\r\n: ", m_index);
+	if (end_of_string == std::string::npos)
+		return "";
+
+	// Extract the string
+	std::string string = m_str.substr(m_index, end_of_string - m_index);
+	m_index = end_of_string;
+	return string;
 }
 
-std::string Command::parse_middle()
+std::string Command::try_parse_middle()
 {
-	return "";
+	if (characters_left() == 0)
+		return "";
+
+	std::string middle;
+	std::size_t old_index = m_index;
+
+	// First, parse a nospcrlfcl string
+	middle += try_parse_nospcrlfcl();
+	if (middle.empty())
+		return return_empty_string_and_restore_index(old_index);
+
+	// Then, try to parse ':' or nospcrlfcl strings
+	while (true) {
+		if (consume_char(0x3A)) { // ':'
+			middle += ':';
+			continue;
+		}
+
+		std::string nospcrlfcl_string = try_parse_nospcrlfcl();
+		if (nospcrlfcl_string.empty())
+			break ;
+		middle += nospcrlfcl_string;
+	}
+
+	return middle;
 }
 
-std::string Command::parse_trailing()
+std::string Command::try_parse_trailing()
 {
-	return "";
+	if (characters_left() == 0)
+		return "";
+
+	std::string trailing;
+
+	// Parse all ':', ' ' or nospcrlfcl strings
+	while (true) {
+		if (consume_char(0x3A)) { // ':'
+			trailing += ':';
+			continue;
+		}
+
+		if (consume_char(0x20)) { // ' '
+			trailing += ' ';
+			continue;
+		}
+
+		std::string nospcrlfcl_string = try_parse_nospcrlfcl();
+		if (nospcrlfcl_string.empty())
+			break ;
+		trailing += nospcrlfcl_string;
+	}
+
+	return trailing;
 }
 
 
 // Wildcard
-std::string Command::parse_mask()
+std::string Command::try_parse_mask()
 {
+	if (characters_left() == 0)
+		return "";
 	return "";
 }
 
-std::string Command::parse_wildone()
+std::string Command::try_parse_wildone()
 {
+	if (characters_left() == 0)
+		return "";
 	return "";
 }
 
-std::string Command::parse_wildmany()
+std::string Command::try_parse_wildmany()
 {
+	if (characters_left() == 0)
+		return "";
 	return "";
 }
 
-std::string Command::parse_nowild()
+std::string Command::try_parse_nowild()
 {
+	if (characters_left() == 0)
+		return "";
 	return "";
 }
 
-std::string Command::parse_noesc()
+std::string Command::try_parse_noesc()
 {
+	if (characters_left() == 0)
+		return "";
 	return "";
 }
 
-std::string Command::parse_matchone()
+std::string Command::try_parse_matchone()
 {
+	if (characters_left() == 0)
+		return "";
 	return "";
 }
 
-std::string Command::parse_matchmany()
+std::string Command::try_parse_matchmany()
 {
+	if (characters_left() == 0)
+		return "";
 	return "";
 }
 
 // Hostname
-std::string	Command::parse_host()
+std::string	Command::try_parse_host()
 {
-	std::string hostname = parse_hostname();
+	if (characters_left() == 0)
+		return "";
+
+	// Try to parse a hostname
+	std::string hostname = try_parse_hostname();
 	if (!hostname.empty())
 		return hostname;
 
-	std::string ipv4_address = parse_ipv4_address();
+	// If we couldn't parse a hostname, parse an ipv4 address
+	std::string ipv4_address = try_parse_ipv4_address();
 	return ipv4_address;
 }
 
-std::string	Command::parse_hostname()
+std::string	Command::try_parse_hostname()
 {
+	if (characters_left() == 0)
+		return "";
+
 	std::size_t old_index = m_index;
 	std::string hostname;
-	std::string domain_label = parse_domain_label();
+	std::string domain_label = try_parse_domain_label();
 
+	// Parse all domain labels
 	while (!domain_label.empty()) {
 		hostname += domain_label;
 		if (!consume_char(0x2E)) // '.'
 			break ;
-		domain_label = parse_domain_label();
+		domain_label = try_parse_domain_label();
 	}
 
-	if (contains_top_label(hostname)) {
+	// A hostname must end with a top label and optional '.'
+	std::string top_label = try_parse_top_label();
+	if (!top_label.empty()) {
 		if (consume_char(0x2E)) // '.'
 			hostname += '.';
 		return hostname;
 	}
 
-	// If we are here, it means that we need to parse an ipv4
-	m_index = old_index;
-	hostname = parse_ipv4_address();
-
-	return hostname;
+	// No hostname could be parsed
+	return return_empty_string_and_restore_index(old_index);
 }
 
-std::string	Command::parse_ipv4_address()
+std::string	Command::try_parse_ipv4_address()
 {
+	if (characters_left() == 0)
+		return "";
+
+	std::size_t old_index = m_index;
 	std::string address;
 
 	for (int i = 0; i < 3; i++)
 	{
 		std::string numbers = consume_integer();
 		if (numbers.empty())
-			return "";
+			return return_empty_string_and_restore_index(old_index);
 		address += numbers;
 		if (!consume_char(0x2E)) // '.'
-			return "";
+			return return_empty_string_and_restore_index(old_index);
 		address += '.';
 	}
 
 	std::string numbers = consume_integer();
 	if (numbers.empty())
-		return "";
+		return return_empty_string_and_restore_index(old_index);
 	address += numbers;
 
 	return address;
 }
 
-std::string	Command::parse_domain_label()
+std::string	Command::try_parse_domain_label()
 {
+	if (characters_left() == 0)
+		return "";
+
 	std::string domain_label;
+
+	// Domain labels must start with amn alphanum
 	if (isalnum(current_char())) {
 		domain_label += current_char();
-		consume_char(current_char());
-
+		m_index++;
+	} else {
+		return "";
 	}
 
-	return "";
+	// Get all the alphanum or '-'
+	while (isalnum(current_char()) || current_char() == 0x2D) {
+		domain_label += current_char();
+		m_index++;
+	}
+
+	// Domain labels must end with an alphanum
+	while (!isalnum(domain_label[domain_label.size() - 1])) {
+		m_index--;
+		domain_label.erase(domain_label.size() - 1, 1);
+	}
+
+	return domain_label;
 }
 
-bool Command::contains_top_label(const std::string& hostname)
+std::string Command::try_parse_top_label()
 {
-	(void)hostname;
-	return true;
+	if (characters_left() == 0)
+		return "";
+
+	std::size_t old_index = m_index;
+	std::string top_label;
+
+	// Top label must start with an alpha
+	if (isalpha(current_char())) {
+		top_label += current_char();
+		m_index++;
+	} else {
+		return "";
+	}
+
+	// If we don't find another alpha, we return the one already found
+	if (isalpha(current_char())) {
+		top_label += current_char();
+		m_index++;
+	} else {
+		return top_label;
+	}
+
+	// Get all the alphanum or '-'
+	while (isalnum(current_char()) || current_char() == 0x2D) {
+		top_label += current_char();
+		m_index++;
+	}
+
+	// Top labels must end with an alphanum
+	while (!isalnum(top_label[top_label.size() - 1]) && isalpha(top_label[top_label.size() - 1])) {
+		m_index--;
+		top_label.erase(top_label.size() - 1, 1);
+	}
+
+	// If no alphanum was found, the domain name is ill formed
+	if (!isalnum(top_label[top_label.size() - 1]))
+		return return_empty_string_and_restore_index(old_index);
+
+	return top_label;
 }
 
 // Helper
@@ -320,4 +654,31 @@ const std::string& Command::digits()
 {
 	static std::string digits = "0123456789";
 	return digits;
+}
+
+std::string Command::return_empty_string_and_restore_index(std::size_t old_index) {
+	m_index = old_index;
+	return "";
+}
+
+void Command::print()
+{
+	CORE_DEBUG("Command :");
+	CORE_DEBUG("  Tags :");
+	for (size_t i = 0; i < m_tags.size(); i++) {
+		CORE_DEBUG("    - Key :");
+		CORE_DEBUG("      - client_prefix : [%s]", m_tags[i].key.client_prefix.c_str());
+		CORE_DEBUG("      - vendor :        [%s]", m_tags[i].key.vendor.c_str());
+		CORE_DEBUG("      - key_str :       [%s]", m_tags[i].key.key_str.c_str());
+		CORE_DEBUG("    - Value:            [%s]", m_tags[i].value.c_str());
+	}
+	CORE_DEBUG("  Source :");
+	CORE_DEBUG("    - source_name : [%s]", m_source.source_name.c_str());
+	CORE_DEBUG("    - user :        [%s]", m_source.user.c_str());
+	CORE_DEBUG("    - host :        [%s]", m_source.host.c_str());
+	CORE_DEBUG("  Command string : [%s]", m_command.c_str());
+	CORE_DEBUG("  Parameters :");
+	for (size_t i = 0; i < m_parameters.size(); i++)
+		CORE_DEBUG("    - [%s]", m_parameters[i].c_str());
+	CORE_DEBUG("  Validity : %s", is_valid() ? "Yes" : "No");
 }

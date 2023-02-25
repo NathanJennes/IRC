@@ -3,7 +3,6 @@
 //
 
 #include <iostream>
-#include <string>
 #include <algorithm>
 #include "Channel.h"
 
@@ -35,6 +34,8 @@ bool Channel::update_modes(const std::string &modes)
 		value = true;
 	else if (modes[0] == '-')
 		value = false;
+	else
+		return false;
 
 	for (size_t i = 1; i < modes.size(); i++) {
 		switch (modes[i]) {
@@ -69,10 +70,10 @@ bool Channel::update_modes(const std::string &modes)
 				m_no_outside_messages = value;
 				break;
 			default:
-				std::cerr << "Unknown mode: " << modes[i] << std::endl;
+				return false;
 		}
 	}
-	return false;
+	return true;
 }
 
 void Channel::add_to_banlist(const std::string &user)

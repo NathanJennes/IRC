@@ -2,6 +2,7 @@ bin/
 obj/
 .idea/
 .vscode/
+*.txt
 
 # Compilation modes
 .release_mode

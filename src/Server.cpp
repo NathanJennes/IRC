@@ -11,12 +11,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string>
+#include "log.h"
 #include "IRC.h"
 #include "Server.h"
+#include "Server_commands.h"
 #include "Command.h"
 
 const int	Server::m_server_backlog = 10;
-const int	Server::m_timeout = 500;
+const int	Server::m_timeout = 10;
 bool		Server::m_is_running = true;
 
 void Server::signal_handler(int signal)
@@ -60,6 +62,8 @@ bool Server::initialize(uint16_t port)
 		std::cerr << "Error: listen: " << strerror(errno) << std::endl;
 		return false;
 	}
+
+	initialize_command_functions();
 
 	m_is_running = true;
 	m_is_readonly = false;
@@ -111,17 +115,13 @@ void Server::handle_events()
 	size_t i;
 	for (i = 0; i < m_users.size(); ++i)
 	{
-		if (m_users[i].is_readable())
-		{
-			if (m_users[i].receive_message() <= 0) {
+		if (m_users[i].is_readable()) {
+			if (m_users[i].receive_message() <= 0)
 				m_users[i].disconnect();
-			}
 		}
-		else if (m_users[i].is_writable())
-		{
-			if (!m_users[i].write_buffer().empty() && m_users[i].send_message() <= 0) {
+		if (m_users[i].is_writable()) {
+			if (!m_users[i].write_buffer().empty() && m_users[i].send_message() <= 0)
 				m_users[i].disconnect();
-			}
 		}
 		// TODO: handle errors
 	}
@@ -146,18 +146,12 @@ void Server::accept_new_connections()
 	socklen_t len = sizeof(client);
 
 	int new_client_socket_fd = accept(m_server_socket, reinterpret_cast<sockaddr *>(&client), &len);
-	if (new_client_socket_fd <= 0)  {
+	if (new_client_socket_fd <= 0)
 		std::cerr << "Error: accept: " << strerror(errno) << std::endl;
-	}
+
 	std::cout << "Incomming connexion from :" << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port) << std::endl;
 
-	std::string username = gethostbyaddr((char *)&client.sin_addr, sizeof(client.sin_addr), AF_INET)->h_name;
-
-	std::stringstream realname;
-	realname << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port);
-
-	User user(username, realname.str(), server_name(), new_client_socket_fd);
-	m_users.push_back(user);
+	m_users.push_back(User(new_client_socket_fd));
 }
 
 void Server::handle_messages()
@@ -167,22 +161,24 @@ void Server::handle_messages()
 		if (!user->is_readable() || user->is_disconnected())
 			continue ;
 
-		std::string command_str = user->get_next_command_str();
-		while (!command_str.empty()) {
-			Command command(command_str);
-			if (command.is_valid())
-				command.execute(*user);
+		std::string	command_str = user->get_next_command_str();
+		CORE_DEBUG("Server command str: [%s]", command_str.c_str());
+		Command		command(command_str);
 
-			command_str.clear();
-			command_str = user->get_next_command_str();
-			std::cout << "Next command: ["<< command_str << "]" << std::endl;
-		}
+		command.print();
+		if (command.is_valid())
+			execute_command(*user, command);
 	}
 }
 
-void Server::execute_command(User &user)
+void Server::execute_command(User &user, const Command &cmd)
 {
-	(void)user;
+	std::cout << "Executing command: " << cmd.get_command() << std::endl;
+	CommandIterator it = m_commands.find(cmd.get_command());
+	if (it != m_commands.end())
+		it->second(user, cmd);
+	else
+		std::cerr << "Error: command not found" << std::endl;
 }
 
 bool Server::initialize_config_file()
@@ -218,9 +214,9 @@ void Server::disconnect_users()
 void Server::cleanup()
 {
 	std::cout << "Cleaning up" << std::endl;
-	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
 		close(user->fd());
-	}
+
 	close(m_server_socket);
 }
 
@@ -231,15 +227,31 @@ void Server::send_to_client(const User& user, const std::string &message)
 	while (total_bytes_write < MAX_MESSAGE_LENGTH) {
 		ssize_t bytes_write = write(user.fd(), message.c_str() + total_bytes_write, static_cast<size_t>(MAX_MESSAGE_LENGTH - total_bytes_write));
 
-		if (bytes_write < 0 && errno != EAGAIN) {
+		if (bytes_write < 0 && errno != EAGAIN)
 			std::cerr << "Error: " << std::strerror(errno) << std::endl;
-		}
+
 		if (bytes_write <= 0)
 			break ;
 
 		total_bytes_write += bytes_write;
 	}
-	if (total_bytes_write < (ssize_t)message.size()) {
+	if (total_bytes_write < (ssize_t)message.size())
 		std::cerr << "Error: write: message truncated" << std::endl;
-	}
+}
+
+void Server::initialize_command_functions()
+{
+	m_commands.insert(std::make_pair("AUTH", auth));
+	m_commands.insert(std::make_pair("CAP", cap));
+	m_commands.insert(std::make_pair("ERROR", error));
+	m_commands.insert(std::make_pair("NICK", nick));
+	m_commands.insert(std::make_pair("OPER", oper));
+	m_commands.insert(std::make_pair("PASS", pass));
+	m_commands.insert(std::make_pair("PING", ping));
+	m_commands.insert(std::make_pair("PONG", pong));
+	m_commands.insert(std::make_pair("USER", user));
+	m_commands.insert(std::make_pair("QUIT", quit));
+
+	m_commands.insert(std::make_pair("JOIN", join));
+
 }

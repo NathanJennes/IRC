@@ -6,11 +6,14 @@
 #include <unistd.h>
 #include <cerrno>
 #include <cstring>
+#include "Command.h"
 #include "User.h"
 #include "IRC.h"
+#include "log.h"
 
-User::User(const std::string &username, const std::string &real_name, const std::string &server_name, int fd)
-	: m_name_on_host(username), m_host_address(real_name), m_server_name(server_name), m_fd(fd), m_is_afk(false), m_is_disconnected(false), m_is_readable(false), m_is_writable(false)
+User::User(int fd) :
+	m_name_on_host(), m_host_address(), m_server_name(), m_fd(fd),
+	m_is_afk(false), m_is_disconnected(false), m_is_readable(false), m_is_writable(false)
 {
 }
 
@@ -60,12 +63,24 @@ ssize_t User::send_message()
 std::string User::get_next_command_str()
 {
 	std::string command;
-	size_t command_end = m_readbuf.find_first_of("\n\r");
 
-	if (command_end != std::string::npos) {
-		command = m_readbuf.substr(0, m_readbuf.find_first_of("\n\r"));
-		std::cout << "Command: [" << command << "]" << std::endl;
-		m_readbuf.erase(0, command.size() + 1);
+	std::size_t command_end = m_readbuf.find_first_of("\n\r");
+	if (command_end == std::string::npos)
+		return "";
+
+	std::size_t crlf_end = command_end + 1;
+	if (m_readbuf[crlf_end] == '\r' || m_readbuf[crlf_end] == '\n')
+		crlf_end++;
+
+	if (crlf_end != std::string::npos) {
+		command = m_readbuf.substr(0, crlf_end);
+		m_readbuf.erase(0, command.size());
 	}
 	return command;
+}
+
+std::string User::source()
+{
+	std::string source = ":" + m_name_on_host + "!" + m_name_on_host + "@" + m_host_address;
+	return source;
 }
