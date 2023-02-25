@@ -70,13 +70,12 @@ bool Server::initialize(uint16_t port)
 		m_is_readonly = true;
 	}
 
-	m_users.push_back(User("Server", "Server", "Server", m_server_socket));
-
 	return true;
 }
 
 bool Server::update()
 {
+	accept_new_connections();
 	poll_events();
 	handle_events();
 	handle_messages();
@@ -114,13 +113,8 @@ void Server::handle_events()
 	{
 		if (m_users[i].is_readable())
 		{
-			if (m_users[i].fd() == m_server_socket) {
-				accept_new_connections();
-			}
-			else {
-				if (m_users[i].receive_message() <= 0) {
-					m_users[i].disconnect();
-				}
+			if (m_users[i].receive_message() <= 0) {
+				m_users[i].disconnect();
 			}
 		}
 		else if (m_users[i].is_writable())
@@ -135,6 +129,19 @@ void Server::handle_events()
 
 void Server::accept_new_connections()
 {
+	pollfd pollfd = {};
+
+	pollfd.fd = m_server_socket;
+	pollfd.events = POLLIN;
+	pollfd.revents = 0;
+
+	int poll_count = poll(&pollfd, 1, m_timeout);
+	if (poll_count < 0 && errno != EINTR)
+		std::cerr << "Error: poll: " << strerror(errno) << std::endl;
+
+	if ((pollfd.revents & POLLIN) == 0)
+		return ;
+
 	struct sockaddr_in client = {};
 	socklen_t len = sizeof(client);
 
@@ -144,12 +151,12 @@ void Server::accept_new_connections()
 	}
 	std::cout << "Incomming connexion from :" << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port) << std::endl;
 
-//	std::string username = gethostbyaddr((char *)&client.sin_addr, sizeof(client.sin_addr), AF_INET)->h_name;
+	std::string username = gethostbyaddr((char *)&client.sin_addr, sizeof(client.sin_addr), AF_INET)->h_name;
 
-//	std::stringstream realname;
-//	realname << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port);
+	std::stringstream realname;
+	realname << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port);
 
-	User user("username", "realname.str()", server_name(), new_client_socket_fd);
+	User user(username, realname.str(), server_name(), new_client_socket_fd);
 	m_users.push_back(user);
 }
 
