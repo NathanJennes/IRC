@@ -5,7 +5,7 @@
 #include "Command.h"
 #include "IRC.h"
 #include "log.h"
-#include <iostream>
+#include "Utils.h"
 
 Command::Command(const std::string &command_str)
 		:m_ill_formed(false), m_str(command_str), m_index(0)
@@ -69,7 +69,7 @@ void	Command::parse_message()
 		return ;
 	} else {
 		// Save the parsed command
-		m_command = command;
+		m_command = to_upper(command);
 	}
 
 	// Now, parse the parameters

@@ -49,7 +49,8 @@ SRC_DIR			:=		src
 # ==============================================================================
 #	Project sources
 # ==============================================================================
-SRCS_FILE			:=		main.cpp Channel.cpp Server.cpp User.cpp Command.cpp tests.cpp log.cpp Server_commands.cpp
+SRCS_FILE			:=		main.cpp Channel.cpp Server.cpp User.cpp Command.cpp tests.cpp log.cpp Server_commands.cpp	\
+							Utils.cpp
 SRCS				:=		$(addprefix $(SRC_DIR)/, $(SRCS_FILE))
 OBJS				:=		$(SRCS:.cpp=.o)
 RELEASE_OBJS		:=		$(addprefix $(RELEASE_OBJDIR)/, $(OBJS))
@@ -88,7 +89,7 @@ RELEASE_LD_FLAGS	:=
 DEBUG_CXX_FLAGS		:=	-Og -g -DDEBUG
 DEBUG_LD_FLAGS		:=
 
-SANITIZE_CXX_FLAGS	:=	$(DEBUG_CXX_FLAGS) -fsanitize=address,undefined -fanalyzer -Wanalyzer-too-complex
+SANITIZE_CXX_FLAGS	:=	$(DEBUG_CXX_FLAGS) -fsanitize=address,undefined -fanalyzer
 SANITIZE_LD_FLAGS	:=	-fsanitize=address,undefined
 
 # ==============================================================================

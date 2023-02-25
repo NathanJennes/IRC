@@ -18,24 +18,34 @@ public:
 	ssize_t		receive_message();
 	ssize_t		send_message();
 	std::string	get_next_command_str();
+	void 		reply(const std::string &msg);
 	std::string	source();
 
 	// getters
 	const std::string&	nickname()			const	{ return m_nickname; }
-	const std::string&	name_on_host()		const	{ return m_name_on_host; }
-	const std::string&	host_address()		const	{ return m_host_address; }
+	const std::string&	name_on_host()		const	{ return m_username; }
+	const std::string&	host_address()		const	{ return m_realname; }
 	const std::string&	server()			const	{ return m_server_name; }
 	bool				is_afk()			const	{ return m_is_afk; }
 	bool				is_disconnected()	const	{ return m_is_disconnected; }
 	const int&			fd()				const	{ return m_fd; }
 	bool				is_writable()		const	{ return m_is_writable; }
 	bool				is_readable()		const	{ return m_is_readable; }
+	bool				is_registered()		const	{ return m_is_registered; }
 
 	const std::string&	read_buffer()		const	{ return m_readbuf; }
 	const std::string&	write_buffer()		const	{ return m_writebuf; }
 
 	// setters
 	void	set_nickname(const std::string& nickname)	{ m_nickname = nickname; }
+	void	set_username(const std::string& username)	{ m_username = username; }
+	void	set_realname(const std::string& realnam)	{ m_realname = realnam; }
+	void	set_server_name(const std::string& name)	{ m_server_name = name; }
+
+	void	set_is_afk(bool is_afk)						{ m_is_afk = is_afk; }
+	void	set_registered()							{ m_is_registered = true; }
+
+
 	void	set_is_readable(bool is_readable)			{ m_is_readable = is_readable; }
 	void	set_is_writable(bool is_writable)			{ m_is_writable = is_writable; }
 	void	update_write_buffer(const std::string& str)	{ m_writebuf.append(str); }
@@ -44,8 +54,8 @@ public:
 
 private:
 	std::string	m_nickname;
-	std::string	m_name_on_host;
-	std::string	m_host_address;
+	std::string	m_username;
+	std::string	m_realname;
 	std::string	m_server_name;
 
 	int			m_fd;
@@ -54,6 +64,7 @@ private:
 	bool		m_is_disconnected;
 	bool		m_is_readable;
 	bool		m_is_writable;
+	bool		m_is_registered;
 
 	std::string	m_readbuf;
 	std::string	m_writebuf;

@@ -6,14 +6,14 @@
 #include <unistd.h>
 #include <cerrno>
 #include <cstring>
-#include "Command.h"
 #include "User.h"
 #include "IRC.h"
 #include "log.h"
 
 User::User(int fd) :
-	m_name_on_host(), m_host_address(), m_server_name(), m_fd(fd),
-	m_is_afk(false), m_is_disconnected(false), m_is_readable(false), m_is_writable(false)
+		m_username(""), m_realname(""), m_server_name(), m_fd(fd),
+		m_is_afk(false), m_is_disconnected(false), m_is_readable(false), m_is_writable(false),
+		m_is_registered(false)
 {
 }
 
@@ -81,6 +81,12 @@ std::string User::get_next_command_str()
 
 std::string User::source()
 {
-	std::string source = ":" + m_name_on_host + "!" + m_name_on_host + "@" + m_host_address;
+	std::string source = ":" + m_username + "!" + m_username + "@" + m_realname;
 	return source;
+}
+
+void User::reply(const std::string &msg)
+{
+	std::string ret = source() + " " + msg + "\n\r";
+	update_write_buffer(ret);
 }

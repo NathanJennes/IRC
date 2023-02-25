@@ -1,6 +1,7 @@
 #include <cstdarg>
 #include <iostream>
 #include <cstring>
+#include <cstdio>
 #include "log.h"
 
 #define RESET   "\033[0m"

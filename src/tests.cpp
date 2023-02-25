@@ -15,10 +15,10 @@ void test_rpl()
 	std::string nick = "cybattis";
 	std::string server_name = "FT_IRC";
 
-	std::cout << RPL_WELCOME(nick, server_name, nick);
-	std::cout << RPL_YOURHOST(nick, server_name, "0.1");
-	std::cout << RPL_CREATED(nick, "2023-02-17");
-	std::cout << RPL_MYINFO(nick, server_name, "0.1", "o", "o", "o");
+	std::cout << RPL_WELCOME(server_name, nick);
+	std::cout << RPL_YOURHOST(server_name, "0.1");
+	std::cout << RPL_CREATED("2023-02-17");
+	std::cout << RPL_MYINFO(server_name, "0.1", "o", "o", "o");
 	std::cout << RPL_ISUPPORT;
 	std::cout << RPL_UMODEIS("o");
 	std::cout << RPL_LUSERCLIENT("1", "0", "1");
@@ -68,7 +68,7 @@ void test_rpl()
 	std::cout << ERR_NOTONCHANNEL("#test");
 	std::cout << ERR_USERONCHANNEL(nick, "#test");
 	std::cout << ERR_NOTREGISTERED;
-	std::cout << ERR_NEEDMOREPARAMS("command");
+//	std::cout << ERR_NEEDMOREPARAMS("command", "msg");
 	std::cout << ERR_ALREADYREGISTERED;
 	std::cout << ERR_PASSWDMISMATCH;
 	std::cout << ERR_YOUREBANNEDCREEP;
