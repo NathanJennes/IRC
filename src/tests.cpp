@@ -60,7 +60,7 @@ void test_rpl()
 	std::cout << ERR_WASNOSUCHNICK(nick);
 	std::cout << ERR_NOORIGIN;
 	std::cout << ERR_INPUTTOOLONG;
-	std::cout << ERR_UNKNOWNCOMMAND("command");
+//	std::cout << ERR_UNKNOWNCOMMAND("command");
 	std::cout << ERR_NOMOTD;
 	std::cout << ERR_ERRONEUSNICKNAME("gligli");
 	std::cout << ERR_NICKNAMEINUSE(nick);

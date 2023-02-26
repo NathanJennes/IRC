@@ -3,71 +3,97 @@
 //
 
 #include "log.h"
-#include "Command.h"
 #include "IRC.h"
+#include "Command.h"
+#include "Server.h"
 
-int auth(User& user, const Command& command)
+int auth(Server& server, User& user, const Command& command)
 {
+	(void)server;
 	(void)command;
 	user.update_write_buffer("AUTH");
 	return 0;
 }
 
-int cap(User& user, const Command& command)
+int cap(Server& server, User& user, const Command& command)
 {
-	(void)command;
-	user.update_write_buffer("CAP");
+	(void)server;
+	if (command.get_parameters().empty()) {
+		user.reply("CAP : Error no subcommand");
+		return 1;
+	}
+
+	if (command.get_parameters()[0] == "LS")
+		user.reply("CAP * LS :");
+	else if (command.get_parameters()[0] == "LIST")
+		user.reply("CAP * LIST :");
+	else if (command.get_parameters()[0] == "REQ")
+		user.reply("CAP * ACK :");
+	else if (command.get_parameters()[0] == "END")
+		user.reply(RPL_WELCOME(server.server_name(), user.nickname()));
+	else
+		user.reply("CAP : Error invalid subcommand");
 	return 0;
 }
 
-int error(User& user, const Command& command)
+int error(Server& server, User& user, const Command& command)
 {
-	(void)command;
-	user.update_write_buffer("ERROR");
+	(void)server;
+	if (command.get_parameters().empty())
+		user.reply("ERROR :");
+	else
+		user.reply("ERROR :" + command.get_parameters()[0]);
 	return 0;
 }
 
-int nick(User& user, const Command& command)
+int nick(Server& server, User& user, const Command& command)
 {
+	(void)server;
 	if (command.get_parameters().empty()) {
 		user.reply(ERR_NONICKNAMEGIVEN);
 		return 1;
 	}
+	std::string old_nickname = user.nickname();
 	user.set_nickname(command.get_parameters()[0]);
-	user.reply(" NICK :" + user.nickname());
+//	user.reply(":" + old_nickname + user.source() + " NICK :" + user.nickname());
 	return 0;
 }
 
-int oper(User& user, const Command& command)
+int oper(Server& server, User& user, const Command& command)
 {
+	(void)server;
 	(void)command;
 	user.update_write_buffer("OPER");
 	return 0;
 }
 
-int pass(User& user, const Command& command)
+int pass(Server& server, User& user, const Command& command)
 {
+	(void)server;
 	(void)command;
 	user.update_write_buffer("PASS");
 	return 0;
 }
 
-int ping(User& user, const Command& command)
+int ping(Server& server, User& user, const Command& command)
 {
+	(void)server;
 	(void)command;
-	user.update_write_buffer("PING");
+	user.reply("PING");
 	return 0;
 }
 
-int pong(User& user, const Command& command)
+int pong(Server& server, User& user, const Command& command)
 {
+	(void)server;
 	(void)command;
-	user.update_write_buffer("PONG");
+	user.reply("PONG");
 	return 0;
 }
 
-int user(User& user, const Command& command)
+int user(Server& server, User& user, const Command& command)
 {
+	(void)server;
 	if (user.is_registered()) {
 		user.reply(ERR_ALREADYREGISTERED);
 		return 1;
@@ -103,17 +129,22 @@ int user(User& user, const Command& command)
 }
 
 
-int quit(User& user, const Command& command)
+int quit(Server& server, User& user, const Command& command)
 {
-	(void)command;
-	user.update_write_buffer("QUIT");
+	(void)server;
+	if (command.get_parameters().empty())
+		user.reply("QUIT :");
+	else
+		user.reply("QUIT :" + command.get_parameters()[0]);
+	user.disconnect();
 	return 0;
 }
 
 // Channel operations
 // ========================
-int join(User& user, const Command& command)
+int join(Server& server, User& user, const Command& command)
 {
+	(void)server;
 	(void)command;
 	user.update_write_buffer("JOINNED");
 	return 0;

@@ -8,15 +8,16 @@
 #include <limits>
 #include <csignal>
 #include "Server.h"
+#include "log.h"
 
 void initialize_signals()
 {
-	struct sigaction action;
-	std::memset(&action, 0, sizeof(action));
-	action.sa_handler = Server::signal_handler;
-	action.sa_flags = 0;
-	sigaction(SIGINT, &action, NULL);
-	sigaction(SIGTERM, &action, NULL);
+	struct sigaction sa;
+	sa.sa_handler = Server::signal_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGINT, &sa, nullptr);
+	sigaction(SIGTERM, &sa, nullptr);
 }
 
 int main(int argc, char* argv[])
@@ -49,11 +50,11 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 	else
-		std::cout << "Server is running on port " << port << std::endl;
+		CORE_DEBUG("Server is running on port %d", port);
 
 	while (server.is_running()) {
 		server.update();
 	}
 	server.cleanup();
-	std::cout << "Server stopped" << std::endl;
+	CORE_DEBUG("Server is shutting down");
 }

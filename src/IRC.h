@@ -85,9 +85,10 @@
 #define ERR_CANNOTSENDTOCHAN(channel)					(" " channel " :Cannot send to channel")
 #define ERR_TOOMANYCHANNELS(channel)					(" " channel " :You have joined too many channels")
 #define ERR_WASNOSUCHNICK(nickname)						(" " + nickname + " :There was no such nickname")
-#define ERR_NOORIGIN									(" :No origin specified")
+#define ERR_NOORIGIN									(" :No origin specified") // 409
+#define ERR_INVALIDCAPCMD(nick, command)				(" 410 " + nick + " " + command + " :Invalid CAP command")
 #define ERR_INPUTTOOLONG								(" :Input too long")
-#define ERR_UNKNOWNCOMMAND(command)						(" " command " :Unknown command")
+#define ERR_UNKNOWNCOMMAND(command)						(" " + command + " :Unknown command")
 #define ERR_NOMOTD										(" :MOTD File is missing")
 #define ERR_NONICKNAMEGIVEN								(" :No nickname given")
 #define ERR_ERRONEUSNICKNAME(nickname)					(" " nickname " :Erroneous nickname")

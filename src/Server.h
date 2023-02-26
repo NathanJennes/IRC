@@ -55,7 +55,7 @@ private:
 	static const int		m_server_backlog;
 	static const int		m_timeout;
 
-	typedef int (*function)(User&, const Command&);
+	typedef int (*function)(Server&, User&, const Command&);
 
 	std::map<std::string, function>	m_commands;
 

@@ -39,7 +39,7 @@ public:
 	// setters
 	void	set_nickname(const std::string& nickname)	{ m_nickname = nickname; }
 	void	set_username(const std::string& username)	{ m_username = username; }
-	void	set_realname(const std::string& realnam)	{ m_realname = realnam; }
+	void	set_realname(const std::string& realname)	{ m_realname = realname; }
 	void	set_server_name(const std::string& name)	{ m_server_name = name; }
 
 	void	set_is_afk(bool is_afk)						{ m_is_afk = is_afk; }

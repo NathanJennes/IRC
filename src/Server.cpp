@@ -158,7 +158,7 @@ void Server::handle_messages()
 {
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
 	{
-		if (!user->is_readable() || user->is_disconnected())
+		if (user->read_buffer().empty() || user->is_disconnected())
 			continue ;
 
 		std::string	command_str = user->get_next_command_str();
@@ -173,12 +173,11 @@ void Server::handle_messages()
 
 void Server::execute_command(User &user, const Command &cmd)
 {
-	std::cout << "Executing command: " << cmd.get_command() << std::endl;
 	CommandIterator it = m_commands.find(cmd.get_command());
 	if (it != m_commands.end())
-		it->second(user, cmd);
+		it->second(*this, user, cmd);
 	else
-		std::cerr << "Error: command not found" << std::endl;
+		user.reply(ERR_UNKNOWNCOMMAND(cmd.get_command()));
 }
 
 bool Server::initialize_config_file()
@@ -203,7 +202,7 @@ void Server::disconnect_users()
 	for (size_t i = 0; i < m_users.size(); ++i)
 	{
 		if (m_users[i].is_disconnected()) {
-			std::cout << RPL_LOGGEDOUT(m_users[i].name_on_host());
+			CORE_DEBUG("%s disconnected\n\r", m_users[i].source().c_str());
 			close(m_users[i].fd());
 			// TODO: save user data
 			m_users.erase(m_users.begin() + (long)i);

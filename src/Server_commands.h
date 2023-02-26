@@ -9,58 +9,58 @@
 #include "Command.h"
 
 // Connection messages
-int auth(User& user, const Command& command);
-int cap(User& user, const Command& command);
-int error(User& user, const Command& command);
-int nick(User& user, const Command& command);
-int user(User& user, const Command& command);
-int oper(User& user, const Command& command);
-int pass(User& user, const Command& command);
-int ping(User& user, const Command& command);
-int pong(User& user, const Command& command);
-int quit(User& user, const Command& command);
+int auth(Server& server, User& user, const Command& command);
+int cap(Server& server, User& user, const Command& command);
+int error(Server& server, User& user, const Command& command);
+int nick(Server& server, User& user, const Command& command);
+int user(Server& server, User& user, const Command& command);
+int oper(Server& server, User& user, const Command& command);
+int pass(Server& server, User& user, const Command& command);
+int ping(Server& server, User& user, const Command& command);
+int pong(Server& server, User& user, const Command& command);
+int quit(Server& server, User& user, const Command& command);
 
 // Channel operations
-int join(User& user, const Command& command);
-int part(User& user, const Command& command);
-int topic(User& user, const Command& command);
-int names(User& user, const Command& command);
-int list(User& user, const Command& command);
-int invite(User& user, const Command& command);
-int kick(User& user, const Command& command);
+int join(Server& server, User& user, const Command& command);
+int part(Server& server, User& user, const Command& command);
+int topic(Server& server, User& user, const Command& command);
+int names(Server& server, User& user, const Command& command);
+int list(Server& server, User& user, const Command& command);
+int invite(Server& server, User& user, const Command& command);
+int kick(Server& server, User& user, const Command& command);
 
 // server queries and commands
-int motd(User& user, const Command& command);
-int version(User& user, const Command& command);
-int admin(User& user, const Command& command);
-int connect(User& user, const Command& command);
-int luser(User& user, const Command& command);
-int time_cmd(User& user, const Command& command);
-int stats(User& user, const Command& command);
-int help(User& user, const Command& command);
-int info(User& user, const Command& command);
-int mode(User& user, const Command& command);
+int motd(Server& server, User& user, const Command& command);
+int version(Server& server, User& user, const Command& command);
+int admin(Server& server, User& user, const Command& command);
+int connect(Server& server, User& user, const Command& command);
+int luser(Server& server, User& user, const Command& command);
+int time_cmd(Server& server, User& user, const Command& command);
+int stats(Server& server, User& user, const Command& command);
+int help(Server& server, User& user, const Command& command);
+int info(Server& server, User& user, const Command& command);
+int mode(Server& server, User& user, const Command& command);
 
 // sending messages
-int privmsg(User& user, const Command& command);
-int notice(User& user, const Command& command);
+int privmsg(Server& server, User& user, const Command& command);
+int notice(Server& server, User& user, const Command& command);
 
 // user based queries
-int who(User& user, const Command& command);
-int whois(User& user, const Command& command);
-int whowas(User& user, const Command& command);
+int who(Server& server, User& user, const Command& command);
+int whois(Server& server, User& user, const Command& command);
+int whowas(Server& server, User& user, const Command& command);
 
 // operator messages
-int kill(User& user, const Command& command);
-int reash(User& user, const Command& command);
-int restart(User& user, const Command& command);
-int quit(User& user, const Command& command);
+int kill(Server& server, User& user, const Command& command);
+int reash(Server& server, User& user, const Command& command);
+int restart(Server& server, User& user, const Command& command);
+int quit(Server& server, User& user, const Command& command);
 
 // service messages
-int away(User& user, const Command& command);
-int links(User& user, const Command& command);
-int userhost(User& user, const Command& command);
-int wallops(User& user, const Command& command);
+int away(Server& server, User& user, const Command& command);
+int links(Server& server, User& user, const Command& command);
+int userhost(Server& server, User& user, const Command& command);
+int wallops(Server& server, User& user, const Command& command);
 
 
 #endif //SERVER_COMMANDS_H
