@@ -7,144 +7,168 @@
 #include "Command.h"
 #include "Server.h"
 
-int auth(Server& server, User& user, const Command& command)
+int auth(User& user, const Command& command)
 {
-	(void)server;
 	(void)command;
 	user.update_write_buffer("AUTH");
 	return 0;
 }
 
-int cap(Server& server, User& user, const Command& command)
+int cap(User& user, const Command& command)
 {
-	(void)server;
 	if (command.get_parameters().empty()) {
-		user.reply("CAP : Error no subcommand");
+		Server::reply(user, "CAP : Error no subcommand");
 		return 1;
 	}
 
-	if (command.get_parameters()[0] == "LS")
-		user.reply("CAP * LS :");
-	else if (command.get_parameters()[0] == "LIST")
-		user.reply("CAP * LIST :");
-	else if (command.get_parameters()[0] == "REQ")
-		user.reply("CAP * ACK :");
-	else if (command.get_parameters()[0] == "END")
-		user.reply(RPL_WELCOME(server.server_name(), user.nickname()));
-	else
-		user.reply("CAP : Error invalid subcommand");
+	if (command.get_parameters()[0] == "LS") {
+		Server::reply(user, "CAP * LS :");
+		if (!user.is_registered())
+			user.set_is_negociating_capabilities(true);
+	}
+	else if (command.get_parameters()[0] == "LIST") {
+		Server::reply(user, "CAP * LIST :");
+		if (!user.is_registered())
+			user.set_is_negociating_capabilities(true);
+	}
+	else if (command.get_parameters()[0] == "REQ") {
+		Server::reply(user, "CAP * ACK :");
+		if (!user.is_registered())
+			user.set_is_negociating_capabilities(true);
+	}
+	else if (command.get_parameters()[0] == "END") {
+		user.set_is_negociating_capabilities(false);
+		if (!user.is_registered())
+			user.try_finish_registration();
+	} else
+		Server::reply(user, "CAP : Error invalid subcommand");
 	return 0;
 }
 
-int error(Server& server, User& user, const Command& command)
+int error(User& user, const Command& command)
 {
-	(void)server;
 	if (command.get_parameters().empty())
-		user.reply("ERROR :");
+		Server::reply(user, "ERROR :");
 	else
-		user.reply("ERROR :" + command.get_parameters()[0]);
+		Server::reply(user, "ERROR :" + command.get_parameters()[0]);
 	return 0;
 }
 
-int nick(Server& server, User& user, const Command& command)
+int nick(User& user, const Command& command)
 {
-	(void)server;
 	if (command.get_parameters().empty()) {
-		user.reply(ERR_NONICKNAMEGIVEN);
+		Server::reply(user, ERR_NONICKNAMEGIVEN);
 		return 1;
 	}
-	std::string old_nickname = user.nickname();
+
+	if (user.is_registered())
+		Server::reply(user, user.source() + " NICK :" + command.get_parameters()[0]);
 	user.set_nickname(command.get_parameters()[0]);
-//	user.reply(":" + old_nickname + user.source() + " NICK :" + user.nickname());
 	return 0;
 }
 
-int oper(Server& server, User& user, const Command& command)
+int oper(User& user, const Command& command)
 {
-	(void)server;
-	(void)command;
-	user.update_write_buffer("OPER");
+	// https://modern.ircdocs.horse/#oper-message
+	// Command: OPER
+	// Parameters: <name> <password>
+
+	if (command.get_parameters().size() < 2) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(user.nickname(), command.get_command()));
+		return 1;
+	}
+
+	// TODO: implement
+
 	return 0;
 }
 
-int pass(Server& server, User& user, const Command& command)
+int pass(User& user, const Command& command)
 {
-	(void)server;
 	(void)command;
 	user.update_write_buffer("PASS");
 	return 0;
 }
 
-int ping(Server& server, User& user, const Command& command)
+int ping(User& user, const Command& command)
 {
-	(void)server;
-	(void)command;
-	user.reply("PING");
-	return 0;
-}
-
-int pong(Server& server, User& user, const Command& command)
-{
-	(void)server;
-	(void)command;
-	user.reply("PONG");
-	return 0;
-}
-
-int user(Server& server, User& user, const Command& command)
-{
-	(void)server;
-	if (user.is_registered()) {
-		user.reply(ERR_ALREADYREGISTERED);
-		return 1;
-	}
+	// https://modern.ircdocs.horse/#ping-message
+	// Command: PING
+	// Parameters: <token>
 
 	if (command.get_parameters().empty()) {
-		user.reply(ERR_NEEDMOREPARAMS(command.get_command(), "Not enough parameters"));
-		user.set_username(user.nickname());
-		user.set_realname(user.nickname());
+		Server::reply(user, ERR_NEEDMOREPARAMS(user.nickname(), command.get_command()));
 		return 1;
 	}
 
-	bool is_valid = true;
-	if (command.get_parameters().size() < 4) {
-		user.reply(ERR_NEEDMOREPARAMS(command.get_command(), "username too long"));
-		user.set_realname(user.nickname());
-		is_valid = false;
-	}
-	if (command.get_parameters()[0].length() < 2) {
-		user.reply(ERR_NEEDMOREPARAMS(command.get_command(), "username too short"));
-		user.set_username(user.nickname());
-		is_valid = false;
-	}
-
-	if (is_valid && command.get_parameters().size() == 4) {
-		user.set_username(command.get_parameters()[0]);
-		user.set_realname(command.get_parameters()[3]);
-	}
-
-	user.set_registered();
-	CORE_DEBUG("User %s registered", user.nickname().c_str());
+	// Simply reply with a PONG command and pass through the given token
+	Server::reply(user, "PONG " + Server::server_name() + " " + command.get_parameters()[0]);
 	return 0;
 }
 
-
-int quit(Server& server, User& user, const Command& command)
+int pong(User& user, const Command& command)
 {
-	(void)server;
+	// https://modern.ircdocs.horse/#pong-message
+	// Command: PONG
+	// Parameters: [<server>] <token>
+
+	// The spec specifies no error reply in this case,
+	// so we simply ignore it
 	if (command.get_parameters().empty())
-		user.reply("QUIT :");
+		return 0;
+
+	// In the case where no <server> is specified (i.e. the pong came from a client)
+	if (command.get_parameters().size() == 1) {
+		if (command.get_parameters()[0] == user.ping_token())
+			user.recalculate_ping();
+	}
+
+	// Otherwise if <server> is specified (i.e. the pong came from a server)
+	else if (command.get_parameters().size() == 2) {
+		CORE_DEBUG("Got PONG command with a <server> parameter. We currently ignore these commands.");
+	}
+
+	return 0;
+}
+
+int user(User& user, const Command& command)
+{
+	if (user.is_registered()) {
+		Server::reply(user, ERR_ALREADYREGISTERED);
+		return 1;
+	}
+
+	if (command.get_parameters().size() < 4) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(command.get_command(), "username too long"));
+		return 1;
+	}
+
+	if (command.get_parameters()[0].length() < 1) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(command.get_command(), "username too short"));
+		return 1;
+	}
+
+	user.set_username(command.get_parameters()[0]);
+	user.set_realname(command.get_parameters()[3]);
+	if (!user.is_registered())
+		user.try_finish_registration();
+	return 0;
+}
+
+int quit(User& user, const Command& command)
+{
+	if (command.get_parameters().empty())
+		Server::reply(user, "QUIT :");
 	else
-		user.reply("QUIT :" + command.get_parameters()[0]);
+		Server::reply(user, "QUIT :" + command.get_parameters()[0]);
 	user.disconnect();
 	return 0;
 }
 
 // Channel operations
 // ========================
-int join(Server& server, User& user, const Command& command)
+int join(User& user, const Command& command)
 {
-	(void)server;
 	(void)command;
 	user.update_write_buffer("JOINNED");
 	return 0;

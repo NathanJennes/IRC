@@ -13,54 +13,67 @@
 #include "Channel.h"
 #include "Command.h"
 
+#define SERVER_VERSION "0.1"
+
 class Server
 {
 public:
-	bool initialize(uint16_t port);
-	bool update();
-	void cleanup();
-	void send_to_client(const User& user, const std::string& message);
+	static bool initialize(uint16_t port);
+	static bool update();
+	static void shutdown();
 
 	static void signal_handler(int signal);
+	static void reply(User& user, const std::string& msg);
+	static void welcome(User& user);
 
 	// getters
-	const std::string&	server_name()	const { return m_server_name; }
-	bool 				is_running()	const { return m_is_running; }
+	static const std::string&	network_name()			{ return m_network_name; }
+	static const std::string&	server_name()			{ return m_server_name; }
+	static bool 				is_running()			{ return m_is_running; }
+	static const std::string&	creation_date()			{ return m_creation_date; }
+	static const std::string&	user_modes()			{ return m_user_modes; }
+	static const std::string&	channel_modes()			{ return m_channel_modes; }
+	static const std::string&	channel_modes_param()	{ return m_channel_modes_parameter; }
 
 	// setters
-	void stop_server() 										{ m_is_running = false; }
-	void set_server_name(const std::string& server_name)	{ m_server_name = server_name; }
+	static void	stop_server()									{ m_is_running = false; }
+	static void	set_server_name(const std::string& server_name)	{ m_server_name = server_name; }
 
 private:
 	// Member functions
-	bool initialize_config_file();
-	void accept_new_connections();
-	void poll_events();
-	void handle_events();
-	void handle_messages();
-	void execute_command(User& user, const Command& command);
-	void disconnect_users();
+	static bool	initialize_config_file();
+	static void	accept_new_connections();
+	static void	poll_events();
+	static void	handle_events();
+	static void	handle_messages();
+	static void	execute_command(User& user, const Command& command);
+	static void	disconnect_users();
 
-	void initialize_command_functions();
+	static void	initialize_command_functions();
 
 	// Member variables
-	std::string				m_server_name;
-	static bool				m_is_running;
-	bool 					m_is_readonly;
-	int						m_server_socket;
+	static std::string			m_network_name;
+	static std::string			m_server_name;
+	static int					m_server_socket;
 
-	std::vector<User>		m_users;
-	std::vector<Channel>	m_channels;
+	static std::vector<User>	m_users;
+	static std::vector<Channel>	m_channels;
 
-	static const int		m_server_backlog;
-	static const int		m_timeout;
+	static bool					m_is_running;
+	static bool					m_is_readonly;
 
-	typedef int (*function)(Server&, User&, const Command&);
+	static const int			m_server_backlog;
+	static const int			m_timeout;
+	static const std::string	m_creation_date;
+	static const std::string	m_user_modes;
+	static const std::string	m_channel_modes;
+	static const std::string	m_channel_modes_parameter;
 
-	std::map<std::string, function>	m_commands;
+	typedef int (*command_function)(User&, const Command&);
+	typedef std::vector<User>::iterator							UserIterator;
+	typedef std::map<std::string, command_function>::iterator	CommandIterator;
 
-	typedef std::vector<User>::iterator					UserIterator;
-	typedef std::map<std::string, function>::iterator	CommandIterator;
+	static std::map<std::string, command_function>	m_commands;
 };
 
 #endif //SERVER_H

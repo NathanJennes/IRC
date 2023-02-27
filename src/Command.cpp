@@ -3,7 +3,6 @@
 //
 
 #include "Command.h"
-#include "IRC.h"
 #include "log.h"
 #include "Utils.h"
 

@@ -5,21 +5,19 @@
 #ifndef IRC_H
 #define IRC_H
 
-#include "User.h"
+#include "Server.h"
 
-#define SERVER_VERSION "0.0.1"
-#define MAX_MESSAGE_LENGTH 512
+#define SOURCE(numeric, nick) (":" + Server::server_name() + " " + numeric + " " + nick)
 
 // RPL CODES
-#define RPL_WELCOME(networkname, nick)		(" :Welcome to the " + networkname + " Network, " + nick)
-#define RPL_YOURHOST(servename, version)	(" :Your host is " + servename + ", running version " SERVER_VERSION)
-#define RPL_CREATED(date) 					(" :This server was created " date)
+#define RPL_WELCOME(nick)										(SOURCE("001", nick) + " :Welcome to the " + Server::network_name() + " Network, " + nick)
+#define RPL_YOURHOST(nick)										(SOURCE("002", nick) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
+#define RPL_CREATED(nick)										(SOURCE("003", nick) + " :This server was created " + Server::creation_date())
+#define RPL_MYINFO(nick)										(SOURCE("004", nick) + " " + Server::server_name() + " " SERVER_VERSION " " + Server::user_modes() + " " + Server::channel_modes() +  " " + Server::channel_modes_param())
+#define RPL_ISUPPORT(nick, tokens)								(SOURCE("005", nick) + " " + tokens +" :are supported by this server")
 
-#define RPL_MYINFO(servename, version, usermodes, channelmodes, chanparam)	(" " + servename + " " SERVER_VERSION " " usermodes " " channelmodes " " chanparam)
-
-#define RPL_ISUPPORT														("<TOKENS> :are supported by this server")
 #define RPL_BOUNCE	// RECOMMENDED BY THE RFC TO NOT BE USED
-#define RPL_UMODEIS(set_usermodes)											(" " set_usermodes)
+#define RPL_UMODEIS(set_usermodes)								(" " set_usermodes)
 
 #define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)				(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers")
 #define RPL_LUSEROP(nbr_opers)												(" " nbr_opers " :operator(s) online")
@@ -97,7 +95,7 @@
 #define ERR_NOTONCHANNEL(channel)						(" " channel " :You're not on that channel")
 #define ERR_USERONCHANNEL(nickname, channel)			(" " + nickname + " " channel " :is already on channel")
 #define ERR_NOTREGISTERED								(" :You have not registered")
-#define ERR_NEEDMOREPARAMS(command, msg)				(" " + command + " :" msg)
+#define ERR_NEEDMOREPARAMS(nick, command)			(SOURCE("461", nick) + " " + command + " :Not enough parameters")
 #define ERR_ALREADYREGISTERED							(" :You are already registered")
 #define ERR_PASSWDMISMATCH								(" :Password incorrect")
 #define ERR_YOUREBANNEDCREEP							(" :You are banned from this server")

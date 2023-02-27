@@ -4,7 +4,6 @@
 
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <cstring>
 #include <arpa/inet.h>
 #include <cerrno>
@@ -17,9 +16,22 @@
 #include "Server_commands.h"
 #include "Command.h"
 
-const int	Server::m_server_backlog = 10;
-const int	Server::m_timeout = 10;
-bool		Server::m_is_running = true;
+const int			Server::m_server_backlog = 10;
+const int			Server::m_timeout = 10;
+const std::string	Server::m_creation_date = "2021-02-16 23:00:00";
+const std::string	Server::m_user_modes = "none";
+const std::string	Server::m_channel_modes = "none";
+const std::string	Server::m_channel_modes_parameter = "none";
+
+std::string			Server::m_network_name = "GigaChat";
+std::string			Server::m_server_name = "localhost";
+int					Server::m_server_socket;
+bool				Server::m_is_running = true;
+bool				Server::m_is_readonly = true;
+
+std::vector<User>								Server::m_users;
+std::vector<Channel>							Server::m_channels;
+std::map<std::string, Server::command_function>	Server::m_commands;
 
 void Server::signal_handler(int signal)
 {
@@ -29,17 +41,17 @@ void Server::signal_handler(int signal)
 
 bool Server::initialize(uint16_t port)
 {
-	m_server_name = "IRC Server";
+	m_network_name = "IRC Server";
 
 	m_server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_server_socket < 0) {
-		std::cerr << "Error: socket: " << strerror(errno) << std::endl;
+		CORE_ERROR("socket: %s", strerror(errno));
 		return false;
 	}
 
 	int is_active = 0;
 	if (setsockopt(m_server_socket, SOL_SOCKET, SO_REUSEADDR, &is_active, sizeof(int)) == -1) {
-		std::cerr << "Error: setsockopt: " << strerror(errno) << std::endl;
+		CORE_ERROR("setsockopt: %s", strerror(errno));
 		return false;
 	}
 
@@ -49,17 +61,17 @@ bool Server::initialize(uint16_t port)
 	params.sin_port = htons(port);
 
 	if (bind(m_server_socket, (const struct sockaddr *) &params, sizeof (params)) < 0) {
-		std::cerr << "Error: bind: " << strerror(errno) << std::endl;
+		CORE_ERROR("bind: %s", strerror(errno));
 		return false;
 	}
 
 	if (fcntl(m_server_socket, F_SETFL, O_NONBLOCK) < 0) {
-		std::cerr << "Error: fcntl: " << strerror(errno) << std::endl;
+		CORE_ERROR("fcntl: %s", strerror(errno));
 		return false;
 	}
 
 	if (listen(m_server_socket, m_server_backlog)) {
-		std::cerr << "Error: listen: " << strerror(errno) << std::endl;
+		CORE_ERROR("listen: %s", strerror(errno));
 		return false;
 	}
 
@@ -69,12 +81,27 @@ bool Server::initialize(uint16_t port)
 	m_is_readonly = false;
 
 	if (!initialize_config_file()) {
-		std::cerr << "Error: " << strerror(errno) << std::endl;
-		std::cerr << "Server is in readonly mode" << std::endl;
+		CORE_WARN("Server is in readonly mode");
 		m_is_readonly = true;
 	}
 
 	return true;
+}
+
+void Server::initialize_command_functions()
+{
+	m_commands.insert(std::make_pair("AUTH", auth));
+	m_commands.insert(std::make_pair("CAP", cap));
+	m_commands.insert(std::make_pair("ERROR", error));
+	m_commands.insert(std::make_pair("NICK", nick));
+	m_commands.insert(std::make_pair("OPER", oper));
+	m_commands.insert(std::make_pair("PASS", pass));
+	m_commands.insert(std::make_pair("PING", ping));
+	m_commands.insert(std::make_pair("PONG", pong));
+	m_commands.insert(std::make_pair("USER", user));
+	m_commands.insert(std::make_pair("QUIT", quit));
+
+	m_commands.insert(std::make_pair("JOIN", join));
 }
 
 bool Server::update()
@@ -100,7 +127,7 @@ void Server::poll_events()
 
 	int poll_count = poll(pollfds.data(), (unsigned int)pollfds.size(), m_timeout);
 	if (poll_count < 0 && errno != EINTR) {
-		std::cerr << "Error: poll: " << strerror(errno) << std::endl;
+		CORE_ERROR("poll: %s", strerror(errno));
 	}
 
 	i = 0;
@@ -137,7 +164,7 @@ void Server::accept_new_connections()
 
 	int poll_count = poll(&pollfd, 1, m_timeout);
 	if (poll_count < 0 && errno != EINTR)
-		std::cerr << "Error: poll: " << strerror(errno) << std::endl;
+		CORE_ERROR("poll: %s", strerror(errno));
 
 	if ((pollfd.revents & POLLIN) == 0)
 		return ;
@@ -147,11 +174,11 @@ void Server::accept_new_connections()
 
 	int new_client_socket_fd = accept(m_server_socket, reinterpret_cast<sockaddr *>(&client), &len);
 	if (new_client_socket_fd <= 0)
-		std::cerr << "Error: accept: " << strerror(errno) << std::endl;
+		CORE_ERROR("accept: %s", strerror(errno));
 
-	std::cout << "Incomming connexion from :" << inet_ntoa(client.sin_addr) << ":" << ntohs(client.sin_port) << std::endl;
+	CORE_INFO("Incomming connexion from : %s:%u", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
 
-	m_users.push_back(User(new_client_socket_fd));
+	m_users.push_back(User(new_client_socket_fd, inet_ntoa(client.sin_addr), ntohs(client.sin_port)));
 }
 
 void Server::handle_messages()
@@ -162,7 +189,6 @@ void Server::handle_messages()
 			continue ;
 
 		std::string	command_str = user->get_next_command_str();
-		CORE_DEBUG("Server command str: [%s]", command_str.c_str());
 		Command		command(command_str);
 
 		command.print();
@@ -171,26 +197,32 @@ void Server::handle_messages()
 	}
 }
 
+void Server::reply(User& user, const std::string &msg)
+{
+	CORE_TRACE("REPLYING TO %s:%d [%s]", user.ip().c_str(), user.port(), msg.c_str());
+	user.update_write_buffer(msg + "\r\n");
+}
+
 void Server::execute_command(User &user, const Command &cmd)
 {
 	CommandIterator it = m_commands.find(cmd.get_command());
 	if (it != m_commands.end())
-		it->second(*this, user, cmd);
+		it->second(user, cmd);
 	else
-		user.reply(ERR_UNKNOWNCOMMAND(cmd.get_command()));
+		reply(user, ERR_UNKNOWNCOMMAND(cmd.get_command()));
 }
 
 bool Server::initialize_config_file()
 {
 	std::fstream banlist_file("banlist.txt", std::ios::in | std::ios::out | std::ios::app);
 	if (!banlist_file.is_open()) {
-		std::cerr << "Error: banlist.txt: " << strerror(errno) << std::endl;
+		CORE_ERROR("banlist.txt: %s", strerror(errno));
 		return false;
 	}
 
 	std::fstream whitelist_file("whitelist.txt", std::ios::in | std::ios::out | std::ios::app);
 	if (!whitelist_file.is_open()) {
-		std::cerr << "Error: whitelist.txt: " << strerror(errno) << std::endl;
+		CORE_ERROR("whitelist.txt: %s", strerror(errno));
 		return false;
 	}
 
@@ -202,55 +234,25 @@ void Server::disconnect_users()
 	for (size_t i = 0; i < m_users.size(); ++i)
 	{
 		if (m_users[i].is_disconnected()) {
-			CORE_DEBUG("%s disconnected\n\r", m_users[i].source().c_str());
+			CORE_INFO("%s disconnected", m_users[i].nickname().c_str());
 			close(m_users[i].fd());
-			// TODO: save user data
 			m_users.erase(m_users.begin() + (long)i);
 		}
 	}
 }
 
-void Server::cleanup()
+void Server::shutdown()
 {
-	std::cout << "Cleaning up" << std::endl;
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
 		close(user->fd());
 
 	close(m_server_socket);
 }
 
-void Server::send_to_client(const User& user, const std::string &message)
+void Server::welcome(User &user)
 {
-	ssize_t total_bytes_write = 0;
-
-	while (total_bytes_write < MAX_MESSAGE_LENGTH) {
-		ssize_t bytes_write = write(user.fd(), message.c_str() + total_bytes_write, static_cast<size_t>(MAX_MESSAGE_LENGTH - total_bytes_write));
-
-		if (bytes_write < 0 && errno != EAGAIN)
-			std::cerr << "Error: " << std::strerror(errno) << std::endl;
-
-		if (bytes_write <= 0)
-			break ;
-
-		total_bytes_write += bytes_write;
-	}
-	if (total_bytes_write < (ssize_t)message.size())
-		std::cerr << "Error: write: message truncated" << std::endl;
-}
-
-void Server::initialize_command_functions()
-{
-	m_commands.insert(std::make_pair("AUTH", auth));
-	m_commands.insert(std::make_pair("CAP", cap));
-	m_commands.insert(std::make_pair("ERROR", error));
-	m_commands.insert(std::make_pair("NICK", nick));
-	m_commands.insert(std::make_pair("OPER", oper));
-	m_commands.insert(std::make_pair("PASS", pass));
-	m_commands.insert(std::make_pair("PING", ping));
-	m_commands.insert(std::make_pair("PONG", pong));
-	m_commands.insert(std::make_pair("USER", user));
-	m_commands.insert(std::make_pair("QUIT", quit));
-
-	m_commands.insert(std::make_pair("JOIN", join));
-
+	reply(user, RPL_WELCOME(user.nickname()));
+	reply(user, RPL_YOURHOST(user.nickname()));
+	reply(user, RPL_CREATED(user.nickname()));
+	reply(user, RPL_MYINFO(user.nickname()));
 }

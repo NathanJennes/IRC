@@ -15,11 +15,11 @@ void test_rpl()
 	std::string nick = "cybattis";
 	std::string server_name = "FT_IRC";
 
-	std::cout << RPL_WELCOME(server_name, nick);
-	std::cout << RPL_YOURHOST(server_name, "0.1");
+//	std::cout << RPL_WELCOME(server_name, nick);
+//	std::cout << RPL_YOURHOST(server_name, "0.1");
 	std::cout << RPL_CREATED("2023-02-17");
-	std::cout << RPL_MYINFO(server_name, "0.1", "o", "o", "o");
-	std::cout << RPL_ISUPPORT;
+//	std::cout << RPL_MYINFO(server_name, "0.1", "o", "o", "o");
+//	std::cout << RPL_ISUPPORT;
 	std::cout << RPL_UMODEIS("o");
 	std::cout << RPL_LUSERCLIENT("1", "0", "1");
 	std::cout << RPL_LUSEROP("1");

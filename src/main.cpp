@@ -23,38 +23,35 @@ void initialize_signals()
 int main(int argc, char* argv[])
 {
 	if (argc != 3) {
-		std::cout << "Error: wrong number of arguments." << std::endl;
-		std::cout << "Usage: ./irc_server <port> <password>" << std::endl;
+		CORE_ERROR("Error: wrong number of arguments.\nUsage: ./irc_server <port> <password>");
 		return 1;
 	}
 
 	int port = std::atoi(argv[1]);
 	if (std::strlen(argv[1]) == 0 || port > std::numeric_limits<uint16_t>::max() || port <= 0) {
-		std::cout << "Error: wrong port." << std::endl;
-		std::cout << "Port need to be between 0 and 65535" << std::endl;
+		CORE_ERROR("Error: wrong port. Port need to be between 0 and 65535");
 		return 1;
 	}
 
 	if (std::strlen(argv[2]) == 0) {
-		std::cout << "Error: wrong password." << std::endl;
-		std::cout << "Usage: ./irc_server <port> <password>" << std::endl;
+		CORE_ERROR("Error: Password can't be empty.\nUsage: ./irc_server <port> <password>");
 		return 1;
 	}
 
 	initialize_signals();
 
-	Server server;
-	if (!server.initialize(static_cast<uint16_t>(port))) {
-		std::cout << "Error: Couldn't initialize server" << std::endl;
-		server.cleanup();
+	if (!Server::initialize(static_cast<uint16_t>(port))) {
+		CORE_ERROR("Couldn't initialize server");
+		Server::shutdown();
 		return 1;
 	}
-	else
-		CORE_DEBUG("Server is running on port %d", port);
+	CORE_INFO("Server is running on port %d", port);
 
-	while (server.is_running()) {
-		server.update();
+	while (Server::is_running()) {
+		Server::update();
 	}
-	server.cleanup();
-	CORE_DEBUG("Server is shutting down");
+	Server::shutdown();
+
+	std::cout << std::endl;
+	CORE_INFO("Server shutdown");
 }
