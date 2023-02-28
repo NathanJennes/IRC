@@ -6,6 +6,7 @@
 #include "IRC.h"
 #include "Command.h"
 #include "Server.h"
+#include "Message.h"
 
 int auth(User& user, const Command& command)
 {
@@ -56,10 +57,29 @@ int error(User& user, const Command& command)
 
 int nick(User& user, const Command& command)
 {
+	// https://modern.ircdocs.horse/#nick-message
+	//	Command: NICK
+	//	Parameters: <nickname>
+
 	if (command.get_parameters().empty()) {
-		Server::reply(user, ERR_NONICKNAMEGIVEN);
+		Server::reply(user, ERR_NONICKNAMEGIVEN(user.nickname()));
 		return 1;
 	}
+
+	if (command.get_parameters()[0] == user.nickname())
+		return 0;
+
+	// TODO: check if nickname is valid
+	if (command.get_parameters()[0].size() > 9) {
+		Server::reply(user, ERR_ERRONEUSNICKNAME(user.nickname(), command.get_parameters()[0]));
+		return 1;
+	}
+
+	// TODO: check if nickname is already taken
+//	if (Server::user_exists(command.get_parameters()[0])) {
+//		Server::reply(user, ERR_NICKNAMEINUSE(user.nickname(), command.get_parameters()[0]));
+//		return 1;
+//	}
 
 	if (user.is_registered())
 		Server::reply(user, user.source() + " NICK :" + command.get_parameters()[0]);

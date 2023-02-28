@@ -24,7 +24,6 @@ public:
 
 	static void signal_handler(int signal);
 	static void reply(User& user, const std::string& msg);
-	static void welcome(User& user);
 
 	// getters
 	static const std::string&	network_name()			{ return m_network_name; }

@@ -88,14 +88,18 @@
 #define ERR_INPUTTOOLONG								(" :Input too long")
 #define ERR_UNKNOWNCOMMAND(command)						(" " + command + " :Unknown command")
 #define ERR_NOMOTD										(" :MOTD File is missing")
-#define ERR_NONICKNAMEGIVEN								(" :No nickname given")
-#define ERR_ERRONEUSNICKNAME(nickname)					(" " nickname " :Erroneous nickname")
-#define ERR_NICKNAMEINUSE(nickname)						(" " + nickname + " :Nickname is already in use")
+
+#define ERR_NONICKNAMEGIVEN(nick)						(SOURCE("431", nick) + " :No nickname given")
+#define ERR_ERRONEUSNICKNAME(nick, new_nick)			(SOURCE("431", nick) + " " + new_nick + " :Erroneous nickname")
+#define ERR_NICKNAMEINUSE(nick, new_nick)				(SOURCE("432", nick) + " " + new_nick + " :Nickname is already in use")
+
 #define ERR_USERNOTINCHANNEL(nickname, channel)			(" " + nickname + " " channel " :They aren't on that channel")
 #define ERR_NOTONCHANNEL(channel)						(" " channel " :You're not on that channel")
 #define ERR_USERONCHANNEL(nickname, channel)			(" " + nickname + " " channel " :is already on channel")
 #define ERR_NOTREGISTERED								(" :You have not registered")
-#define ERR_NEEDMOREPARAMS(nick, command)			(SOURCE("461", nick) + " " + command + " :Not enough parameters")
+
+#define ERR_NEEDMOREPARAMS(nick, command)				(SOURCE("461", nick) + " " + command + " :Not enough parameters")
+
 #define ERR_ALREADYREGISTERED							(" :You are already registered")
 #define ERR_PASSWDMISMATCH								(" :Password incorrect")
 #define ERR_YOUREBANNEDCREEP							(" :You are banned from this server")

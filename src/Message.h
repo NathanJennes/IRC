@@ -2,8 +2,8 @@
 // Created by Cyril Battistolo on 25/02/2023.
 //
 
-#ifndef SERVER_COMMANDS_H
-#define SERVER_COMMANDS_H
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
 #include "User.h"
 #include "Command.h"
@@ -62,5 +62,15 @@ int links(User& user, const Command& command);
 int userhost(User& user, const Command& command);
 int wallops(User& user, const Command& command);
 
+// ====================
+// Message_utils
+// ====================
 
-#endif //SERVER_COMMANDS_H
+namespace Message
+{
+
+void welcome(User &user);
+
+}
+
+#endif //MESSAGE_H

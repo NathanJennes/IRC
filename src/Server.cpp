@@ -13,7 +13,7 @@
 #include "log.h"
 #include "IRC.h"
 #include "Server.h"
-#include "Server_commands.h"
+#include "Message.h"
 #include "Command.h"
 
 const int			Server::m_server_backlog = 10;
@@ -247,12 +247,4 @@ void Server::shutdown()
 		close(user->fd());
 
 	close(m_server_socket);
-}
-
-void Server::welcome(User &user)
-{
-	reply(user, RPL_WELCOME(user.nickname()));
-	reply(user, RPL_YOURHOST(user.nickname()));
-	reply(user, RPL_CREATED(user.nickname()));
-	reply(user, RPL_MYINFO(user.nickname()));
 }

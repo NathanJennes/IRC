@@ -6,15 +6,16 @@
 #include <cerrno>
 #include <cstring>
 #include <sys/time.h>
-#include "Server.h"
 #include "User.h"
 #include "log.h"
+#include "Message.h"
 
 User::User(int fd, const std::string& ip, uint16_t port) :
 		m_nickname("*"), m_ip(ip), m_port(port), m_fd(fd),
 		m_is_afk(false), m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
-		m_is_registered(false), m_is_negociating_capabilities(false)
+		m_is_registered(false), m_is_negociating_capabilities(false),
+		m_last_ping_timestamp(), m_ping()
 {
 }
 
@@ -95,7 +96,7 @@ void User::try_finish_registration()
 	{
 		m_is_registered = true;
 		CORE_TRACE("User %s registered", nickname().c_str());
-		Server::welcome(*this);
+		Message::welcome(*this);
 	}
 }
 
