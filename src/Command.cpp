@@ -3,11 +3,12 @@
 //
 
 #include "Command.h"
+#include "IRC.h"
 #include "log.h"
-#include "Utils.h"
+#include <iostream>
 
 Command::Command(const std::string &command_str)
-		:m_ill_formed(false), m_str(command_str), m_index(0)
+	:m_ill_formed(false), m_str(command_str), m_index(0)
 {
 	parse_message();
 }
@@ -29,12 +30,14 @@ void	Command::parse_message()
 		std::vector<Tag> tags = try_parse_tags();
 		if (tags.empty()) {
 			m_ill_formed = true;
+			CORE_WARN("Couldn't parse the tags after the @");
 			return ;
 		}
 
 		// If successful, parse the required SPACE characters
 		if (!consume_spaces()) {
 			m_ill_formed = true;
+			CORE_WARN("Couldn't parse spaces after the tags");
 			return ;
 		}
 
@@ -48,12 +51,14 @@ void	Command::parse_message()
 		Source source = try_parse_source();
 		if (source.source_name.empty()) {
 			m_ill_formed = true;
+			CORE_WARN("Couldn't parse source name after the :");
 			return ;
 		}
 
 		// If successful, parse the required SPACE characters
 		if (!consume_spaces()) {
 			m_ill_formed = true;
+			CORE_WARN("Couldn't parse spaces after the source");
 			return ;
 		}
 
@@ -65,18 +70,21 @@ void	Command::parse_message()
 	std::string command = try_parse_command();
 	if (command.empty()) {
 		m_ill_formed = true;
+		CORE_WARN("Couldn't parse command string");
 		return ;
 	} else {
 		// Save the parsed command
-		m_command = to_upper(command);
+		m_command = command;
 	}
 
 	// Now, parse the parameters
 	m_parameters = try_parse_parameter();
 
 	// Finally, we should end up at the cr-lf field
-	if (!consume_crlf())
+	if (!consume_crlf()) {
 		m_ill_formed = true;
+		CORE_WARN("Couldn't parse crlf");
+	}
 }
 
 bool	Command::consume_spaces()
@@ -622,7 +630,12 @@ bool Command::consume_char(char c)
 
 std::string Command::consume_integer()
 {
-	return "";
+	std::string number;
+	while (isdigit(current_char())) {
+		number += current_char();
+		m_index++;
+	}
+	return number;
 }
 
 std::string Command::consume_string()
@@ -645,7 +658,7 @@ std::size_t Command::characters_left()
 const std::string& Command::letters()
 {
 	static std::string letters = "abcdefghijklmnopqrstuvwxyz"
-								 "ABECDEFIHJKLMNOPQRSTUVWXYZ";
+								 "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	return letters;
 }
 
