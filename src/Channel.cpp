@@ -7,16 +7,16 @@
 #include "Channel.h"
 
 Channel::Channel(const std::string &name) : m_name(name), m_user_limit(), m_user_count(),
-	m_is_ban_protected(),
-	m_is_ban_exceptions(),
-	m_is_user_limited(),
-	m_is_invite_only(),
-	m_is_invite_exempt(),
-	m_is_key_protected(),
-	m_is_moderated(),
-	m_is_secret(),
-	m_is_topic_protected(),
-	m_no_outside_messages()
+											m_is_ban_protected(),
+											m_has_ban_exemptions(),
+											m_is_user_limited(),
+											m_is_invite_only(),
+											m_has_invite_exemptions(),
+											m_is_key_protected(),
+											m_is_moderated(),
+											m_is_secret(),
+											m_is_topic_protected(),
+											m_no_outside_messages()
 {
 	if (name[0] == '#') {
 		m_type = REGULAR;
@@ -43,7 +43,7 @@ bool Channel::update_modes(const std::string &modes)
 				m_is_ban_protected = value;
 				break;
 			case 'e':
-				m_is_ban_exceptions = value;
+				m_has_ban_exemptions = value;
 				break;
 			case 'l':
 				m_is_user_limited = value;
@@ -52,7 +52,7 @@ bool Channel::update_modes(const std::string &modes)
 				m_is_invite_only = value;
 				break;
 			case 'I':
-				m_is_invite_exempt = value;
+				m_has_invite_exemptions = value;
 				break;
 			case 'k':
 				m_is_key_protected = value;

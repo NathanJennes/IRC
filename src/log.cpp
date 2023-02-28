@@ -45,6 +45,8 @@ static void set_color(const char *error_level)
 {
 	if (strcmp(error_level, "DEBUG") == 0)
 		printf("%s", BLUE);
+	else if (strcmp(error_level, "TRACE_IRC_ERR") == 0)
+		printf("%s", BOLDMAGENTA);
 	else if (strcmp(error_level, "TRACE") == 0)
 		printf("%s", WHITE);
 	else if (strcmp(error_level, "INFO") == 0)

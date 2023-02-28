@@ -28,10 +28,12 @@ std::string			Server::m_server_name = "localhost";
 int					Server::m_server_socket;
 bool				Server::m_is_running = true;
 bool				Server::m_is_readonly = true;
+std::string			Server::m_password;
 
 std::vector<User>								Server::m_users;
 std::vector<Channel>							Server::m_channels;
 std::map<std::string, Server::command_function>	Server::m_commands;
+std::map<std::string, Server::command_function>	Server::m_connection_commands;
 
 void Server::signal_handler(int signal)
 {
@@ -49,7 +51,7 @@ bool Server::initialize(uint16_t port)
 		return false;
 	}
 
-	int is_active = 0;
+	int is_active = 1;
 	if (setsockopt(m_server_socket, SOL_SOCKET, SO_REUSEADDR, &is_active, sizeof(int)) == -1) {
 		CORE_ERROR("setsockopt: %s", strerror(errno));
 		return false;
@@ -90,17 +92,22 @@ bool Server::initialize(uint16_t port)
 
 void Server::initialize_command_functions()
 {
-	m_commands.insert(std::make_pair("AUTH", auth));
-	m_commands.insert(std::make_pair("CAP", cap));
+	// register commands
+	m_connection_commands.insert(std::make_pair("AUTH", auth));
+	m_connection_commands.insert(std::make_pair("CAP", cap));
+	m_connection_commands.insert(std::make_pair("NICK", nick));
+	m_connection_commands.insert(std::make_pair("PASS", pass));
+	m_connection_commands.insert(std::make_pair("USER", user));
+
+	// connection commands
 	m_commands.insert(std::make_pair("ERROR", error));
-	m_commands.insert(std::make_pair("NICK", nick));
 	m_commands.insert(std::make_pair("OPER", oper));
-	m_commands.insert(std::make_pair("PASS", pass));
 	m_commands.insert(std::make_pair("PING", ping));
 	m_commands.insert(std::make_pair("PONG", pong));
-	m_commands.insert(std::make_pair("USER", user));
 	m_commands.insert(std::make_pair("QUIT", quit));
+	m_commands.insert(std::make_pair("NICK", nick));
 
+	// channel commands
 	m_commands.insert(std::make_pair("JOIN", join));
 }
 
@@ -197,19 +204,57 @@ void Server::handle_messages()
 	}
 }
 
+void Server::execute_command(User &user, const Command &cmd)
+{
+	CommandIterator it;
+	if (!user.is_registered())
+	{
+		it = m_connection_commands.find(cmd.get_command());
+		if (it != m_connection_commands.end())
+		{
+			if (user.need_password() && cmd.get_command() == "NICK") {
+				user.check_password();
+				if (user.need_password()) {
+					reply(user, ":Access denied, need password"); //TODO: get the real error
+					user.disconnect();
+					return;
+				}
+			}
+			it->second(user, cmd);
+		}
+		else
+			reply(user, ERR_UNKNOWNCOMMAND(cmd.get_command()));
+		return ;
+	}
+
+	it = m_commands.find(cmd.get_command());
+	if (it != m_commands.end())
+		it->second(user, cmd);
+	else
+		reply(user, ERR_UNKNOWNCOMMAND(cmd.get_command()));
+}
+
 void Server::reply(User& user, const std::string &msg)
 {
 	CORE_TRACE("REPLYING TO %s:%d [%s]", user.ip().c_str(), user.port(), msg.c_str());
 	user.update_write_buffer(msg + "\r\n");
 }
 
-void Server::execute_command(User &user, const Command &cmd)
+void Server::broadcast(const std::string &msg)
 {
-	CommandIterator it = m_commands.find(cmd.get_command());
-	if (it != m_commands.end())
-		it->second(user, cmd);
-	else
-		reply(user, ERR_UNKNOWNCOMMAND(cmd.get_command()));
+	CORE_TRACE("BROADCASTING [%s]", msg.c_str());
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
+		reply(*user, msg);
+}
+
+void Server::broadcast(User& user, const std::string &msg)
+{
+	CORE_TRACE("BROADCASTING [%s]", msg.c_str());
+	for (UserIterator it = m_users.begin(); it != m_users.end(); it++)
+	{
+		if (*it != user)
+			reply(*it, msg);
+	}
 }
 
 bool Server::initialize_config_file()
@@ -243,19 +288,25 @@ void Server::disconnect_users()
 
 void Server::shutdown()
 {
-	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
-		close(user->fd());
 
 	close(m_server_socket);
+	CORE_INFO("Server shutdown");
 }
 
 bool Server::is_nickname_taken(const std::string &nickname)
 {
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
-		if (user->nickname() == nickname)
-		{
+		if (user->nickname() == nickname) {
 			CORE_DEBUG("Nickname %s already exists", nickname.c_str());
 			return true;
 		}
 	return false;
+}
+
+void Server::welcome_user(User &user)
+{
+	reply(user, RPL_WELCOME(user));
+	reply(user, RPL_YOURHOST(user));
+	reply(user, RPL_CREATED(user));
+	reply(user, RPL_MYINFO(user));
 }

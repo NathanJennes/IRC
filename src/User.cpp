@@ -6,16 +6,19 @@
 #include <cerrno>
 #include <cstring>
 #include <sys/time.h>
+#include "Server.h"
 #include "User.h"
 #include "Message.h"
 #include "log.h"
+#include "IRC.h"
 
 User::User(int fd, const std::string& ip, uint16_t port) :
 		m_nickname("*"), m_ip(ip), m_port(port), m_fd(fd),
 		m_is_afk(false), m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false),
-		m_last_ping_timestamp(), m_ping()
+		m_need_password(true),
+		m_last_ping_timestamp(), m_ping(0)
 {
 }
 
@@ -89,14 +92,31 @@ std::string User::source()
 	return source;
 }
 
+bool User::check_password()
+{
+	if (!Server::password().empty() && m_password != Server::password())
+	{
+		Server::reply(*this, ERR_PASSWDMISMATCH((*this)));
+		disconnect();
+		return false;
+	}
+	m_need_password = false;
+	CORE_DEBUG("User %s succesfully gave password", debug_name());
+	return true;
+}
+
 void User::try_finish_registration()
 {
-	if (!m_is_registered && !m_is_negociating_capabilities && !m_nickname.empty()
-		&& !m_username.empty() && !m_realname.empty())
+	CORE_DEBUG("trying to finalize registration: %d | %s | %s | %s | %d", (int)m_is_negociating_capabilities, m_nickname.c_str(), m_username.c_str(), m_realname.c_str(), (int)m_need_password);
+	if (m_is_registered)
+		return ;
+
+	if (!m_is_negociating_capabilities && !m_nickname.empty()
+		&& !m_username.empty() && !m_realname.empty() && !m_need_password)
 	{
 		m_is_registered = true;
 		CORE_TRACE("User %s registered", nickname().c_str());
-		Message::welcome(*this);
+		Server::welcome_user(*this);
 	}
 }
 
@@ -110,4 +130,11 @@ void User::recalculate_ping()
 	struct timeval tv = {};
 	gettimeofday(&tv, NULL);
 	m_ping = (tv.tv_sec * 1000 + tv.tv_usec / 1000) - (m_last_ping_timestamp.tv_sec * 1000 + m_last_ping_timestamp.tv_usec / 1000);
+}
+
+const char *User::debug_name()
+{
+	static std::string debug_name;
+	debug_name = m_nickname + "@" + m_ip + ":" + std::to_string(m_port);
+	return debug_name.c_str();
 }

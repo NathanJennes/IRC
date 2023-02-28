@@ -8,12 +8,4 @@
 namespace Message
 {
 
-void welcome(User &user)
-{
-	Server::reply(user, RPL_WELCOME(user.nickname()));
-	Server::reply(user, RPL_YOURHOST(user.nickname()));
-	Server::reply(user, RPL_CREATED(user.nickname()));
-	Server::reply(user, RPL_MYINFO(user.nickname()));
-}
-
 } // namespace Message

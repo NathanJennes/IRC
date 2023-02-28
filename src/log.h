@@ -4,6 +4,7 @@
 #define LOG_WARN_ENABLED 1
 #define LOG_INFO_ENABLED 1
 #define LOG_TRACE_ENABLED 1
+#define LOG_TRACE_IRC_ERR 1
 
 #ifdef DEBUG
 # define LOG_DEBUG_ENABLED 1
@@ -27,6 +28,12 @@ void log_message(bool newline, const char *error_level, const char *message, ...
 # define CORE_DEBUG(message, ...) {Log::log_message(true, "DEBUG", message, ##__VA_ARGS__);}
 #else
 # define CORE_DEBUG(message, ...)
+#endif
+
+#if LOG_TRACE_IRC_ERR == 1
+# define CORE_TRACE_IRC_ERR(message, ...) {Log::log_message(true, "TRACE_IRC_ERR", message, ##__VA_ARGS__);}
+#else
+# define CORE_TRACE_IRC_ERR(message, ...)
 #endif
 
 #if LOG_INFO_ENABLED == 1

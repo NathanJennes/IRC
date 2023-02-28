@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <sys/poll.h>
 #include <unistd.h>
+#include "log.h"
 
 #define MAX_MESSAGE_LENGTH 512
 #define MAX_NICKNAME_LENGTH 9
@@ -18,7 +19,10 @@ class User
 {
 public:
 	explicit User(int fd, const std::string& ip, uint16_t port);
-	~User() { close(m_fd); };
+	~User() {
+		if (is_registered())
+			close(m_fd);
+	}
 
 	ssize_t		receive_message();
 	ssize_t		send_message();
@@ -26,6 +30,7 @@ public:
 	std::string	source();
 
 	void		try_finish_registration();
+	bool		check_password();
 
 	// Ping
 	void	take_ping_timestamp();
@@ -46,6 +51,9 @@ public:
 	bool				is_writable()		const	{ return m_is_writable; }
 	bool				is_readable()		const	{ return m_is_readable; }
 	bool				is_registered()		const	{ return m_is_registered; }
+	bool				need_password()		const	{ return m_need_password; }
+
+	std::vector<std::string>&	channels()			{ return m_channels; }
 
 	const std::string&	read_buffer()		const	{ return m_readbuf; }
 	const std::string&	write_buffer()		const	{ return m_writebuf; }
@@ -64,8 +72,22 @@ public:
 	void	set_is_readable(bool is_readable)			{ m_is_readable = is_readable; }
 	void	set_is_writable(bool is_writable)			{ m_is_writable = is_writable; }
 	void	update_write_buffer(const std::string& str)	{ m_writebuf.append(str); }
+	void	set_password(const std::string& password)	{ m_password = password; }
 
-	void	disconnect()								{ m_is_disconnected = true; }
+	void	disconnect() 	{ m_is_disconnected = true; }
+
+	friend bool operator==(const User& lhs, const User& rhs) {
+		return lhs.nickname() == rhs.nickname();
+	}
+
+	friend bool operator!=(const User& lhs, const User& rhs) {
+		return !(lhs == rhs);
+	}
+
+	//
+	// Debug
+	//
+	const char *debug_name();
 
 private:
 	std::string	m_nickname;
@@ -85,6 +107,7 @@ private:
 	bool		m_is_writable;
 	bool		m_is_registered;
 	bool		m_is_negociating_capabilities;
+	bool 		m_need_password;
 
 	std::string	m_readbuf;
 	std::string	m_writebuf;
@@ -94,10 +117,5 @@ private:
 	struct timeval	m_last_ping_timestamp;
 	long			m_ping;
 };
-
-bool operator==(const User& lhs, const User& rhs)
-{
-	return lhs.nickname() == rhs.nickname();
-}
 
 #endif //USER_H

@@ -45,13 +45,12 @@ int main(int argc, char* argv[])
 		Server::shutdown();
 		return 1;
 	}
+	Server::set_password(argv[2]);
+
 	CORE_INFO("Server is running on port %d", port);
 
 	while (Server::is_running()) {
 		Server::update();
 	}
 	Server::shutdown();
-
-	std::cout << std::endl;
-	CORE_INFO("Server shutdown");
 }

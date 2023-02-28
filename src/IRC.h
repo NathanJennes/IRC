@@ -7,16 +7,17 @@
 
 #include "Server.h"
 
-#define SOURCE(numeric, nick) (":" + Server::server_name() + " " + numeric + " " + nick)
+#define SOURCE(numeric, user) (":" + Server::server_name() + " " + numeric + " " + user.nickname())
 
-#define RPL_CAP(nick, command, msg) (SOURCE("CAP", nick) + command + " :" + msg)
+#define RPL_CAP(user, command, msg) (SOURCE("CAP", user) + " " + command + msg)
+#define RPL_MESSAGE(user, command, msg) (SOURCE(command, user) + " " + msg)
 
 // RPL CODES
-#define RPL_WELCOME(nick)										(SOURCE("001", nick) + " :Welcome to the " + Server::network_name() + " Network, " + nick)
-#define RPL_YOURHOST(nick)										(SOURCE("002", nick) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
-#define RPL_CREATED(nick)										(SOURCE("003", nick) + " :This server was created " + Server::creation_date())
-#define RPL_MYINFO(nick)										(SOURCE("004", nick) + " " + Server::server_name() + " " SERVER_VERSION " " + Server::user_modes() + " " + Server::channel_modes() +  " " + Server::channel_modes_param())
-#define RPL_ISUPPORT(nick, tokens)								(SOURCE("005", nick) + " " + tokens +" :are supported by this server")
+#define RPL_WELCOME(user)										(SOURCE("001", user) + " :Welcome to the " + Server::network_name() + " Network, " + user.nickname())
+#define RPL_YOURHOST(user)										(SOURCE("002", user) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
+#define RPL_CREATED(user)										(SOURCE("003", user) + " :This server was created " + Server::creation_date())
+#define RPL_MYINFO(user)										(SOURCE("004", user) + " " + Server::server_name() + " " SERVER_VERSION " " + Server::user_modes() + " " + Server::channel_modes() +  " " + Server::channel_modes_param())
+#define RPL_ISUPPORT(user, tokens)								(SOURCE("005", user) + " " + tokens +" :are supported by this server")
 
 #define RPL_BOUNCE	// RECOMMENDED BY THE RFC TO NOT BE USED
 #define RPL_UMODEIS(set_usermodes)								(" " set_usermodes)
@@ -58,7 +59,7 @@
 #define RPL_CREATIONTIME 329
 #define RPL_WHOISACCOUNT 330
 #define RPL_NOTOPIC 331
-#define RPL_TOPIC 332
+#define RPL_TOPIC(user, channel)						(SOURCE("332", user) + " " + channel.name() + " :" + channel.topic())
 #define RPL_TOPICWHOTIME 333
 #define RPL_INVITELIST 336
 #define RPL_ENDOFINVITELIST 337
@@ -69,8 +70,8 @@
 #define RPL_EXCEPTLIST 348
 #define RPL_ENDOFEXCEPTLIST 349
 #define RPL_VERSION 351
-#define RPL_NAMREPLY 353
-#define RPL_ENDOFNAMES 366
+#define RPL_NAMREPLY(user, channel, prefix)				(SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + prefix + user.nickname())
+#define RPL_ENDOFNAMES(user, channel)					(SOURCE("366", user) + " " + channel.name() + " :End of /NAMES list.")
 #define RPL_LINKS 364
 #define RPL_ENDOFLINKS 365
 #define RPL_BANLIST 367
@@ -81,37 +82,39 @@
 #define ERR_UNKNOWNERROR(ERRCODE)						(" " ERRCODE " :Unknown error")
 #define ERR_NOSUCHNICK(nickname)						(" " + nickname + " :No such nick/channel")
 #define ERR_NOSUCHSERVER(servername)					(" " + servername + " :No such server")
-#define ERR_NOSUCHCHANNEL(channel)						(" " channel " :No such channel")
-#define ERR_CANNOTSENDTOCHAN(channel)					(" " channel " :Cannot send to channel")
-#define ERR_TOOMANYCHANNELS(channel)					(" " channel " :You have joined too many channels")
+
+#define ERR_NOSUCHCHANNEL(user, channel)				(SOURCE("403", user) + " " + channel + " :No such channel")
+#define ERR_CANNOTSENDTOCHAN(user, channel)				(SOURCE("404", user) + " " + channel + " :Cannot send to channel")
+#define ERR_TOOMANYCHANNELS(user, channel)				(SOURCE("405", user) + " " + channel + " :You have joined too many channels")
+
 #define ERR_WASNOSUCHNICK(nickname)						(" " + nickname + " :There was no such nickname")
 #define ERR_NOORIGIN									(" :No origin specified") // 409
 
-#define ERR_INVALIDCAPCMD(nick, command)				(SOURCE("410", nick) + " " + command + " :Invalid CAP command")
+#define ERR_INVALIDCAPCMD(user, command)				(SOURCE("410", user) + " " + command + " :Invalid CAP command")
 
 #define ERR_INPUTTOOLONG								(" :Input too long")
 #define ERR_UNKNOWNCOMMAND(command)						(" " + command + " :Unknown command")
 #define ERR_NOMOTD										(" :MOTD File is missing")
 
-#define ERR_NONICKNAMEGIVEN(nick)						(SOURCE("431", nick) + " :No nickname given")
-#define ERR_ERRONEUSNICKNAME(nick, new_nick)			(SOURCE("431", nick) + " " + new_nick + " :Erroneous nickname")
-#define ERR_NICKNAMEINUSE(nick, new_nick)				(SOURCE("432", nick) + " " + new_nick + " :Nickname is already in use")
+#define ERR_NONICKNAMEGIVEN(user)						(SOURCE("431", user) + " :No nickname given")
+#define ERR_ERRONEUSNICKNAME(user, new_nick)			(SOURCE("431", user) + " " + new_nick + " :Erroneous nickname")
+#define ERR_NICKNAMEINUSE(user, new_nick)				(SOURCE("432", user) + " " + new_nick + " :Nickname is already in use")
 
 #define ERR_USERNOTINCHANNEL(nickname, channel)			(" " + nickname + " " channel " :They aren't on that channel")
 #define ERR_NOTONCHANNEL(channel)						(" " channel " :You're not on that channel")
 #define ERR_USERONCHANNEL(nickname, channel)			(" " + nickname + " " channel " :is already on channel")
 #define ERR_NOTREGISTERED								(" :You have not registered")
 
-#define ERR_NEEDMOREPARAMS(nick, command)				(SOURCE("461", nick) + " " + command + " :Not enough parameters")
+#define ERR_NEEDMOREPARAMS(user, command)				(SOURCE("461", user) + " " + command.get_command() + " :Not enough parameters")
+#define ERR_ALREADYREGISTERED(user, command)			(SOURCE("462", user) + " " + command.get_command() + " :You are already registered")
 
-#define ERR_ALREADYREGISTERED							(" :You are already registered")
-#define ERR_PASSWDMISMATCH								(" :Password incorrect")
+#define ERR_PASSWDMISMATCH(user)						(SOURCE("464", user) + " :Password incorrect")
 #define ERR_YOUREBANNEDCREEP							(" :You are banned from this server")
-#define ERR_CHANNELISFULL(channel)						(" " channel " :Cannot join channel (+l)")
-#define ERR_UNKNOWNMODE(mode)							(" " mode " :is unknown mode char to me")
-#define ERR_INVITEONLYCHAN(channel)						(" " channel " :Cannot join channel (+i)")
-#define ERR_BANNEDFROMCHAN(channel)						(" " channel " :Cannot join channel (+b)")
-#define ERR_BADCHANNELKEY(channel)						(" " channel " :Cannot join channel (+k)")
+#define ERR_CHANNELISFULL(user, channel)				(SOURCE("471", user) + " " + channel + " :Cannot join channel (+l)")
+#define ERR_UNKNOWNMODE(user, mode)						(SOURCE("472", user) + " " + mode + " :is unknown mode char to me")
+#define ERR_INVITEONLYCHAN(user, channel)				(SOURCE("473", user) + " " + channel + " :Cannot join channel (+i)")
+#define ERR_BANNEDFROMCHAN(user, channel)				(SOURCE("474", user) + " " + channel + " :Cannot join channel (+b)")
+#define ERR_BADCHANNELKEY(user, channel)				(SOURCE("475", user) + " " + channel + " :Cannot join channel (+k)")
 #define ERR_BADCHANMASK(channel)						(" " channel " :Bad Channel Mask")
 #define ERR_NOPRIVILEGES								(" :Permission Denied- You're not an IRC operator")
 #define ERR_CHANOPRIVSNEEDED(channel)					(" " channel " :You're not channel operator")
