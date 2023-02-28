@@ -24,11 +24,12 @@ public:
 
 	static void signal_handler(int signal);
 	static void reply(User& user, const std::string& msg);
+	static bool is_nickname_taken(const std::string& nickname);
 
 	// getters
 	static const std::string&	network_name()			{ return m_network_name; }
 	static const std::string&	server_name()			{ return m_server_name; }
-	static bool 				is_running()			{ return m_is_running; }
+	static       bool			is_running()			{ return m_is_running; }
 	static const std::string&	creation_date()			{ return m_creation_date; }
 	static const std::string&	user_modes()			{ return m_user_modes; }
 	static const std::string&	channel_modes()			{ return m_channel_modes; }
@@ -68,11 +69,12 @@ private:
 	static const std::string	m_channel_modes;
 	static const std::string	m_channel_modes_parameter;
 
+	// Message function prototype
 	typedef int (*command_function)(User&, const Command&);
+	static std::map<std::string, command_function>	m_commands;
+
 	typedef std::vector<User>::iterator							UserIterator;
 	typedef std::map<std::string, command_function>::iterator	CommandIterator;
-
-	static std::map<std::string, command_function>	m_commands;
 };
 
 #endif //SERVER_H

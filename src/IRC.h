@@ -9,6 +9,8 @@
 
 #define SOURCE(numeric, nick) (":" + Server::server_name() + " " + numeric + " " + nick)
 
+#define RPL_CAP(nick, command, msg) (SOURCE("CAP", nick) + command + " :" + msg)
+
 // RPL CODES
 #define RPL_WELCOME(nick)										(SOURCE("001", nick) + " :Welcome to the " + Server::network_name() + " Network, " + nick)
 #define RPL_YOURHOST(nick)										(SOURCE("002", nick) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
@@ -84,7 +86,9 @@
 #define ERR_TOOMANYCHANNELS(channel)					(" " channel " :You have joined too many channels")
 #define ERR_WASNOSUCHNICK(nickname)						(" " + nickname + " :There was no such nickname")
 #define ERR_NOORIGIN									(" :No origin specified") // 409
-#define ERR_INVALIDCAPCMD(nick, command)				(" 410 " + nick + " " + command + " :Invalid CAP command")
+
+#define ERR_INVALIDCAPCMD(nick, command)				(SOURCE("410", nick) + " " + command + " :Invalid CAP command")
+
 #define ERR_INPUTTOOLONG								(" :Input too long")
 #define ERR_UNKNOWNCOMMAND(command)						(" " + command + " :Unknown command")
 #define ERR_NOMOTD										(" :MOTD File is missing")

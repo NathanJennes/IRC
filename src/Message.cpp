@@ -23,17 +23,18 @@ int cap(User& user, const Command& command)
 	}
 
 	if (command.get_parameters()[0] == "LS") {
-		Server::reply(user, "CAP * LS :");
+		Server::reply(user, RPL_CAP(user.nickname(), "LS", ""));
 		if (!user.is_registered())
 			user.set_is_negociating_capabilities(true);
 	}
 	else if (command.get_parameters()[0] == "LIST") {
-		Server::reply(user, "CAP * LIST :");
+		Server::reply(user, RPL_CAP(user.nickname(), "LIST", ""));
 		if (!user.is_registered())
 			user.set_is_negociating_capabilities(true);
 	}
 	else if (command.get_parameters()[0] == "REQ") {
-		Server::reply(user, "CAP * ACK :");
+		// TODO: check if capabilities are valid and if they are supported
+		Server::reply(user, RPL_CAP(user.nickname(), "ACK", ""));
 		if (!user.is_registered())
 			user.set_is_negociating_capabilities(true);
 	}
@@ -42,7 +43,7 @@ int cap(User& user, const Command& command)
 		if (!user.is_registered())
 			user.try_finish_registration();
 	} else
-		Server::reply(user, "CAP : Error invalid subcommand");
+		Server::reply(user, ERR_INVALIDCAPCMD(user.nickname(), command.get_parameters()[0]));
 	return 0;
 }
 
@@ -70,16 +71,15 @@ int nick(User& user, const Command& command)
 		return 0;
 
 	// TODO: check if nickname is valid
-	if (command.get_parameters()[0].size() > 9) {
+	if (command.get_parameters()[0].size() > MAX_NICKNAME_LENGTH) {
 		Server::reply(user, ERR_ERRONEUSNICKNAME(user.nickname(), command.get_parameters()[0]));
 		return 1;
 	}
 
-	// TODO: check if nickname is already taken
-//	if (Server::user_exists(command.get_parameters()[0])) {
-//		Server::reply(user, ERR_NICKNAMEINUSE(user.nickname(), command.get_parameters()[0]));
-//		return 1;
-//	}
+	if (Server::is_nickname_taken(command.get_parameters()[0])) {
+		Server::reply(user, ERR_NICKNAMEINUSE(user.nickname(), command.get_parameters()[0]));
+		return 1;
+	}
 
 	if (user.is_registered())
 		Server::reply(user, user.source() + " NICK :" + command.get_parameters()[0]);

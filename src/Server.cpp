@@ -248,3 +248,14 @@ void Server::shutdown()
 
 	close(m_server_socket);
 }
+
+bool Server::is_nickname_taken(const std::string &nickname)
+{
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
+		if (user->nickname() == nickname)
+		{
+			CORE_DEBUG("Nickname %s already exists", nickname.c_str());
+			return true;
+		}
+	return false;
+}

@@ -7,8 +7,8 @@
 #include <cstring>
 #include <sys/time.h>
 #include "User.h"
-#include "log.h"
 #include "Message.h"
+#include "log.h"
 
 User::User(int fd, const std::string& ip, uint16_t port) :
 		m_nickname("*"), m_ip(ip), m_port(port), m_fd(fd),

@@ -9,13 +9,16 @@
 #include <string>
 #include <netinet/in.h>
 #include <sys/poll.h>
+#include <unistd.h>
 
 #define MAX_MESSAGE_LENGTH 512
+#define MAX_NICKNAME_LENGTH 9
 
 class User
 {
 public:
 	explicit User(int fd, const std::string& ip, uint16_t port);
+	~User() { close(m_fd); };
 
 	ssize_t		receive_message();
 	ssize_t		send_message();
@@ -91,5 +94,10 @@ private:
 	struct timeval	m_last_ping_timestamp;
 	long			m_ping;
 };
+
+bool operator==(const User& lhs, const User& rhs)
+{
+	return lhs.nickname() == rhs.nickname();
+}
 
 #endif //USER_H
