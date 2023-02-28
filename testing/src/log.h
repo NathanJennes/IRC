@@ -38,7 +38,7 @@ void log_message(bool newline, const char *error_level, const char *message, ...
 
 #if LOG_WARN_ENABLED == 1
 # ifdef DEBUG
-#  define CORE_WARN(message, ...) {Log::log_message(false, "WARN", "[%s:%d %s()]\t", __FILE__, __LINE__, __func__); Log::log_message(true, nullptr, message, ##__VA_ARGS__);}
+#  define CORE_WARN(message, ...) {Log::log_message(false, "WARN", "[%s:%d %s()]\t", __FILE__, __LINE__, __func__); Log::log_message(true, NULL, message, ##__VA_ARGS__);}
 # else
 #  define CORE_WARN(message, ...) {Log::log_message(true, "WARN", message, ##__VA_ARGS__);}
 # endif
@@ -47,7 +47,7 @@ void log_message(bool newline, const char *error_level, const char *message, ...
 #endif
 
 #ifdef DEBUG
-# define CORE_ERROR(message, ...) {Log::log_message(false, "ERROR", "[%s:%d %s()]\t", __FILE__, __LINE__, __func__); Log::log_message(true, nullptr, message, ##__VA_ARGS__);}
+# define CORE_ERROR(message, ...) {Log::log_message(false, "ERROR", "[%s:%d %s()]\t", __FILE__, __LINE__, __func__); Log::log_message(true, NULL, message, ##__VA_ARGS__);}
 #else
 # define CORE_ERROR(message, ...) {Log::log_message(true, "ERROR", message, ##__VA_ARGS__);}
 #endif

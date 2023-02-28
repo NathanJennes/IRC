@@ -16,8 +16,8 @@ void initialize_signals()
 	sa.sa_handler = Server::signal_handler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
-	sigaction(SIGINT, &sa, nullptr);
-	sigaction(SIGTERM, &sa, nullptr);
+	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGTERM, &sa, NULL);
 }
 
 int main(int argc, char* argv[])
