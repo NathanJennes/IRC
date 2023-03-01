@@ -390,7 +390,7 @@ bool CommandBuilder::check_validity(const Command &command)
 {
 	auto& tags = command.get_tags();
 	if (tags.size() != m_tags.size())
-		return return_msg("tags vector size differ: got: [" + std::to_string(tags.size()) + "], expected: [" + std::to_string(m_tags.size()) + "]");
+		return return_msg("tags vector size differ: got: [" + to_string(tags.size()) + "], expected: [" + to_string(m_tags.size()) + "]");
 	for (size_t i = 0; i < tags.size(); i++) {
 		if (tags[i].key.client_prefix != m_tags[i].key.client_prefix)
 			return return_msg("tags client prefix differ: got: [" + tags[i].key.client_prefix + "], expected: [" + m_tags[i].key.client_prefix + "]");
@@ -416,9 +416,9 @@ bool CommandBuilder::check_validity(const Command &command)
 
 	auto& parameters = command.get_parameters();
 	if (m_has_last_param && parameters.size() != m_parameters.size() + 1)
-		return return_msg("parameters vector size differ: got:" + std::to_string(parameters.size()) + ", expected:" + std::to_string(m_parameters.size() + 1));
+		return return_msg("parameters vector size differ: got:" + to_string(parameters.size()) + ", expected:" + to_string(m_parameters.size() + 1));
 	if (!m_has_last_param && parameters.size() != m_parameters.size())
-		return return_msg("parameters vector size differ: got:" + std::to_string(parameters.size()) + ", expected:" + std::to_string(m_parameters.size()));
+		return return_msg("parameters vector size differ: got:" + to_string(parameters.size()) + ", expected:" + to_string(m_parameters.size()));
 
 	for (size_t i = 0; i < m_parameters.size(); i++) {
 		if (parameters[i] != m_parameters[i])

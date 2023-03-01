@@ -11,6 +11,7 @@
 #include <sys/poll.h>
 #include <unistd.h>
 #include "log.h"
+#include "Utils.h"
 
 #define MAX_MESSAGE_LENGTH 512
 #define MAX_NICKNAME_LENGTH 9
@@ -37,7 +38,7 @@ public:
 	void	recalculate_ping();
 
 	// getters
-	std::string			ping_token()		const	{ return m_ip + std::to_string(m_port) + m_realname; }
+	std::string			ping_token()		const	{ return m_ip + to_string(m_port) + m_realname; }
 	const std::string&	nickname()			const	{ return m_nickname; }
 	const std::string&	username()			const	{ return m_username; }
 	const std::string&	realname()			const	{ return m_realname; }
