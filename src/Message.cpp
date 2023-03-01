@@ -84,7 +84,7 @@ int nick(User& user, const Command& command)
 	if (Server::is_nickname_taken(command.get_parameters()[0])) {
 		if (!user.is_registered())
 		{
-			user.set_nickname("Guest" + Server::users_count());
+			user.set_nickname("Guest" + to_string(Server::users().size()));
 			Server::reply(user, user.source() + " NICK :" + user.nickname());
 			return 0;
 		}

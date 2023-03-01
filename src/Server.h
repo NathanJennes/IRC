@@ -18,6 +18,17 @@
 class Server
 {
 public:
+	//
+	// I/O typedefs
+	//
+	typedef int (*command_function)(User&, const Command&);
+	typedef std::vector<User>::iterator							UserIterator;
+	typedef std::vector<Channel>::iterator						ChannelIterator;
+	typedef std::map<std::string, command_function>::iterator	CommandIterator;
+
+	//
+	// Server management
+	//
 	static bool initialize(uint16_t port);
 	static bool update();
 	static void shutdown();
@@ -28,24 +39,50 @@ public:
 	static void broadcast(const std::string& msg);
 	static void broadcast(User& user, const std::string &msg);
 
+	//
+	// Complex replies
+	//
 	static void welcome_user(User& user);
+	static void list_channel_members_to_user(User &user, const Channel& channel);
 
-	static bool is_nickname_taken(const std::string& nickname);
+	//
+	// User management
+	//
+	static bool			user_exists(const std::string& user_nickname);
+	static bool			user_exists(const UserIterator& user);
+	static UserIterator	find_user(const std::string& user_nickname);
+	static bool			is_nickname_taken(const std::string& user_nickname);
 
-	// getters
-	static const std::string&			network_name()			{ return m_network_name; }
-	static const std::string&			server_name()			{ return m_server_name; }
-	static       bool					is_running()			{ return m_is_running; }
-	static const std::string&			creation_date()			{ return m_creation_date; }
+	//
+	// Channel management
+	//
+	static bool				channel_exists(const std::string& channel_name);
+	static bool				channel_exists(const ChannelIterator& channel);
+	static ChannelIterator	find_channel(const std::string& channel_name);
+
+
+	//
+	// Getters
+	//
+
+	// Server information
+	static const std::string&						network_name()			{ return m_network_name; }
+	static const std::string&						server_name()			{ return m_server_name; }
+	static       bool								is_running()			{ return m_is_running; }
+	static const std::string&						creation_date()			{ return m_creation_date; }
+	static const std::string&						password()				{ return m_password; }
+
+	// User & Channels
+	static       std::vector<Channel>&	channels()				{ return m_channels; }
+	static       std::vector<User>&		users()					{ return m_users; }
 	static const std::string&			user_modes()			{ return m_user_modes; }
 	static const std::string&			channel_modes()			{ return m_channel_modes; }
 	static const std::string&			channel_modes_param()	{ return m_channel_modes_parameter; }
-	static const std::string			users_count()			{ return to_string(m_users.size()); }
-	static const std::string&			password()				{ return m_password; }
-	static std::vector<Channel>&		channels()				{ return m_channels; }
 
-	// setters
-	static void	stop_server()									{ m_is_running = false; }
+	//
+	// Setters
+	//
+	static void	set_is_running(bool new_state)					{ m_is_running = new_state; };
 	static void	set_server_name(const std::string& server_name)	{ m_server_name = server_name; }
 	static void set_password(const std::string& password)		{ m_password = password; }
 
@@ -81,12 +118,8 @@ private:
 	static const std::string	m_channel_modes_parameter;
 
 	// Message function prototype
-	typedef int (*command_function)(User&, const Command&);
 	static std::map<std::string, command_function>	m_commands;
 	static std::map<std::string, command_function>	m_connection_commands;
-
-	typedef std::vector<User>::iterator							UserIterator;
-	typedef std::map<std::string, command_function>::iterator	CommandIterator;
 };
 
 #endif //SERVER_H

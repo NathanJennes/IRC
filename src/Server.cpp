@@ -146,16 +146,14 @@ void Server::poll_events()
 
 void Server::handle_events()
 {
-	size_t i;
-	for (i = 0; i < m_users.size(); ++i)
-	{
-		if (m_users[i].is_readable()) {
-			if (m_users[i].receive_message() <= 0)
-				m_users[i].disconnect();
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
+		if (user->is_readable()) {
+			if (user->receive_message() <= 0)
+				user->disconnect();
 		}
-		if (m_users[i].is_writable()) {
-			if (!m_users[i].write_buffer().empty() && m_users[i].send_message() <= 0)
-				m_users[i].disconnect();
+		if (user->is_writable()) {
+			if (!user->write_buffer().empty() && user->send_message() <= 0)
+				user->disconnect();
 		}
 		// TODO: handle errors
 	}
@@ -296,18 +294,17 @@ void Server::disconnect_users()
 
 void Server::shutdown()
 {
-
 	close(m_server_socket);
 	CORE_INFO("Server shutdown");
 }
 
 bool Server::is_nickname_taken(const std::string &nickname)
 {
-	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
-		if (user->nickname() == nickname) {
-			CORE_DEBUG("Nickname %s already exists", nickname.c_str());
-			return true;
-		}
+	UserIterator user = find_user(nickname);
+	if (user_exists(user)) {
+		CORE_DEBUG("Nickname %s already exists", nickname.c_str());
+		return true;
+	}
 	return false;
 }
 
@@ -317,4 +314,56 @@ void Server::welcome_user(User &user)
 	reply(user, RPL_YOURHOST(user));
 	reply(user, RPL_CREATED(user));
 	reply(user, RPL_MYINFO(user));
+}
+
+void Server::list_channel_members_to_user(User &user, const Channel& channel)
+{
+	(void)user;
+	(void)channel;
+}
+
+bool Server::user_exists(const std::string &user_nickname)
+{
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
+		if (user->nickname() == user_nickname)
+			return true;
+	}
+	return false;
+}
+
+Server::UserIterator Server::find_user(const std::string &user_nickname)
+{
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
+		if (user->nickname() == user_nickname)
+			return user;
+	}
+	return m_users.end();
+}
+
+bool Server::channel_exists(const std::string &channel_name)
+{
+	for (ChannelIterator channel = m_channels.begin(); channel != m_channels.end(); channel++) {
+		if (channel->name() == channel_name)
+			return true;
+	}
+	return false;
+}
+
+Server::ChannelIterator Server::find_channel(const std::string &channel_name)
+{
+	for (ChannelIterator channel = m_channels.begin(); channel != m_channels.end(); channel++) {
+		if (channel->name() == channel_name)
+			return channel;
+	}
+	return m_channels.end();
+}
+
+bool Server::user_exists(const Server::UserIterator &user)
+{
+	return user != m_users.end();
+}
+
+bool Server::channel_exists(const Server::ChannelIterator &channel)
+{
+	return channel != m_channels.end();
 }
