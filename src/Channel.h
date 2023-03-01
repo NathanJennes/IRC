@@ -10,11 +10,18 @@
 
 #include <string>
 #include <vector>
+#include "User.h"
+#include "Command.h"
 
 class Channel
 {
 public:
-	explicit Channel(const std::string& name);
+	explicit Channel(User& user, const std::string& name);
+
+	void	add_to_banlist(const std::string& user);
+	void	remove_from_banlist(const std::string& user);
+
+	bool	is_user_in_channel(User &user) const;
 
 	//
 	// Getters
@@ -27,8 +34,9 @@ public:
 	const std::vector<std::string>&	invite_exemptions()	const { return m_invite_exemptions; }
 	const std::vector<std::string>&	ban_exemptions()	const { return m_ban_exemptions; }
 	int								user_limit()		const { return m_user_limit; }
-	int								user_count()		const { return m_user_count; }
+	size_t							user_count()		const { return m_users.size(); }
 	char							type()				const { return m_type; }
+	std::string						modes(User& user)	const;
 
 	//
 	// Flags
@@ -50,11 +58,15 @@ public:
 	void	set_topic(const std::string& topic)	{ m_topic = topic; }
 	void	set_key(const std::string& key)		{ m_key = key; }
 	void	set_user_limit(int limit) 			{ m_user_limit = limit; }
+	bool	set_mode(Command& cmd);
 
-	void	add_to_banlist(const std::string& user);
-	void	remove_from_banlist(const std::string& user);
+	friend bool operator==(const Channel& lhs, const Channel& rhs) {
+		return lhs.m_name == rhs.m_name;
+	}
 
-	bool	update_modes(const std::string& modes);
+	friend bool operator!=(const Channel& lhs, const Channel& rhs) {
+		return !(lhs == rhs);
+	}
 
 private:
 	std::string					m_name;
@@ -67,8 +79,9 @@ private:
 	std::vector<std::string>	m_invite_exemptions;
 	std::string 				m_key;
 
+	std::vector<User *>			m_users; // ????
+
 	int		m_user_limit;
-	int		m_user_count;
 
 	// modes
 	bool	m_is_ban_protected;			// +b

@@ -66,11 +66,6 @@ int wallops(User& user, const Command& command);
 // Message_utils
 // ====================
 
-namespace Message
-{
-
-void welcome(User &user);
-
-}
+bool is_channel(const std::string& name);
 
 #endif //MESSAGE_H

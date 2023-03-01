@@ -30,9 +30,15 @@ public:
 
 	static void welcome_user(User& user);
 
-	static bool is_nickname_taken(const std::string& nickname);
+	//
+	// Utils
+	//
+	static bool is_nickname_exist(const std::string& nickname);
+	static Channel* get_channel(const std::string& channel_name);
 
+	//
 	// getters
+	//
 	static const std::string&			network_name()			{ return m_network_name; }
 	static const std::string&			server_name()			{ return m_server_name; }
 	static       bool					is_running()			{ return m_is_running; }
@@ -44,7 +50,9 @@ public:
 	static const std::string&			password()				{ return m_password; }
 	static std::vector<Channel>&		channels()				{ return m_channels; }
 
+	//
 	// setters
+	//
 	static void	stop_server()									{ m_is_running = false; }
 	static void	set_server_name(const std::string& server_name)	{ m_server_name = server_name; }
 	static void set_password(const std::string& password)		{ m_password = password; }
@@ -86,6 +94,7 @@ private:
 	static std::map<std::string, command_function>	m_connection_commands;
 
 	typedef std::vector<User>::iterator							UserIterator;
+	typedef std::vector<Channel>::iterator						ChanIterator;
 	typedef std::map<std::string, command_function>::iterator	CommandIterator;
 };
 

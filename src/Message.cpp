@@ -2,6 +2,7 @@
 // Created by Cyril Battistolo on 25/02/2023.
 //
 
+#include <algorithm>
 #include "log.h"
 #include "IRC.h"
 #include "Command.h"
@@ -81,7 +82,7 @@ int nick(User& user, const Command& command)
 		return 1;
 	}
 
-	if (Server::is_nickname_taken(command.get_parameters()[0])) {
+	if (Server::is_nickname_exist(command.get_parameters()[0])) {
 		if (!user.is_registered())
 		{
 			user.set_nickname("Guest" + Server::users_count());
@@ -291,7 +292,7 @@ int join(User& user, const Command& command)
 
 		// If no associated channel was found, create a new channel with its name
 		if (server_channel == server_channels.end()) {
-			Server::channels().push_back(Channel(*requested_chan));
+			Server::channels().push_back(Channel(user, *requested_chan));
 			server_channel = Server::channels().end() - 1;
 		}
 
@@ -411,6 +412,34 @@ int mode(User& user, const Command& command)
 		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
 		return 0;
 	}
+
+	if (is_channel(command.get_parameters()[0]))
+	{
+		Channel* channel = Server::get_channel(command.get_parameters()[0]);
+		if (channel)
+		{
+			if (command.get_parameters().size() == 1) {
+				Server::reply(user, RPL_CHANNELMODEIS(user, channel));
+				return 0;
+			}
+			if (command.get_parameters().size() == 2) {
+				if (channel->is_user_in_channel(user))
+					channel->set_mode(command);
+				else {
+					CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
+					Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
+				}
+			}
+			return 0;
+		}
+		else {
+			CORE_TRACE_IRC_ERR("User %s tried to set mode on a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+			Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
+			return 1;
+		}
+	}
+	else
+
 
 	return 0;
 }

@@ -6,30 +6,36 @@
 #include <algorithm>
 #include "Channel.h"
 
-Channel::Channel(const std::string &name) : m_name(name), m_user_limit(), m_user_count(),
-											m_is_ban_protected(),
-											m_has_ban_exemptions(),
-											m_is_user_limited(),
-											m_is_invite_only(),
-											m_has_invite_exemptions(),
-											m_is_key_protected(),
-											m_is_moderated(),
-											m_is_secret(),
-											m_is_topic_protected(),
-											m_no_outside_messages()
+Channel::Channel(User& user, const std::string &name) :
+	m_name(name),
+	m_user_limit(),
+	m_is_ban_protected(),
+	m_has_ban_exemptions(),
+	m_is_user_limited(),
+	m_is_invite_only(),
+	m_has_invite_exemptions(),
+	m_is_key_protected(),
+	m_is_moderated(),
+	m_is_secret(),
+	m_is_topic_protected(),
+	m_no_outside_messages()
 {
 	if (name[0] == '#') {
 		m_type = REGULAR;
-		update_modes("+nt");
+		m_is_topic_protected = true; // +t
+		m_no_outside_messages = true; // +n
 	}
 	else
 		m_type = LOCAL;
-	(void)m_user_count;
+	m_users.push_back(&user);
 }
 
-bool Channel::update_modes(const std::string &modes)
+// TODO: check if user is already in the channel
+bool Channel::set_mode(Command& command)
 {
 	bool value;
+	std::string modes = command.get_parameters()[0]; // TODO put it in a loop
+
 	if (modes[0] != '+')
 		value = true;
 	else if (modes[0] == '-')
@@ -87,4 +93,50 @@ void Channel::add_to_banlist(const std::string &user)
 void Channel::remove_from_banlist(const std::string &user)
 {
 	(void)user;
+}
+
+std::string Channel::modes(User& user) const
+{
+	std::string modes = "+";
+	std::string mode_params;
+
+	bool hidden = is_user_in_channel(user);
+
+	if (m_is_ban_protected)
+		modes += "b";
+	if (m_has_ban_exemptions)
+		modes += "e";
+	if (m_is_invite_only)
+		modes += "i";
+
+	if (m_is_key_protected) {
+		modes += "k";
+		if (!hidden)
+			mode_params += "<Key>";
+		else
+			mode_params += " " + m_key;
+	}
+
+	if (m_is_user_limited) {
+		modes += "l";
+		mode_params += " " + to_string(m_user_limit);
+	}
+
+	if (m_no_outside_messages)
+		modes += "n";
+	if (m_is_moderated)
+		modes += "m";
+	if (m_is_secret)
+		modes += "s";
+	if (m_is_topic_protected)
+		modes += "t";
+	if (m_has_invite_exemptions)
+		modes += "I";
+
+	return modes + mode_params;
+}
+
+bool Channel::is_user_in_channel(User &user) const
+{
+	return false;
 }

@@ -55,7 +55,7 @@
 #define RPL_LISTSTART 321
 #define RPL_LIST 322
 #define RPL_LISTEND 323
-#define RPL_CHANNELMODEIS 324
+#define RPL_CHANNELMODEIS(user, channel)				(SOURCE("324", user), " " + channel->name() + " :" + channel->modes(user))
 #define RPL_CREATIONTIME 329
 #define RPL_WHOISACCOUNT 330
 #define RPL_NOTOPIC 331
@@ -117,7 +117,9 @@
 #define ERR_BADCHANNELKEY(user, channel)				(SOURCE("475", user) + " " + channel + " :Cannot join channel (+k)")
 #define ERR_BADCHANMASK(channel)						(" " channel " :Bad Channel Mask")
 #define ERR_NOPRIVILEGES								(" :Permission Denied- You're not an IRC operator")
-#define ERR_CHANOPRIVSNEEDED(channel)					(" " channel " :You're not channel operator")
+
+#define ERR_CHANOPRIVSNEEDED(user, channel)				(SOURCE("482", user) + channel->name() + " :You're not channel operator")
+
 #define ERR_CANTKILLSERVER								(" :You cant kill a server!")
 #define ERR_NOOPERHOST									(" :No O-lines for your host")
 #define ERR_UMODEUNKNOWNFLAG							(" :Unknown MODE flag")

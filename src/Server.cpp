@@ -299,7 +299,15 @@ void Server::shutdown()
 	CORE_INFO("Server shutdown");
 }
 
-bool Server::is_nickname_taken(const std::string &nickname)
+void Server::welcome_user(User &user)
+{
+	reply(user, RPL_WELCOME(user));
+	reply(user, RPL_YOURHOST(user));
+	reply(user, RPL_CREATED(user));
+	reply(user, RPL_MYINFO(user));
+}
+
+bool Server::is_nickname_exist(const std::string &nickname)
 {
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
 		if (user->nickname() == nickname) {
@@ -309,10 +317,12 @@ bool Server::is_nickname_taken(const std::string &nickname)
 	return false;
 }
 
-void Server::welcome_user(User &user)
+Channel* Server::get_channel(const std::string &channel_name)
 {
-	reply(user, RPL_WELCOME(user));
-	reply(user, RPL_YOURHOST(user));
-	reply(user, RPL_CREATED(user));
-	reply(user, RPL_MYINFO(user));
+	for (ChanIterator channel = m_channels.begin(); channel != m_channels.end(); channel++)
+		if (channel->name() == channel_name) {
+			CORE_DEBUG("Channel %s already exists", channel_name.c_str());
+			return channel.base();
+		}
+	return NULL;
 }
