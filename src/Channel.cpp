@@ -6,6 +6,30 @@
 #include <algorithm>
 #include "Channel.h"
 
+Channel::UserEntry::UserEntry(const std::string& nickname)
+: m_nickname(nickname), m_is_founder(false), m_is_protected(false),
+  m_is_operator(false), m_is_halfop(false), m_has_voice(false) {}
+
+bool Channel::UserEntry::operator==(const std::string &nickname)
+{
+	return nickname == m_nickname;
+}
+
+std::string Channel::UserEntry::get_highest_prefix() const
+{
+	if (m_is_founder)
+		return CHANNEL_USER_PREFIX_FOUNDER;
+	else if (m_is_protected)
+		return CHANNEL_USER_PREFIX_PROTECTED;
+	else if (m_is_operator)
+		return CHANNEL_USER_PREFIX_OPERATOR;
+	else if (m_is_halfop)
+		return CHANNEL_USER_PREFIX_HALFOP;
+	else if (m_has_voice)
+		return CHANNEL_USER_PREFIX_VOICE;
+	return "";
+}
+
 Channel::Channel(const std::string &name) : m_name(name), m_user_limit(), m_user_count(),
 											m_is_ban_protected(),
 											m_has_ban_exemptions(),
@@ -18,13 +42,13 @@ Channel::Channel(const std::string &name) : m_name(name), m_user_limit(), m_user
 											m_is_topic_protected(),
 											m_no_outside_messages()
 {
-	if (name[0] == '#') {
-		m_type = REGULAR;
+	// TODO: have a look into this
+	if (name[0] == CHANNEL_TYPE_SHARED_SYMBOL) {
+		m_type = CHANNEL_TYPE_SHARED_SYMBOL;
 		update_modes("+nt");
 	}
 	else
-		m_type = LOCAL;
-	(void)m_user_count;
+		m_type = CHANNEL_TYPE_LOCAL_SYMBOL;
 }
 
 bool Channel::update_modes(const std::string &modes)

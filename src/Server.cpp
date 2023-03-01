@@ -318,7 +318,9 @@ void Server::reply_welcome_user(User &user)
 
 void Server::reply_list_channel_members_to_user(User &user, const Channel& channel)
 {
-
+	for (Channel::ConstUserIterator channel_user = channel.users().begin(); channel_user != channel.users().end(); channel_user++)
+		reply(user, RPL_NAMREPLY(user, channel, (*channel_user)));
+	reply(user, RPL_ENDOFNAMES(user, channel));
 }
 
 bool Server::user_exists(const std::string &user_nickname)

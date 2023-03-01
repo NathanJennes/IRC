@@ -394,8 +394,7 @@ int join(User& user, const Command& command)
 		user.channels().push_back(server_channel->name());
 		Server::reply(user, user.source() + " JOIN " + server_channel->name());
 		Server::reply(user, RPL_TOPIC(user, (*server_channel)));
-		Server::reply(user, RPL_NAMREPLY(user, (*server_channel), ""));
-		Server::reply(user, RPL_ENDOFNAMES(user, (*server_channel)));
+		Server::reply_list_channel_members_to_user(user, *server_channel);
 	}
 	return 0;
 }

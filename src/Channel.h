@@ -5,8 +5,14 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
-#define REGULAR true
-#define LOCAL false
+#define CHANNEL_TYPE_SHARED_SYMBOL '#'
+#define CHANNEL_TYPE_LOCAL_SYMBOL  '&'
+
+#define CHANNEL_USER_PREFIX_FOUNDER   "~"
+#define CHANNEL_USER_PREFIX_PROTECTED "&"
+#define CHANNEL_USER_PREFIX_OPERATOR  "@"
+#define CHANNEL_USER_PREFIX_HALFOP    "%"
+#define CHANNEL_USER_PREFIX_VOICE     "+"
 
 #include <string>
 #include <vector>
@@ -18,11 +24,11 @@ public:
 	/// Types
 	struct UserEntry
 	{
-		explicit UserEntry(const std::string& nickname) :
-			m_nickname(nickname), m_is_founder(false), m_is_protected(false),
-			m_is_operator(false), m_is_halfop(false), m_has_voice(false) {}
+		explicit UserEntry(const std::string& nickname);
 
-		bool operator==(const std::string& nickname) { return nickname == m_nickname; }
+		bool operator==(const std::string& nickname);
+
+		std::string get_highest_prefix() const;
 
 		void is_founder(bool new_value)		{ m_is_founder = new_value; };
 		void is_protected(bool new_value)	{ m_is_protected = new_value; };
@@ -47,6 +53,11 @@ public:
 	};
 
 	explicit Channel(const std::string& name);
+
+	/// Typedefs
+	typedef std::vector<UserEntry>::iterator		UserIterator;
+	typedef std::vector<UserEntry>::const_iterator	ConstUserIterator;
+	typedef std::vector<std::string>::iterator		NicknameIterator;
 
 	/// Channel information
 	void set_topic(const std::string& topic)	{ m_topic = topic; }
@@ -101,10 +112,6 @@ public:
 	bool	no_outside_messages()	const { return m_no_outside_messages; }
 
 private:
-	/// Typedefs
-	typedef std::vector<UserEntry>::iterator	UserIterator;
-	typedef std::vector<std::string>::iterator	NicknameIterator;
-
 	/// Channel information
 	std::string					m_name;
 	char						m_type;

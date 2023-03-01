@@ -70,7 +70,9 @@
 #define RPL_EXCEPTLIST 348
 #define RPL_ENDOFEXCEPTLIST 349
 #define RPL_VERSION 351
-#define RPL_NAMREPLY(user, channel, prefix)				(SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + prefix + user.nickname())
+
+// TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
+#define RPL_NAMREPLY(user, channel, channel_user)		(SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + channel_user.get_highest_prefix() + channel_user.nickname())
 #define RPL_ENDOFNAMES(user, channel)					(SOURCE("366", user) + " " + channel.name() + " :End of /NAMES list.")
 #define RPL_LINKS 364
 #define RPL_ENDOFLINKS 365
