@@ -76,15 +76,85 @@ bool Channel::update_modes(const std::string &modes)
 	return true;
 }
 
-void Channel::add_to_banlist(const std::string &user)
+void Channel::add_user(const User &user)
 {
-	if (std::find(m_ban_list.begin(), m_ban_list.end(), user) == m_ban_list.end())
-		m_ban_list.push_back(user);
-	else
-		std::cerr << "User already in ban list" << std::endl;
+	add_user(user.nickname());
 }
 
-void Channel::remove_from_banlist(const std::string &user)
+void Channel::add_user(const std::string &user_nickname)
 {
-	(void)user;
+	m_users.push_back(user_nickname);
+}
+
+void Channel::remove_user(const User &user)
+{
+	remove_user(user.nickname());
+}
+
+void Channel::remove_user(const std::string &user_nickname)
+{
+	UserIterator user = std::find(m_users.begin(), m_users.end(), user_nickname);
+	if (user != m_users.end())
+		m_users.erase(user);
+	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the user list of channel [%] because it was not present.", user_nickname.c_str(), m_name.c_str());
+}
+
+bool Channel::has_user(const User &user)
+{
+	return has_user(user.nickname());
+}
+
+bool Channel::has_user(const std::string &user_nickname)
+{
+	return std::find(m_users.begin(), m_users.end(), user_nickname) != m_users.end();
+}
+
+void Channel::add_to_banlist(const User &user)
+{
+	add_to_banlist(user.nickname());
+}
+
+void Channel::add_to_banlist(const std::string &user_nickname)
+{
+	if (std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname) == m_ban_list.end())
+		m_ban_list.push_back(user_nickname);
+	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban list of channel [%] because it was already present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::remove_from_banlist(const User &user)
+{
+	remove_from_banlist(user.nickname());
+}
+
+void Channel::remove_from_banlist(const std::string &user_nickname)
+{
+	UserIterator entry = std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname);
+	if (entry != m_ban_list.end())
+		m_ban_list.erase(entry);
+	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban list of channel [%] because it was not present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::add_to_invitelist(const User &user)
+{
+	add_to_invitelist(user.nickname());
+}
+
+void Channel::add_to_invitelist(const std::string &user_nickname)
+{
+	if (std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname) == m_invite_list.end())
+		m_invite_list.push_back(user_nickname);
+	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the invite list of channel [%] because it was already present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::remove_from_invitelist(const User &user)
+{
+	remove_from_invitelist(user.nickname());
+}
+
+void Channel::remove_from_invitelist(const std::string &user_nickname)
+{
+	UserIterator entry = std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname);
+	if (entry != m_invite_list.end())
+		m_invite_list.erase(entry);
+	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
