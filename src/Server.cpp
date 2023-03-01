@@ -183,6 +183,12 @@ void Server::accept_new_connections()
 	if (new_client_socket_fd <= 0)
 		CORE_ERROR("accept: %s", strerror(errno));
 
+	if (fcntl(new_client_socket_fd, F_SETFL, O_NONBLOCK) < 0) {
+		CORE_ERROR("fcntl: %s", strerror(errno));
+		close(new_client_socket_fd);
+		return ;
+	}
+
 	CORE_INFO("Incomming connexion from : %s:%u", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
 
 	m_users.push_back(User(new_client_socket_fd, inet_ntoa(client.sin_addr), ntohs(client.sin_port)));

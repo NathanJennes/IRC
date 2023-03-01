@@ -135,6 +135,6 @@ void User::recalculate_ping()
 const char *User::debug_name()
 {
 	static std::string debug_name;
-	debug_name = m_nickname + "@" + m_ip + ":" + std::to_string(m_port);
+	debug_name = m_nickname + "@" + m_ip + ":" + to_string(m_port);
 	return debug_name.c_str();
 }

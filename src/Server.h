@@ -40,7 +40,7 @@ public:
 	static const std::string&			user_modes()			{ return m_user_modes; }
 	static const std::string&			channel_modes()			{ return m_channel_modes; }
 	static const std::string&			channel_modes_param()	{ return m_channel_modes_parameter; }
-	static const std::string			users_count()			{ return std::to_string(m_users.size()); }
+	static const std::string			users_count()			{ return to_string((int)m_users.size()); }
 	static const std::string&			password()				{ return m_password; }
 	static std::vector<Channel>&		channels()				{ return m_channels; }
 
@@ -84,7 +84,6 @@ private:
 	typedef int (*command_function)(User&, const Command&);
 	static std::map<std::string, command_function>	m_commands;
 	static std::map<std::string, command_function>	m_connection_commands;
-
 
 	typedef std::vector<User>::iterator							UserIterator;
 	typedef std::map<std::string, command_function>::iterator	CommandIterator;
