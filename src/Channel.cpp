@@ -27,11 +27,10 @@ Channel::Channel(User& user, const std::string &name) :
 	}
 	else
 		m_type = LOCAL;
-	m_users.push_back(&user);
 }
 
 // TODO: check if user is already in the channel
-bool Channel::set_mode(Command& command)
+bool Channel::set_mode(const Command& command)
 {
 	bool value;
 	std::string modes = command.get_parameters()[0]; // TODO put it in a loop
@@ -82,19 +81,6 @@ bool Channel::set_mode(Command& command)
 	return true;
 }
 
-void Channel::add_to_banlist(const std::string &user)
-{
-	if (std::find(m_ban_list.begin(), m_ban_list.end(), user) == m_ban_list.end())
-		m_ban_list.push_back(user);
-	else
-		std::cerr << "User already in ban list" << std::endl;
-}
-
-void Channel::remove_from_banlist(const std::string &user)
-{
-	(void)user;
-}
-
 std::string Channel::modes(User& user) const
 {
 	std::string modes = "+";
@@ -139,4 +125,17 @@ std::string Channel::modes(User& user) const
 bool Channel::is_user_in_channel(User &user) const
 {
 	return false;
+}
+
+void Channel::add_to_banlist(const std::string &user)
+{
+	if (std::find(m_ban_list.begin(), m_ban_list.end(), user) == m_ban_list.end())
+		m_ban_list.push_back(user);
+	else
+		std::cerr << "User already in ban list" << std::endl;
+}
+
+void Channel::remove_from_banlist(const std::string &user)
+{
+	(void)user;
 }

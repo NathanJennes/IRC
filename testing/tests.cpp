@@ -3,8 +3,8 @@
 //
 
 #include <iostream>
-#include "IRC.h"
-#include "Server.h"
+#include "../src/IRC.h"
+#include "../src/Server.h"
 
 #define USERNAME "cyril"
 #define HOSTNAME "localhost"

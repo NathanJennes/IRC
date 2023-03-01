@@ -58,7 +58,7 @@ public:
 	void	set_topic(const std::string& topic)	{ m_topic = topic; }
 	void	set_key(const std::string& key)		{ m_key = key; }
 	void	set_user_limit(int limit) 			{ m_user_limit = limit; }
-	bool	set_mode(Command& cmd);
+	bool	set_mode(const Command& cmd);
 
 	friend bool operator==(const Channel& lhs, const Channel& rhs) {
 		return lhs.m_name == rhs.m_name;
@@ -78,8 +78,6 @@ private:
 	std::vector<std::string>	m_invite_list;
 	std::vector<std::string>	m_invite_exemptions;
 	std::string 				m_key;
-
-	std::vector<User *>			m_users; // ????
 
 	int		m_user_limit;
 

@@ -438,8 +438,7 @@ int mode(User& user, const Command& command)
 			return 1;
 		}
 	}
-	else
-
+	// TODO: Handle user mode
 
 	return 0;
 }
