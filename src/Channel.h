@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include "User.h"
+#include "Command.h"
 
 class Channel
 {
@@ -26,7 +27,7 @@ public:
 	{
 		explicit UserEntry(const std::string& nickname);
 
-		bool operator==(const std::string& nickname);
+		bool operator==(const std::string& nickname) const;
 
 		std::string get_highest_prefix() const;
 
@@ -52,7 +53,7 @@ public:
 		bool		m_has_voice;
 	};
 
-	explicit Channel(const std::string& name);
+	explicit Channel(User& user, const std::string& name);
 
 	/// Typedefs
 	typedef std::vector<UserEntry>::iterator		UserIterator;
@@ -69,11 +70,11 @@ public:
 	void add_user(const std::string& user_nickname);
 	void remove_user(const User& user);
 	void remove_user(const std::string& user_nickname);
-	bool has_user(const User& user);
-	bool has_user(const std::string& user_nickname);
+	bool has_user(const User& user) const;
+	bool has_user(const std::string& user_nickname) const;
 
 	/// Modes
-	bool update_modes(const std::string& modes);
+	bool update_modes(const Command& command);
 
 	/// Entry restrictions
 	void add_to_banlist(const std::string& user_nickname);
@@ -90,8 +91,8 @@ public:
 	const	std::string&	topic()	const	{ return m_topic; }
 	char					type()	const	{ return m_type; }
 
-	int								user_count()	const	{ return m_user_count; }
-	int								user_limit()	const	{ return m_user_limit; }
+	size_t							user_count()	const	{ return m_users.size(); }
+	size_t							user_limit()	const	{ return m_user_limit; }
 	const	std::vector<UserEntry>&	users()			const	{ return m_users; }
 
 	const std::string&				key()				const	{ return m_key; }
@@ -99,6 +100,7 @@ public:
 	const std::vector<std::string>&	invite_exemptions()	const { return m_invite_exemptions; }
 	const std::vector<std::string>&	ban_list()			const { return m_ban_list; }
 	const std::vector<std::string>&	ban_exemptions()	const { return m_ban_exemptions; }
+	std::string						modes(User& user)	const;
 
 	bool	is_ban_protected()		const { return m_is_ban_protected; }
 	bool	has_ban_exemptions()	const { return m_has_ban_exemptions; }
@@ -110,6 +112,14 @@ public:
 	bool	is_secret()				const { return m_is_secret; }
 	bool	is_topic_protected()	const { return m_is_topic_protected; }
 	bool	no_outside_messages()	const { return m_no_outside_messages; }
+
+	friend bool operator==(const Channel& lhs, const Channel& rhs) {
+		return lhs.m_name == rhs.m_name;
+	}
+
+	friend bool operator!=(const Channel& lhs, const Channel& rhs) {
+		return !(lhs == rhs);
+	}
 
 private:
 	/// Channel information
@@ -125,9 +135,8 @@ private:
 	std::string 				m_key;
 
 	/// Users
-	int							m_user_limit;
-	int							m_user_count;
-	std::vector<UserEntry>	m_users;
+	size_t						m_user_limit;
+	std::vector<UserEntry>		m_users;
 
 	/// Modes
 	bool	m_is_ban_protected;			// +b

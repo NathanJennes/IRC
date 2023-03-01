@@ -10,7 +10,7 @@ Channel::UserEntry::UserEntry(const std::string& nickname)
 : m_nickname(nickname), m_is_founder(false), m_is_protected(false),
   m_is_operator(false), m_is_halfop(false), m_has_voice(false) {}
 
-bool Channel::UserEntry::operator==(const std::string &nickname)
+bool Channel::UserEntry::operator==(const std::string &nickname) const
 {
 	return nickname == m_nickname;
 }
@@ -30,30 +30,38 @@ std::string Channel::UserEntry::get_highest_prefix() const
 	return "";
 }
 
-Channel::Channel(const std::string &name) : m_name(name), m_user_limit(), m_user_count(),
-											m_is_ban_protected(),
-											m_has_ban_exemptions(),
-											m_is_user_limited(),
-											m_is_invite_only(),
-											m_has_invite_exemptions(),
-											m_is_key_protected(),
-											m_is_moderated(),
-											m_is_secret(),
-											m_is_topic_protected(),
-											m_no_outside_messages()
+Channel::Channel(User& user, const std::string &name) :
+	m_name(name),
+	m_user_limit(),
+	m_is_ban_protected(),
+	m_has_ban_exemptions(),
+	m_is_user_limited(),
+	m_is_invite_only(),
+	m_has_invite_exemptions(),
+	m_is_key_protected(),
+	m_is_moderated(),
+	m_is_secret(),
+	m_is_topic_protected(),
+	m_no_outside_messages()
 {
 	// TODO: have a look into this
 	if (name[0] == CHANNEL_TYPE_SHARED_SYMBOL) {
 		m_type = CHANNEL_TYPE_SHARED_SYMBOL;
-		update_modes("+nt");
+		m_is_topic_protected = true; // +t
+		m_no_outside_messages = true; // +n
 	}
 	else
 		m_type = CHANNEL_TYPE_LOCAL_SYMBOL;
+
+	(void)user;
 }
 
-bool Channel::update_modes(const std::string &modes)
+// TODO: check if user is already in the channel
+bool Channel::update_modes(const Command& command)
 {
 	bool value;
+	std::string modes = command.get_parameters()[0]; // TODO put it in a loop
+
 	if (modes[0] != '+')
 		value = true;
 	else if (modes[0] == '-')
@@ -100,6 +108,47 @@ bool Channel::update_modes(const std::string &modes)
 	return true;
 }
 
+std::string Channel::modes(User& user) const
+{
+	std::string modes = "+";
+	std::string mode_params;
+
+	bool hidden = has_user(user);
+
+	if (m_is_ban_protected)
+		modes += "b";
+	if (m_has_ban_exemptions)
+		modes += "e";
+	if (m_is_invite_only)
+		modes += "i";
+
+	if (m_is_key_protected) {
+		modes += "k";
+		if (!hidden)
+			mode_params += "<Key>";
+		else
+			mode_params += " " + m_key;
+	}
+
+	if (m_is_user_limited) {
+		modes += "l";
+		mode_params += " " + to_string(m_user_limit);
+	}
+
+	if (m_no_outside_messages)
+		modes += "n";
+	if (m_is_moderated)
+		modes += "m";
+	if (m_is_secret)
+		modes += "s";
+	if (m_is_topic_protected)
+		modes += "t";
+	if (m_has_invite_exemptions)
+		modes += "I";
+
+	return modes + mode_params;
+}
+
 void Channel::add_user(const User &user)
 {
 	add_user(user.nickname());
@@ -123,12 +172,12 @@ void Channel::remove_user(const std::string &user_nickname)
 	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the user list of channel [%] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
-bool Channel::has_user(const User &user)
+bool Channel::has_user(const User &user) const
 {
 	return has_user(user.nickname());
 }
 
-bool Channel::has_user(const std::string &user_nickname)
+bool Channel::has_user(const std::string &user_nickname) const
 {
 	return std::find(m_users.begin(), m_users.end(), user_nickname) != m_users.end();
 }

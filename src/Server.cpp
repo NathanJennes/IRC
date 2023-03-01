@@ -109,6 +109,7 @@ void Server::initialize_command_functions()
 
 	// channel commands
 	m_commands.insert(std::make_pair("JOIN", join));
+	m_commands.insert(std::make_pair("MODE", mode));
 }
 
 bool Server::update()
@@ -323,6 +324,11 @@ void Server::reply_list_channel_members_to_user(User &user, const Channel& chann
 	reply(user, RPL_ENDOFNAMES(user, channel));
 }
 
+bool Server::user_exists(const Server::UserIterator &user)
+{
+	return user != m_users.end();
+}
+
 bool Server::user_exists(const std::string &user_nickname)
 {
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++) {
@@ -341,6 +347,11 @@ Server::UserIterator Server::find_user(const std::string &user_nickname)
 	return m_users.end();
 }
 
+bool Server::channel_exists(const Server::ChannelIterator &channel)
+{
+	return channel != m_channels.end();
+}
+
 bool Server::channel_exists(const std::string &channel_name)
 {
 	for (ChannelIterator channel = m_channels.begin(); channel != m_channels.end(); channel++) {
@@ -357,14 +368,4 @@ Server::ChannelIterator Server::find_channel(const std::string &channel_name)
 			return channel;
 	}
 	return m_channels.end();
-}
-
-bool Server::user_exists(const Server::UserIterator &user)
-{
-	return user != m_users.end();
-}
-
-bool Server::channel_exists(const Server::ChannelIterator &channel)
-{
-	return channel != m_channels.end();
 }

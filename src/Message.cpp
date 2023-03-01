@@ -2,6 +2,7 @@
 // Created by Cyril Battistolo on 25/02/2023.
 //
 
+#include <algorithm>
 #include "log.h"
 #include "IRC.h"
 #include "Command.h"
@@ -81,7 +82,7 @@ int nick(User& user, const Command& command)
 		return 1;
 	}
 
-	if (Server::is_nickname_taken(command.get_parameters()[0])) {
+	if (Server::user_exists(command.get_parameters()[0])) {
 		if (!user.is_registered())
 		{
 			user.set_nickname("Guest" + to_string(Server::users().size()));
@@ -256,6 +257,10 @@ int join(User& user, const Command& command)
 			last_pos = new_pos;
 			new_pos = first_param.find_first_of(',');
 		}
+
+		std::string last_channel = first_param.substr(last_pos);
+		if (!last_channel.empty())
+			requested_channels.push_back(last_channel);
 	}
 
 	// Retrieve all keys
@@ -291,7 +296,7 @@ int join(User& user, const Command& command)
 
 		// If no associated channel was found, create a new channel with its name
 		if (server_channel == server_channels.end()) {
-			Server::channels().push_back(Channel(*requested_chan));
+			Server::channels().push_back(Channel(user, *requested_chan));
 			server_channel = Server::channels().end() - 1;
 		}
 
@@ -392,6 +397,7 @@ int join(User& user, const Command& command)
 
 		CORE_INFO("User %s joined the channel %s", user.debug_name(), server_channel->name().c_str());
 		user.channels().push_back(server_channel->name());
+		server_channel->add_user(user);
 		Server::reply(user, user.source() + " JOIN " + server_channel->name());
 		Server::reply(user, RPL_TOPIC(user, (*server_channel)));
 		Server::reply_list_channel_members_to_user(user, *server_channel);
@@ -410,6 +416,33 @@ int mode(User& user, const Command& command)
 		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
 		return 0;
 	}
+
+	if (is_channel(command.get_parameters()[0]))
+	{
+		Server::ChannelIterator channel = Server::find_channel(command.get_parameters()[0]);
+		if (channel != Server::channels().end())
+		{
+			if (command.get_parameters().size() == 1) {
+				Server::reply(user, RPL_CHANNELMODEIS(user, channel));
+				return 0;
+			}
+			if (command.get_parameters().size() == 2) {
+				if (channel->has_user(user))
+					channel->update_modes(command);
+				else {
+					CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
+					Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
+				}
+			}
+			return 0;
+		}
+		else {
+			CORE_TRACE_IRC_ERR("User %s tried to set mode on a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+			Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
+			return 1;
+		}
+	}
+	// TODO: Handle user mode
 
 	return 0;
 }
