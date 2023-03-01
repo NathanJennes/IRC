@@ -83,7 +83,7 @@ void Channel::add_user(const User &user)
 
 void Channel::add_user(const std::string &user_nickname)
 {
-	m_users.push_back(user_nickname);
+	m_users.push_back(UserEntry(user_nickname));
 }
 
 void Channel::remove_user(const User &user)
@@ -128,7 +128,7 @@ void Channel::remove_from_banlist(const User &user)
 
 void Channel::remove_from_banlist(const std::string &user_nickname)
 {
-	UserIterator entry = std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname);
+	NicknameIterator entry = std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname);
 	if (entry != m_ban_list.end())
 		m_ban_list.erase(entry);
 	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban list of channel [%] because it was not present.", user_nickname.c_str(), m_name.c_str());
@@ -153,7 +153,7 @@ void Channel::remove_from_invitelist(const User &user)
 
 void Channel::remove_from_invitelist(const std::string &user_nickname)
 {
-	UserIterator entry = std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname);
+	NicknameIterator entry = std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname);
 	if (entry != m_invite_list.end())
 		m_invite_list.erase(entry);
 	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%] because it was not present.", user_nickname.c_str(), m_name.c_str());

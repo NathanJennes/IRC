@@ -15,6 +15,37 @@
 class Channel
 {
 public:
+	/// Types
+	struct UserEntry
+	{
+		explicit UserEntry(const std::string& nickname) :
+			m_nickname(nickname), m_is_founder(false), m_is_protected(false),
+			m_is_operator(false), m_is_halfop(false), m_has_voice(false) {}
+
+		bool operator==(const std::string& nickname) { return nickname == m_nickname; }
+
+		void is_founder(bool new_value)		{ m_is_founder = new_value; };
+		void is_protected(bool new_value)	{ m_is_protected = new_value; };
+		void is_operator(bool new_value)	{ m_is_operator = new_value; };
+		void is_halfop(bool new_value)		{ m_is_halfop = new_value; };
+		void has_voice(bool new_value)		{ m_has_voice = new_value; };
+
+		const std::string&	nickname()		const { return m_nickname; };
+		bool				is_founder()	const { return m_is_founder; };
+		bool				is_protected()	const { return m_is_protected; };
+		bool				is_operator()	const { return m_is_operator; };
+		bool				is_halfop()		const { return m_is_halfop; };
+		bool				has_voice()		const { return m_has_voice; };
+
+	private:
+		std::string	m_nickname;
+		bool		m_is_founder;
+		bool		m_is_protected;
+		bool		m_is_operator;
+		bool		m_is_halfop;
+		bool		m_has_voice;
+	};
+
 	explicit Channel(const std::string& name);
 
 	/// Channel information
@@ -48,9 +79,9 @@ public:
 	const	std::string&	topic()	const	{ return m_topic; }
 	char					type()	const	{ return m_type; }
 
-	int									user_count()	const	{ return m_user_count; }
-	int									user_limit()	const	{ return m_user_limit; }
-	const	std::vector<std::string>&	users()			const	{ return m_users; }
+	int								user_count()	const	{ return m_user_count; }
+	int								user_limit()	const	{ return m_user_limit; }
+	const	std::vector<UserEntry>&	users()			const	{ return m_users; }
 
 	const std::string&				key()				const	{ return m_key; }
 	const std::vector<std::string>&	invite_list()		const { return m_invite_list; }
@@ -71,7 +102,8 @@ public:
 
 private:
 	/// Typedefs
-	typedef std::vector<std::string>::iterator UserIterator;
+	typedef std::vector<UserEntry>::iterator	UserIterator;
+	typedef std::vector<std::string>::iterator	NicknameIterator;
 
 	/// Channel information
 	std::string					m_name;
@@ -88,7 +120,7 @@ private:
 	/// Users
 	int							m_user_limit;
 	int							m_user_count;
-	std::vector<std::string>	m_users;
+	std::vector<UserEntry>	m_users;
 
 	/// Modes
 	bool	m_is_ban_protected;			// +b
