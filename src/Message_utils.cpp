@@ -5,7 +5,7 @@
 #include "IRC.h"
 #include "Message.h"
 
-namespace Message
+bool is_channel(const std::string& name)
 {
-
-} // namespace Message
+	return name[0] == '#' || name[0] == '&';
+}

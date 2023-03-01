@@ -399,3 +399,18 @@ int join(User& user, const Command& command)
 	}
 	return 0;
 }
+
+int mode(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#mode-message
+	// Command: MODE
+	// Parameters: <target> [<modestring> [<mode arguments>...]]
+
+	if (command.get_parameters().empty()) {
+		CORE_TRACE_IRC_ERR("User %s sent a MODE command with no parameters.", user.debug_name());
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	return 0;
+}

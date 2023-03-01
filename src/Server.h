@@ -85,7 +85,6 @@ private:
 	static std::map<std::string, command_function>	m_commands;
 	static std::map<std::string, command_function>	m_connection_commands;
 
-
 	typedef std::vector<User>::iterator							UserIterator;
 	typedef std::map<std::string, command_function>::iterator	CommandIterator;
 };
