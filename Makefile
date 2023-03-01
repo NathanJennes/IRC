@@ -89,7 +89,7 @@ RELEASE_LD_FLAGS	:=
 DEBUG_CXX_FLAGS		:=	-Og -g -DDEBUG
 DEBUG_LD_FLAGS		:=
 
-SANITIZE_CXX_FLAGS	:=	$(DEBUG_CXX_FLAGS) -fsanitize=address,undefined -fanalyzer
+SANITIZE_CXX_FLAGS	:=	$(DEBUG_CXX_FLAGS) -fsanitize=address,undefined #-fanalyzer
 SANITIZE_LD_FLAGS	:=	-fsanitize=address,undefined
 
 # ==============================================================================

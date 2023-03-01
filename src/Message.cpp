@@ -121,7 +121,7 @@ int pass(User& user, const Command& command)
 	// Parameters: <password>
 
 	if (user.is_registered()) {
-		Server::reply(user, ERR_ALREADYREGISTERED(user, command));
+		Server::reply(user, ERR_ALREADYREGISTERED(user));
 		user.disconnect();
 		return 1;
 	}
@@ -188,7 +188,7 @@ int user(User& user, const Command& command)
 	}
 
 	if (user.is_registered()) {
-		Server::reply(user, ERR_ALREADYREGISTERED(user, command));
+		Server::reply(user, ERR_ALREADYREGISTERED(user));
 		return 1;
 	}
 

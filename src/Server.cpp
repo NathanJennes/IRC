@@ -213,11 +213,9 @@ void Server::handle_messages()
 void Server::execute_command(User &user, const Command &cmd)
 {
 	CommandIterator it;
-	if (!user.is_registered())
-	{
+	if (!user.is_registered()) {
 		it = m_connection_commands.find(cmd.get_command());
-		if (it != m_connection_commands.end())
-		{
+		if (it != m_connection_commands.end()) {
 			if (user.need_password() && cmd.get_command() == "NICK") {
 				user.check_password();
 				if (user.need_password()) {
@@ -228,6 +226,8 @@ void Server::execute_command(User &user, const Command &cmd)
 			}
 			it->second(user, cmd);
 		}
+		else if (m_commands.find(cmd.get_command()) != m_commands.end())
+			reply(user, ERR_NOTREGISTERED(user));
 		else
 			reply(user, ERR_UNKNOWNCOMMAND(cmd.get_command()));
 		return ;
@@ -236,6 +236,8 @@ void Server::execute_command(User &user, const Command &cmd)
 	it = m_commands.find(cmd.get_command());
 	if (it != m_commands.end())
 		it->second(user, cmd);
+	else if (m_connection_commands.find(cmd.get_command()) != m_connection_commands.end())
+		reply(user, ERR_ALREADYREGISTERED(user));
 	else
 		reply(user, ERR_UNKNOWNCOMMAND(cmd.get_command()));
 }

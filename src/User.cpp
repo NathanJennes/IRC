@@ -81,8 +81,8 @@ std::string User::get_next_command_str()
 		m_readbuf.erase(0, command.size());
 	}
 
-	CORE_TRACE("INCOMING FROM %s:%d [%s]", ip().c_str(), port(), command.c_str());
-	CORE_DEBUG("User command buffer left: %s", m_readbuf.c_str());
+	CORE_TRACE("INCOMING FROM %s[%s]", debug_name(), command.c_str());
+	CORE_DEBUG("User %s command buffer left: %s", debug_name(), m_readbuf.c_str());
 	return command;
 }
 

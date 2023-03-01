@@ -103,10 +103,10 @@
 #define ERR_USERNOTINCHANNEL(nickname, channel)			(" " + nickname + " " channel " :They aren't on that channel")
 #define ERR_NOTONCHANNEL(channel)						(" " channel " :You're not on that channel")
 #define ERR_USERONCHANNEL(nickname, channel)			(" " + nickname + " " channel " :is already on channel")
-#define ERR_NOTREGISTERED								(" :You have not registered")
+#define ERR_NOTREGISTERED(user)							(SOURCE("451", user) + " :You have not registered")
 
 #define ERR_NEEDMOREPARAMS(user, command)				(SOURCE("461", user) + " " + command.get_command() + " :Not enough parameters")
-#define ERR_ALREADYREGISTERED(user, command)			(SOURCE("462", user) + " " + command.get_command() + " :You are already registered")
+#define ERR_ALREADYREGISTERED(user)						(SOURCE("462", user) + " :You may not registered")
 
 #define ERR_PASSWDMISMATCH(user)						(SOURCE("464", user) + " :Password incorrect")
 #define ERR_YOUREBANNEDCREEP							(" :You are banned from this server")
