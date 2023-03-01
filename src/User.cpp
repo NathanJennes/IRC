@@ -116,7 +116,7 @@ void User::try_finish_registration()
 	{
 		m_is_registered = true;
 		CORE_TRACE("User %s registered", nickname().c_str());
-		Server::welcome_user(*this);
+		Server::reply_welcome_user(*this);
 	}
 }
 

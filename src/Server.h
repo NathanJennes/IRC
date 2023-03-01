@@ -42,8 +42,8 @@ public:
 	//
 	// Complex replies
 	//
-	static void welcome_user(User& user);
-	static void list_channel_members_to_user(User &user, const Channel& channel);
+	static void reply_welcome_user(User& user);
+	static void reply_list_channel_members_to_user(User &user, const Channel& channel);
 
 	//
 	// User management

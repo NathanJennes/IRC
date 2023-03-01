@@ -308,7 +308,7 @@ bool Server::is_nickname_taken(const std::string &nickname)
 	return false;
 }
 
-void Server::welcome_user(User &user)
+void Server::reply_welcome_user(User &user)
 {
 	reply(user, RPL_WELCOME(user));
 	reply(user, RPL_YOURHOST(user));
@@ -316,10 +316,9 @@ void Server::welcome_user(User &user)
 	reply(user, RPL_MYINFO(user));
 }
 
-void Server::list_channel_members_to_user(User &user, const Channel& channel)
+void Server::reply_list_channel_members_to_user(User &user, const Channel& channel)
 {
-	(void)user;
-	(void)channel;
+
 }
 
 bool Server::user_exists(const std::string &user_nickname)
