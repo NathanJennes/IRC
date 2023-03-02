@@ -57,52 +57,69 @@ Channel::Channel(User& user, const std::string &name) :
 }
 
 // TODO: check if user is already in the channel
-bool Channel::update_modes(const Command& command)
+bool Channel::update_mode(const Command& command)
 {
 	bool value;
-	std::string modes = command.get_parameters()[0]; // TODO put it in a loop
 
-	if (modes[0] != '+')
-		value = true;
-	else if (modes[0] == '-')
-		value = false;
-	else
-		return false;
+	// TODO: parse the mode string
 
-	for (size_t i = 1; i < modes.size(); i++) {
-		switch (modes[i]) {
-			case 'b':
-				m_is_ban_protected = value;
-				break;
-			case 'e':
-				m_has_ban_exemptions = value;
-				break;
-			case 'l':
-				m_is_user_limited = value;
-				break;
-			case 'i':
-				m_is_invite_only = value;
-				break;
-			case 'I':
-				m_has_invite_exemptions = value;
-				break;
-			case 'k':
-				m_is_key_protected = value;
-				break;
-			case 'm':
-				m_is_moderated = value;
-				break;
-			case 's':
-				m_is_secret = value;
-				break;
-			case 't':
-				m_is_topic_protected = value;
-				break;
-			case 'n':
-				m_no_outside_messages = value;
-				break;
-			default:
-				return false;
+	for (size_t i = 0; i < command.get_parameters().size(); i++)
+	{
+		std::string modes = command.get_parameters()[i]; // TODO put it in a loop
+		CORE_DEBUG("Parameter %d: %s", i, modes.c_str());
+
+		if (modes[0] != '+')
+			value = true;
+		else if (modes[0] == '-')
+			value = false;
+		else
+			return false;
+
+		size_t j = 0;
+		if (modes.size() == 1 && command.get_parameters().size() > i + 1)
+			modes = command.get_parameters()[++i];
+		else
+			j = 1;
+
+		for (; j < modes.size(); j++)
+		{
+			switch (modes[j])
+			{
+				case 'b':
+					m_is_ban_protected = value;
+					break;
+				case 'e':
+					m_has_ban_exemptions = value;
+					break;
+				case 'l':
+					// TODO: check argument
+					m_is_user_limited = value;
+					break;
+				case 'i':
+					m_is_invite_only = value;
+					break;
+				case 'I':
+					m_has_invite_exemptions = value;
+					break;
+				case 'k':
+					m_is_key_protected = value;
+					m_key = command.get_parameters()[];
+					break;
+				case 'm':
+					m_is_moderated = value;
+					break;
+				case 's':
+					m_is_secret = value;
+					break;
+				case 't':
+					m_is_topic_protected = value;
+					break;
+				case 'n':
+					m_no_outside_messages = value;
+					break;
+				default:
+					return false;
+			}
 		}
 	}
 	return true;

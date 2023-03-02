@@ -74,7 +74,7 @@ public:
 	bool has_user(const std::string& user_nickname) const;
 
 	/// Modes
-	bool update_modes(const Command& command);
+	bool update_mode(const Command& command);
 
 	/// Entry restrictions
 	void add_to_banlist(const std::string& user_nickname);

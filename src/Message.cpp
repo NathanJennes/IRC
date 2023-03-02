@@ -428,7 +428,7 @@ int mode(User& user, const Command& command)
 			}
 			if (command.get_parameters().size() == 2) {
 				if (channel->has_user(user))
-					channel->update_modes(command);
+					channel->update_mode(command);
 				else {
 					CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
 					Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
