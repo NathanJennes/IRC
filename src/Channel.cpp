@@ -102,8 +102,8 @@ bool Channel::update_mode(const Command& command)
 					m_has_invite_exemptions = value;
 					break;
 				case 'k':
+//					m_key = command.get_parameters()[];
 					m_is_key_protected = value;
-					m_key = command.get_parameters()[];
 					break;
 				case 'm':
 					m_is_moderated = value;

@@ -65,7 +65,7 @@ public:
 	void set_key(const std::string& key)		{ m_key = key; }
 
 	/// Users
-	void set_user_limit(int limit) { m_user_limit = limit; }
+	void set_user_limit(size_t limit) { m_user_limit = limit; }
 	void add_user(const User& user);
 	void add_user(const std::string& user_nickname);
 	void remove_user(const User& user);

@@ -57,18 +57,20 @@ bool Server::initialize(uint16_t port)
 		return false;
 	}
 
+	if (fcntl(m_server_socket, F_SETFL, O_NONBLOCK) < 0) {
+		CORE_ERROR("fcntl: %s", strerror(errno));
+		return false;
+	}
+
 	struct sockaddr_in params = {};
+	bzero(&params, sizeof(params));
+
 	params.sin_family = AF_INET;
-	params.sin_addr.s_addr = htonl(INADDR_ANY);
+	params.sin_addr.s_addr = INADDR_ANY;
 	params.sin_port = htons(port);
 
 	if (bind(m_server_socket, (const struct sockaddr *) &params, sizeof (params)) < 0) {
 		CORE_ERROR("bind: %s", strerror(errno));
-		return false;
-	}
-
-	if (fcntl(m_server_socket, F_SETFL, O_NONBLOCK) < 0) {
-		CORE_ERROR("fcntl: %s", strerror(errno));
 		return false;
 	}
 
