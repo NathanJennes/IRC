@@ -96,6 +96,7 @@ int nick(User& user, const Command& command)
 	if (user.is_registered())
 		Server::reply(user, user.source() + " NICK :" + command.get_parameters()[0]);
 	user.set_nickname(command.get_parameters()[0]);
+	Server::reply(user, user.source() + " NICK :" + command.get_parameters()[0]);
 	return 0;
 }
 
@@ -194,7 +195,7 @@ int user(User& user, const Command& command)
 	}
 
 	if (command.get_parameters().size() < 4) {
-		Server::reply(user, RPL_MESSAGE(user, "USER", ":username too long"));
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
 		return 1;
 	}
 

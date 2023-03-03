@@ -20,10 +20,6 @@ class User
 {
 public:
 	explicit User(int fd, const std::string& ip, uint16_t port);
-	~User() {
-		if (is_registered())
-			close(m_fd);
-	}
 
 	ssize_t		receive_message();
 	ssize_t		send_message();

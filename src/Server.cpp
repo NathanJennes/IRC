@@ -59,11 +59,6 @@ bool Server::initialize(uint16_t port)
 		return false;
 	}
 
-	if (fcntl(m_server_socket, F_SETFL, O_NONBLOCK) < 0) {
-		CORE_ERROR("fcntl: %s", strerror(errno));
-		return false;
-	}
-
 	struct sockaddr_in params = {};
 	bzero(&params, sizeof(params));
 
@@ -104,7 +99,7 @@ void Server::initialize_command_functions()
 {
 	// register commands
 	m_connection_commands.insert(std::make_pair("AUTH", auth));
-	m_connection_commands.insert(std::make_pair("CAP", cap));
+//	m_connection_commands.insert(std::make_pair("CAP", cap));
 	m_connection_commands.insert(std::make_pair("NICK", nick));
 	m_connection_commands.insert(std::make_pair("PASS", pass));
 	m_connection_commands.insert(std::make_pair("USER", user));
@@ -291,6 +286,8 @@ void Server::disconnect_users()
 
 void Server::shutdown()
 {
+	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
+		close(user->fd());
 	close(m_server_socket);
 	CORE_INFO("Server shutdown");
 }
