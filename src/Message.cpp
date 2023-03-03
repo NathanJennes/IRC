@@ -232,6 +232,10 @@ int join(User& user, const Command& command)
 	//  Command: JOIN
 	//  Parameters: <channel>{,<channel>} [<key>{,<key>}]
 
+	// TODO: handle alternative parameter "0"
+	// TODO: handle empty JOIN command (to make a user quit all its connected channels)
+	// TODO: once joining a channel, the server should send to all users connected to the channel a JOIN command to signal them
+
 	// If we receive a source, simply ignore the command as it may come from a server
 	if (!command.get_source().source_name.empty()) {
 		CORE_TRACE_IRC_ERR("Got a <source> inside a JOIN message from %s. Did the message come from a server ?", user.debug_name());
@@ -298,6 +302,10 @@ int join(User& user, const Command& command)
 		// If no associated channel was found, create a new channel with its name
 		if (server_channel == server_channels.end()) {
 			Server::channels().push_back(Channel(user, *requested_chan));
+			Server::ChannelIterator new_channel = Server::find_channel(*requested_chan);
+			Server::reply(user, user.source() + " JOIN " + new_channel->name());
+			Server::reply(user, RPL_TOPIC(user, (*new_channel))); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
+			Server::reply_list_channel_members_to_user(user, *new_channel);
 			return 0;
 		}
 
@@ -400,7 +408,7 @@ int join(User& user, const Command& command)
 		user.channels().push_back(server_channel->name());
 		server_channel->add_user(user);
 		Server::reply(user, user.source() + " JOIN " + server_channel->name());
-		Server::reply(user, RPL_TOPIC(user, (*server_channel)));
+		Server::reply(user, RPL_TOPIC(user, (*server_channel))); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
 		Server::reply_list_channel_members_to_user(user, *server_channel);
 	}
 	return 0;

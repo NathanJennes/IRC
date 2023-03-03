@@ -17,9 +17,9 @@ bool Channel::UserEntry::operator==(const std::string &nickname) const
 
 std::string Channel::UserEntry::get_highest_prefix() const
 {
-	if (m_is_founder)
-		return CHANNEL_USER_PREFIX_FOUNDER;
-	else if (m_is_protected)
+//	if (m_is_founder)
+//		return CHANNEL_USER_PREFIX_FOUNDER;
+	if (m_is_protected)
 		return CHANNEL_USER_PREFIX_PROTECTED;
 	else if (m_is_operator)
 		return CHANNEL_USER_PREFIX_OPERATOR;
@@ -53,10 +53,9 @@ Channel::Channel(User& user, const std::string &name) :
 	else
 		m_type = CHANNEL_TYPE_LOCAL_SYMBOL;
 
-	UserEntry user_entry(user.nickname());
-	user_entry.is_founder(true);
-	user_entry.is_operator(true);
-	m_users.push_back(user_entry);
+	add_user(user);
+	set_user_founder(user, true);
+	set_user_operator(user, true);
 }
 
 bool Channel::update_mode(const Command& command)
@@ -127,7 +126,7 @@ bool Channel::update_mode(const Command& command)
 	return true;
 }
 
-std::string Channel::modes(User& user) const
+std::string Channel::get_modes_as_str(User& user) const
 {
 	std::string modes = "+";
 	std::string mode_params;
@@ -249,4 +248,85 @@ void Channel::remove_from_invitelist(const std::string &user_nickname)
 	if (entry != m_invite_list.end())
 		m_invite_list.erase(entry);
 	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%] because it was not present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::set_user_founder(const User& user, bool value)
+{
+	set_user_founder(user.nickname(), value);
+}
+
+void Channel::set_user_founder(const std::string& user_nickname, bool value)
+{
+	if (!has_user(user_nickname))
+		return ;
+
+	UserIterator user = find_user(user_nickname);
+	user->set_is_founder(value);
+}
+
+void Channel::set_user_protected(const User& user, bool value)
+{
+	set_user_protected(user.nickname(), value);
+}
+
+void Channel::set_user_protected(const std::string& user_nickname, bool value)
+{
+	if (!has_user(user_nickname))
+		return ;
+
+	UserIterator user = find_user(user_nickname);
+	user->set_is_protected(value);
+}
+
+void Channel::set_user_operator(const User& user, bool value)
+{
+	set_user_operator(user.nickname(), value);
+
+}
+
+void Channel::set_user_operator(const std::string& user_nickname, bool value)
+{
+	if (!has_user(user_nickname))
+		return ;
+
+	UserIterator user = find_user(user_nickname);
+	user->set_is_operator(value);
+}
+
+void Channel::set_user_halfop(const User& user, bool value)
+{
+	set_user_halfop(user.nickname(), value);
+}
+
+void Channel::set_user_halfop(const std::string& user_nickname, bool value)
+{
+	if (!has_user(user_nickname))
+		return ;
+
+	UserIterator user = find_user(user_nickname);
+	user->set_is_halfop(value);
+}
+
+void Channel::set_user_voice_permission(const User& user, bool value)
+{
+	set_user_voice_permission(user.nickname(), value);
+}
+
+void Channel::set_user_voice_permission(const std::string& user_nickname, bool value)
+{
+	if (!has_user(user_nickname))
+		return ;
+
+	UserIterator user = find_user(user_nickname);
+	user->set_has_voice(value);
+}
+
+Channel::UserIterator Channel::find_user(const User &user)
+{
+	return find_user(user.nickname());
+}
+
+Channel::UserIterator Channel::find_user(const std::string &user_nickname)
+{
+	return std::find(m_users.begin(), m_users.end(), user_nickname);
 }

@@ -31,11 +31,11 @@ public:
 
 		std::string get_highest_prefix() const;
 
-		void is_founder(bool new_value)		{ m_is_founder = new_value; };
-		void is_protected(bool new_value)	{ m_is_protected = new_value; };
-		void is_operator(bool new_value)	{ m_is_operator = new_value; };
-		void is_halfop(bool new_value)		{ m_is_halfop = new_value; };
-		void has_voice(bool new_value)		{ m_has_voice = new_value; };
+		void set_is_founder(bool new_value)		{ m_is_founder = new_value; };
+		void set_is_protected(bool new_value)	{ m_is_protected = new_value; };
+		void set_is_operator(bool new_value)	{ m_is_operator = new_value; };
+		void set_is_halfop(bool new_value)		{ m_is_halfop = new_value; };
+		void set_has_voice(bool new_value)		{ m_has_voice = new_value; };
 
 		const std::string&	nickname()		const { return m_nickname; };
 		bool				is_founder()	const { return m_is_founder; };
@@ -72,6 +72,16 @@ public:
 	void remove_user(const std::string& user_nickname);
 	bool has_user(const User& user) const;
 	bool has_user(const std::string& user_nickname) const;
+	void set_user_founder(const User& user, bool value);
+	void set_user_founder(const std::string& user_nickname, bool value);
+	void set_user_protected(const User& user, bool value);
+	void set_user_protected(const std::string& user_nickname, bool value);
+	void set_user_operator(const User& user, bool value);
+	void set_user_operator(const std::string& user_nickname, bool value);
+	void set_user_halfop(const User& user, bool value);
+	void set_user_halfop(const std::string& user_nickname, bool value);
+	void set_user_voice_permission(const User& user, bool value);
+	void set_user_voice_permission(const std::string& user_nickname, bool value);
 
 	/// Modes
 	bool update_mode(const Command& command);
@@ -100,7 +110,7 @@ public:
 	const std::vector<std::string>&	invite_exemptions()	const { return m_invite_exemptions; }
 	const std::vector<std::string>&	ban_list()			const { return m_ban_list; }
 	const std::vector<std::string>&	ban_exemptions()	const { return m_ban_exemptions; }
-	std::string						modes(User& user)	const;
+	std::string						get_modes_as_str(User& user)	const;
 
 	bool	is_ban_protected()		const { return m_is_ban_protected; }
 	bool	has_ban_exemptions()	const { return m_has_ban_exemptions; }
@@ -122,6 +132,11 @@ public:
 	}
 
 private:
+
+	/// Users
+	UserIterator	find_user(const User& user);
+	UserIterator	find_user(const std::string& user_nickname);
+
 	/// Channel information
 	std::string					m_name;
 	char						m_type;
