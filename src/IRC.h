@@ -55,7 +55,7 @@
 #define RPL_LISTSTART 321
 #define RPL_LIST 322
 #define RPL_LISTEND 323
-#define RPL_CHANNELMODEIS(user, channel)				(SOURCE("324", user), " " + channel->name() + " :" + channel->modes(user))
+#define RPL_CHANNELMODEIS(user, channel)				(SOURCE("324", user), " " + channel->name() + " : " + channel->modes(user))
 #define RPL_CREATIONTIME 329
 #define RPL_WHOISACCOUNT 330
 #define RPL_NOTOPIC 331

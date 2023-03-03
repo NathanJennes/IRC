@@ -53,10 +53,12 @@ Channel::Channel(User& user, const std::string &name) :
 	else
 		m_type = CHANNEL_TYPE_LOCAL_SYMBOL;
 
-	(void)user;
+	UserEntry user_entry(user.nickname());
+	user_entry.is_founder(true);
+	user_entry.is_operator(true);
+	m_users.push_back(user_entry);
 }
 
-// TODO: check if user is already in the channel
 bool Channel::update_mode(const Command& command)
 {
 	bool value;
@@ -65,7 +67,7 @@ bool Channel::update_mode(const Command& command)
 
 	for (size_t i = 0; i < command.get_parameters().size(); i++)
 	{
-		std::string modes = command.get_parameters()[i]; // TODO put it in a loop
+		std::string modes = command.get_parameters()[i];
 		CORE_DEBUG("Parameter %d: %s", i, modes.c_str());
 
 		if (modes[0] != '+')
