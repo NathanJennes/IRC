@@ -24,6 +24,7 @@ public:
 	ssize_t		receive_message();
 	ssize_t		send_message();
 	std::string	get_next_command_str();
+	bool		has_pending_command();
 	std::string	source();
 
 	void		try_finish_registration();

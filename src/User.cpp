@@ -66,16 +66,15 @@ ssize_t User::send_message()
 
 std::string User::get_next_command_str()
 {
-	std::string command;
-
-	std::size_t command_end = m_readbuf.find_first_of("\n\r");
-	if (command_end == std::string::npos)
+	if (!has_pending_command())
 		return "";
 
+	std::size_t command_end = m_readbuf.find_first_of("\n\r");
 	std::size_t crlf_end = command_end + 1;
 	if (m_readbuf[crlf_end] == '\r' || m_readbuf[crlf_end] == '\n')
 		crlf_end++;
 
+	std::string command;
 	if (crlf_end != std::string::npos) {
 		command = m_readbuf.substr(0, crlf_end);
 		m_readbuf.erase(0, command.size());
@@ -137,4 +136,9 @@ const char *User::debug_name()
 	static std::string debug_name;
 	debug_name = m_nickname + "@" + m_ip + ":" + to_string(m_port);
 	return debug_name.c_str();
+}
+
+bool User::has_pending_command()
+{
+	return m_readbuf.find_first_of("\r\n") != std::string::npos;
 }

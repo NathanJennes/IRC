@@ -187,7 +187,7 @@ void Server::handle_messages()
 {
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++)
 	{
-		if (user->read_buffer().empty() || user->is_disconnected())
+		if (!user->has_pending_command() || user->is_disconnected())
 			continue ;
 
 		std::string	command_str = user->get_next_command_str();

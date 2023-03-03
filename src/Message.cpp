@@ -298,7 +298,7 @@ int join(User& user, const Command& command)
 		// If no associated channel was found, create a new channel with its name
 		if (server_channel == server_channels.end()) {
 			Server::channels().push_back(Channel(user, *requested_chan));
-			server_channel = Server::channels().end() - 1;
+			return 0;
 		}
 
 		// If channel is invite-only
