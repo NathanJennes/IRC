@@ -17,7 +17,7 @@
 #include "Command.h"
 
 const int			Server::m_server_backlog = 10;
-const int			Server::m_timeout = 100;
+const int			Server::m_timeout = 20;
 const std::string	Server::m_creation_date = "2021-02-16 23:00:00";
 const std::string	Server::m_user_modes = "none";
 const std::string	Server::m_channel_modes = "none";
@@ -30,8 +30,7 @@ bool				Server::m_is_running = true;
 bool				Server::m_is_readonly = true;
 std::string			Server::m_password;
 
-pollfd				Server::m_server_pollfd;
-std::vector<pollfd>	Server::m_client_pollfds;
+std::vector<pollfd>	Server::m_pollfds;
 
 std::vector<User>								Server::m_users;
 std::vector<Channel>							Server::m_channels;
@@ -92,9 +91,11 @@ bool Server::initialize(uint16_t port)
 		m_is_readonly = true;
 	}
 
+	pollfd m_server_pollfd = {};
 	m_server_pollfd.fd = m_server_socket;
 	m_server_pollfd.events = POLLIN;
 	m_server_pollfd.revents = 0;
+	m_pollfds.push_back(m_server_pollfd);
 
 	return true;
 }
@@ -123,8 +124,8 @@ void Server::initialize_command_functions()
 
 bool Server::update()
 {
-	accept_new_connections();
 	poll_events();
+	accept_new_connections();
 	handle_events();
 	handle_messages();
 	disconnect_users();
@@ -133,11 +134,7 @@ bool Server::update()
 
 void Server::accept_new_connections()
 {
-	int poll_count = poll(&m_server_pollfd, 1, m_timeout);
-	if (poll_count < 0 && errno != EINTR)
-		CORE_ERROR("poll: %s", strerror(errno));
-
-	if ((m_server_pollfd.revents & POLLIN) == 0)
+	if ((m_pollfds[0].revents & POLLIN) == 0)
 		return ;
 
 	struct sockaddr_in client = {};
@@ -159,21 +156,21 @@ void Server::accept_new_connections()
 	pollfds.events = POLLIN | POLLOUT;
 	pollfds.revents = 0;
 
-	m_client_pollfds.push_back(pollfds);
+	m_pollfds.push_back(pollfds);
 	m_users.push_back(User(new_client_socket_fd, inet_ntoa(client.sin_addr), ntohs(client.sin_port)));
 }
 
 void Server::poll_events()
 {
-	int poll_count = poll(m_client_pollfds.data(), (nfds_t)m_client_pollfds.size(), -1);
+	int poll_count = poll(m_pollfds.data(), (nfds_t)m_pollfds.size(), m_timeout);
 	if (poll_count < 0 && errno != EINTR) {
 		CORE_ERROR("poll: %s", strerror(errno));
 	}
 
-	size_t i = 0;
+	size_t i = 1; // skip server socket
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++, i++) {
-		user->set_is_readable(m_client_pollfds[i].revents & POLLIN);
-		user->set_is_writable(m_client_pollfds[i].revents & POLLOUT);
+		user->set_is_readable(m_pollfds[i].revents & POLLIN);
+		user->set_is_writable(m_pollfds[i].revents & POLLOUT);
 	}
 }
 
@@ -285,7 +282,7 @@ void Server::disconnect_users()
 	{
 		if (m_users[i].is_disconnected()) {
 			CORE_INFO("%s disconnected", m_users[i].nickname().c_str());
-			m_client_pollfds.erase(m_client_pollfds.begin() + (long)i);
+			m_pollfds.erase(m_pollfds.begin() + (long)i);
 			close(m_users[i].fd());
 			m_users.erase(m_users.begin() + (long)i);
 		}
