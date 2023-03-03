@@ -17,7 +17,7 @@
 #include "Command.h"
 
 const int			Server::m_server_backlog = 10;
-const int			Server::m_timeout = 10;
+const int			Server::m_timeout = 20;
 const std::string	Server::m_creation_date = "2021-02-16 23:00:00";
 const std::string	Server::m_user_modes = "none";
 const std::string	Server::m_channel_modes = "none";
@@ -29,6 +29,8 @@ int					Server::m_server_socket;
 bool				Server::m_is_running = true;
 bool				Server::m_is_readonly = true;
 std::string			Server::m_password;
+
+std::vector<pollfd>	Server::m_pollfds;
 
 std::vector<User>								Server::m_users;
 std::vector<Channel>							Server::m_channels;
@@ -89,6 +91,12 @@ bool Server::initialize(uint16_t port)
 		m_is_readonly = true;
 	}
 
+	pollfd m_server_pollfd = {};
+	m_server_pollfd.fd = m_server_socket;
+	m_server_pollfd.events = POLLIN;
+	m_server_pollfd.revents = 0;
+	m_pollfds.push_back(m_server_pollfd);
+
 	return true;
 }
 
@@ -116,34 +124,53 @@ void Server::initialize_command_functions()
 
 bool Server::update()
 {
-	accept_new_connections();
 	poll_events();
+	accept_new_connections();
 	handle_events();
 	handle_messages();
 	disconnect_users();
 	return true;
 }
 
-void Server::poll_events()
+void Server::accept_new_connections()
 {
-	std::vector<pollfd> pollfds(m_users.size());
+	if ((m_pollfds[0].revents & POLLIN) == 0)
+		return ;
 
-	size_t i = 0;
-	for (UserIterator user = m_users.begin(); user != m_users.end(); user++, i++) {
-		pollfds[i].fd = user->fd();
-		pollfds[i].events = POLLIN | POLLOUT;
-		pollfds[i].revents = 0;
+	struct sockaddr_in client = {};
+	socklen_t len = sizeof(client);
+
+	int new_client_socket_fd = accept(m_server_socket, reinterpret_cast<sockaddr *>(&client), &len);
+	if (new_client_socket_fd <= 0)
+		CORE_ERROR("accept: %s", strerror(errno));
+	CORE_INFO("Incomming connexion from : %s:%u", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+
+	if (fcntl(new_client_socket_fd, F_SETFL, O_NONBLOCK) < 0) {
+		CORE_ERROR("fcntl: %s", strerror(errno));
+		close(new_client_socket_fd);
+		return ;
 	}
 
-	int poll_count = poll(pollfds.data(), (unsigned int)pollfds.size(), m_timeout);
+	pollfd pollfds = {};
+	pollfds.fd = new_client_socket_fd;
+	pollfds.events = POLLIN | POLLOUT;
+	pollfds.revents = 0;
+
+	m_pollfds.push_back(pollfds);
+	m_users.push_back(User(new_client_socket_fd, inet_ntoa(client.sin_addr), ntohs(client.sin_port)));
+}
+
+void Server::poll_events()
+{
+	int poll_count = poll(m_pollfds.data(), (nfds_t)m_pollfds.size(), m_timeout);
 	if (poll_count < 0 && errno != EINTR) {
 		CORE_ERROR("poll: %s", strerror(errno));
 	}
 
-	i = 0;
+	size_t i = 1; // skip server socket
 	for (UserIterator user = m_users.begin(); user != m_users.end(); user++, i++) {
-		user->set_is_readable(pollfds[i].revents & POLLIN);
-		user->set_is_writable(pollfds[i].revents & POLLOUT);
+		user->set_is_readable(m_pollfds[i].revents & POLLIN);
+		user->set_is_writable(m_pollfds[i].revents & POLLOUT);
 	}
 }
 
@@ -158,41 +185,7 @@ void Server::handle_events()
 			if (!user->write_buffer().empty() && user->send_message() <= 0)
 				user->disconnect();
 		}
-		// TODO: handle errors
 	}
-}
-
-void Server::accept_new_connections()
-{
-	pollfd pollfd = {};
-
-	pollfd.fd = m_server_socket;
-	pollfd.events = POLLIN;
-	pollfd.revents = 0;
-
-	int poll_count = poll(&pollfd, 1, m_timeout);
-	if (poll_count < 0 && errno != EINTR)
-		CORE_ERROR("poll: %s", strerror(errno));
-
-	if ((pollfd.revents & POLLIN) == 0)
-		return ;
-
-	struct sockaddr_in client = {};
-	socklen_t len = sizeof(client);
-
-	int new_client_socket_fd = accept(m_server_socket, reinterpret_cast<sockaddr *>(&client), &len);
-	if (new_client_socket_fd <= 0)
-		CORE_ERROR("accept: %s", strerror(errno));
-
-	if (fcntl(new_client_socket_fd, F_SETFL, O_NONBLOCK) < 0) {
-		CORE_ERROR("fcntl: %s", strerror(errno));
-		close(new_client_socket_fd);
-		return ;
-	}
-
-	CORE_INFO("Incomming connexion from : %s:%u", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
-
-	m_users.push_back(User(new_client_socket_fd, inet_ntoa(client.sin_addr), ntohs(client.sin_port)));
 }
 
 void Server::handle_messages()
@@ -289,6 +282,7 @@ void Server::disconnect_users()
 	{
 		if (m_users[i].is_disconnected()) {
 			CORE_INFO("%s disconnected", m_users[i].nickname().c_str());
+			m_pollfds.erase(m_pollfds.begin() + (long)i);
 			close(m_users[i].fd());
 			m_users.erase(m_users.begin() + (long)i);
 		}

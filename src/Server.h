@@ -87,6 +87,7 @@ private:
 	static int					m_server_socket;
 	static std::string			m_password;
 
+	static std::vector<pollfd>	m_pollfds;
 	static std::vector<User>	m_users;
 	static std::vector<Channel>	m_channels;
 
