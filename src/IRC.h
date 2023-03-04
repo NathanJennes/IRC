@@ -13,30 +13,32 @@
 #define RPL_MESSAGE(user, command, msg) (SOURCE(command, user) + " " + msg)
 
 // RPL CODES
-#define RPL_WELCOME(user)										(SOURCE("001", user) + " :Welcome to the " + Server::network_name() + " Network, " + user.nickname())
-#define RPL_YOURHOST(user)										(SOURCE("002", user) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
-#define RPL_CREATED(user)										(SOURCE("003", user) + " :This server was created " + Server::creation_date())
-#define RPL_MYINFO(user)										(SOURCE("004", user) + " " + Server::server_name() + " " SERVER_VERSION " " + Server::user_modes() + " " + Server::channel_modes() +  " " + Server::channel_modes_param())
-#define RPL_ISUPPORT(user, tokens)								(SOURCE("005", user) + " " + tokens +" :are supported by this server")
+#define RPL_WELCOME(user)								(SOURCE("001", user) + " :Welcome to the " + Server::network_name() + " Network, " + user.nickname())
+#define RPL_YOURHOST(user)								(SOURCE("002", user) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
+#define RPL_CREATED(user)								(SOURCE("003", user) + " :This server was created " + Server::creation_date())
+#define RPL_MYINFO(user)								(SOURCE("004", user) + " " + Server::server_name() + " " SERVER_VERSION " " + Server::user_modes() + " " + Server::channel_modes() +  " " + Server::channel_modes_param())
+#define RPL_ISUPPORT(user, tokens)						(SOURCE("005", user) + " " + tokens +" :are supported by this server")
 
 #define RPL_BOUNCE	// RECOMMENDED BY THE RFC TO NOT BE USED
 #define RPL_UMODEIS(set_usermodes)								(" " set_usermodes)
 
-#define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)				(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers")
-#define RPL_LUSEROP(nbr_opers)												(" " nbr_opers " :operator(s) online")
-#define RPL_LUSERUNKNOWN(nbr_unknown)										(" " nbr_unknown " :unknown connection(s)")
-#define RPL_LUSERCHANNELS(nbr_channels)										(" " nbr_channels " :channels formed")
-#define RPL_LUSERME(nbr_users, nbr_servers)									(" :I have " nbr_users " clients and " nbr_servers " servers")
-#define RPL_ADMINME(servename)												(" " + servename + " :Administrative info")
-#define RPL_ADMINLOC1(admin_location)										(" " admin_location)
-#define RPL_ADMINLOC2(hosting_location)										(" " hosting_location)
-#define RPL_ADMINEMAIL(admin_email)											(" " admin_email)
-#define RPL_TRYAGAIN(command)												(" " command " :Please wait a while and try again.")
-#define RPL_LOCALUSERS(current_users, max_users)							(" :Current local users " current_users " max " max_users)
-#define RPL_GLOBALUSERS(current_users, max_users)							(" :Current global users " current_users " max " max_users)
-#define RPL_WHOISCERTFP(nickname, certfp)									(" " + nickname + " :has client certificate fingerprint " certfp)
-#define RPL_NONE															(" :Unknown format")
-#define RPL_AWAY(nickname, away_message)									(" " + nickname + " :" away_message)
+#define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)	(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers")
+#define RPL_LUSEROP(nbr_opers)									(" " nbr_opers " :operator(s) online")
+#define RPL_LUSERUNKNOWN(nbr_unknown)							(" " nbr_unknown " :unknown connection(s)")
+#define RPL_LUSERCHANNELS(nbr_channels)							(" " nbr_channels " :channels formed")
+#define RPL_LUSERME(nbr_users, nbr_servers)						(" :I have " nbr_users " clients and " nbr_servers " servers")
+#define RPL_ADMINME(servename)									(" " + servename + " :Administrative info")
+#define RPL_ADMINLOC1(admin_location)							(" " admin_location)
+#define RPL_ADMINLOC2(hosting_location)							(" " hosting_location)
+#define RPL_ADMINEMAIL(admin_email)								(" " admin_email)
+#define RPL_TRYAGAIN(command)									(" " command " :Please wait a while and try again.")
+#define RPL_LOCALUSERS(current_users, max_users)				(" :Current local users " current_users " max " max_users)
+#define RPL_GLOBALUSERS(current_users, max_users)				(" :Current global users " current_users " max " max_users)
+#define RPL_WHOISCERTFP(nickname, certfp)						(" " + nickname + " :has client certificate fingerprint " certfp)
+#define RPL_NONE												(" :Unknown format")
+
+#define RPL_AWAY(user, target)							(SOURCE("301", user), " " + target->nickname() + " :" + target->away_message())
+
 #define RPL_USERHOST														// TODO : Implement function to return a list of userhost
 #define RPL_UNAWAY															(":You are no longer marked as being away")
 #define RPL_NOWAWAY															(":You have been marked as being away")
@@ -82,11 +84,11 @@
 #define RPL_INFO 371
 #define RPL_ENDOFINFO 374
 #define ERR_UNKNOWNERROR(ERRCODE)						(" " ERRCODE " :Unknown error")
-#define ERR_NOSUCHNICK(nickname)						(" " + nickname + " :No such nick/channel")
-#define ERR_NOSUCHSERVER(servername)					(" " + servername + " :No such server")
 
-#define ERR_NOSUCHCHANNEL(user, channel)				(SOURCE("403", user) + " " + channel + " :No such channel")
-#define ERR_CANNOTSENDTOCHAN(user, channel)				(SOURCE("404", user) + " " + channel + " :Cannot send to channel")
+#define ERR_NOSUCHNICK(user, nickname)					(SOURCE("401", user) + " " + nickname + " :No such nick")
+#define ERR_NOSUCHSERVER(servername)					(SOURCE("402", user) + " " + servername + " :No such server")
+#define ERR_NOSUCHCHANNEL(user, chan_name)				(SOURCE("403", user) + " " + chan_name + " :No such channel")
+#define ERR_CANNOTSENDTOCHAN(user, channel)				(SOURCE("404", user) + " " + channel->name() + " :Cannot send to channel")
 #define ERR_TOOMANYCHANNELS(user, channel)				(SOURCE("405", user) + " " + channel + " :You have joined too many channels")
 
 #define ERR_WASNOSUCHNICK(nickname)						(" " + nickname + " :There was no such nickname")
@@ -105,18 +107,18 @@
 #define ERR_USERNOTINCHANNEL(nickname, channel)			(" " + nickname + " " channel " :They aren't on that channel")
 #define ERR_NOTONCHANNEL(channel)						(" " channel " :You're not on that channel")
 #define ERR_USERONCHANNEL(nickname, channel)			(" " + nickname + " " channel " :is already on channel")
-#define ERR_NOTREGISTERED(user)							(SOURCE("451", user) + " :You have not registered")
 
+#define ERR_NOTREGISTERED(user)							(SOURCE("451", user) + " :You have not registered")
 #define ERR_NEEDMOREPARAMS(user, command)				(SOURCE("461", user) + " " + command.get_command() + " :Not enough parameters")
 #define ERR_ALREADYREGISTERED(user)						(SOURCE("462", user) + " :You may not registered")
-
 #define ERR_PASSWDMISMATCH(user)						(SOURCE("464", user) + " :Password incorrect")
-#define ERR_YOUREBANNEDCREEP							(" :You are banned from this server")
+#define ERR_YOUREBANNEDCREEP(user)						(SOURCE("465", user) + " :You are banned from this server")
 #define ERR_CHANNELISFULL(user, channel)				(SOURCE("471", user) + " " + channel + " :Cannot join channel (+l)")
 #define ERR_UNKNOWNMODE(user, mode)						(SOURCE("472", user) + " " + mode + " :is unknown mode char to me")
 #define ERR_INVITEONLYCHAN(user, channel)				(SOURCE("473", user) + " " + channel + " :Cannot join channel (+i)")
 #define ERR_BANNEDFROMCHAN(user, channel)				(SOURCE("474", user) + " " + channel + " :Cannot join channel (+b)")
 #define ERR_BADCHANNELKEY(user, channel)				(SOURCE("475", user) + " " + channel + " :Cannot join channel (+k)")
+
 #define ERR_BADCHANMASK(channel)						(" " channel " :Bad Channel Mask")
 #define ERR_NOPRIVILEGES								(" :Permission Denied- You're not an IRC operator")
 
@@ -135,6 +137,8 @@
 #define RPL_HELPSTART 704
 #define RPL_HELPTXT 705
 #define RPL_ENDOFHELP 706
+
+// SASL replies
 #define ERR_NOPRIVS(priv)								(" " priv " :Insufficient oper privileges.")
 #define RPL_LOGGEDIN(nickname, username, account)		(" " + nickname + " " account " :You are now logged in as " username)
 #define RPL_LOGGEDOUT(nickname)							(" " + nickname + " :You are now logged out")

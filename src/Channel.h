@@ -28,6 +28,7 @@ public:
 		explicit UserEntry(const std::string& nickname);
 
 		bool operator==(const std::string& nickname) const;
+		bool operator!=(const std::string& nickname) const;
 
 		std::string get_highest_prefix() const;
 
@@ -67,7 +68,6 @@ public:
 	/// Users
 	void set_user_limit(size_t limit) { m_user_limit = limit; }
 	void add_user(const User& user);
-	void add_user(const std::string& user_nickname);
 	void remove_user(const User& user);
 	void remove_user(const std::string& user_nickname);
 	bool has_user(const User& user) const;
@@ -97,9 +97,9 @@ public:
 	void remove_from_invitelist(const User& user);
 
 	/// Getters
-	const	std::string&	name()	const	{ return m_name; }
-	const	std::string&	topic()	const	{ return m_topic; }
-	char					type()	const	{ return m_type; }
+	const	std::string&			name()	const	{ return m_name; }
+	const	std::string&			topic()	const	{ return m_topic; }
+	char							type()	const	{ return m_type; }
 
 	size_t							user_count()	const	{ return m_users.size(); }
 	size_t							user_limit()	const	{ return m_user_limit; }

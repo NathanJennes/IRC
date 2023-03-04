@@ -99,7 +99,7 @@ void Server::initialize_command_functions()
 {
 	// register commands
 	m_connection_commands.insert(std::make_pair("AUTH", auth));
-//	m_connection_commands.insert(std::make_pair("CAP", cap));
+	m_connection_commands.insert(std::make_pair("CAP", cap));
 	m_connection_commands.insert(std::make_pair("NICK", nick));
 	m_connection_commands.insert(std::make_pair("PASS", pass));
 	m_connection_commands.insert(std::make_pair("USER", user));
@@ -115,6 +115,7 @@ void Server::initialize_command_functions()
 	// channel commands
 	m_commands.insert(std::make_pair("JOIN", join));
 	m_commands.insert(std::make_pair("MODE", mode));
+	m_commands.insert(std::make_pair("PRIVMSG", privmsg));
 }
 
 bool Server::update()
@@ -250,6 +251,16 @@ void Server::broadcast(User& user, const std::string &msg)
 	for (UserIterator it = m_users.begin(); it != m_users.end(); it++)
 	{
 		if (*it != user)
+			reply(*it, msg);
+	}
+}
+
+void Server::broadcast_to_channel(User& user, Channel& channel, const std::string& msg)
+{
+	CORE_TRACE("BROADCASTING [%s] TO %s from %s", msg.c_str(), channel.name().c_str(), user.nickname().c_str());
+	for (UserIterator it = m_users.begin(); it != m_users.end(); it++)
+	{
+		if (channel.has_user(*it) && *it != user)
 			reply(*it, msg);
 	}
 }

@@ -15,6 +15,11 @@ bool Channel::UserEntry::operator==(const std::string &nickname) const
 	return nickname == m_nickname;
 }
 
+bool Channel::UserEntry::operator!=(const std::string &nickname) const
+{
+	return nickname != m_nickname;
+}
+
 std::string Channel::UserEntry::get_highest_prefix() const
 {
 //	if (m_is_founder)
@@ -169,12 +174,7 @@ std::string Channel::get_modes_as_str(User& user) const
 
 void Channel::add_user(const User &user)
 {
-	add_user(user.nickname());
-}
-
-void Channel::add_user(const std::string &user_nickname)
-{
-	m_users.push_back(UserEntry(user_nickname));
+	m_users.push_back(UserEntry(user.nickname()));
 }
 
 void Channel::remove_user(const User &user)

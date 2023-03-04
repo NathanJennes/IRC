@@ -31,8 +31,8 @@ public:
 	bool		check_password();
 
 	// Ping
-	void	take_ping_timestamp();
-	void	recalculate_ping();
+	void		take_ping_timestamp();
+	void		recalculate_ping();
 
 	// getters
 	std::string			ping_token()		const	{ return m_ip + to_string(m_port) + m_realname; }
@@ -41,7 +41,7 @@ public:
 	const std::string&	realname()			const	{ return m_realname; }
 	const std::string&	password()			const	{ return m_password; }
 	const std::string&	server()			const	{ return m_server_name; }
-	bool				is_afk()			const	{ return m_is_afk; }
+	bool				is_away()			const	{ return m_is_afk; }
 	bool				is_disconnected()	const	{ return m_is_disconnected; }
 	const int&			fd()				const	{ return m_fd; }
 	const std::string&	ip()				const	{ return m_ip; }
@@ -51,12 +51,13 @@ public:
 	bool				is_registered()		const	{ return m_is_registered; }
 	bool				need_password()		const	{ return m_need_password; }
 
-	std::vector<std::string>&	channels()			{ return m_channels; }
+	std::vector<std::string>&	channels()				{ return m_channels; }
 
-	const std::string&	read_buffer()		const	{ return m_readbuf; }
-	const std::string&	write_buffer()		const	{ return m_writebuf; }
+	const std::string&			read_buffer()	const	{ return m_readbuf; }
+	const std::string&			write_buffer()	const	{ return m_writebuf; }
+	const std::string&			away_message()	const	{ return m_away_message; }
 
-	long	ping()							const	{ return m_ping; }
+	long						ping()			const	{ return m_ping; }
 
 	// setters
 	void	set_nickname(const std::string& nickname)	{ m_nickname = nickname; }
@@ -71,6 +72,7 @@ public:
 	void	set_is_writable(bool is_writable)			{ m_is_writable = is_writable; }
 	void	update_write_buffer(const std::string& str)	{ m_writebuf.append(str); }
 	void	set_password(const std::string& password)	{ m_password = password; }
+	void	set_away_msg(const std::string& message)	{ m_away_message = message; }
 
 	void	disconnect() 	{ m_is_disconnected = true; }
 
@@ -109,6 +111,8 @@ private:
 
 	std::string	m_readbuf;
 	std::string	m_writebuf;
+
+	std::string m_away_message;
 
 	std::vector<std::string>	m_channels;
 

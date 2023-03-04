@@ -34,6 +34,7 @@ public:
 
 	static void broadcast(const std::string& msg);
 	static void broadcast(User& user, const std::string &msg);
+	static void broadcast_to_channel(User& user, Channel& channel, const std::string& msg);
 
 	/// Complex replies
 	static void reply_welcome_user(User& user);

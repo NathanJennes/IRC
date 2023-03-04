@@ -455,3 +455,61 @@ int mode(User& user, const Command& command)
 
 	return 0;
 }
+
+int privmsg(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#privmsg-message
+	// Command: PRIVMSG
+	// Parameters: <target>{,<target>} <text to be sent>
+
+	// TODO: Handle when target is empty
+	if (command.get_parameters().size() < 2)
+	{
+		CORE_TRACE_IRC_ERR("User %s sent a PRIVMSG command with less than 2 parameters.", user.debug_name());
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	// TODO: Handle when too many target
+	// TODO: Handle when msg is empty
+
+	if (is_channel(command.get_parameters()[0]))
+	{
+		if (Server::channel_exists(command.get_parameters()[0]))
+		{
+			Server::ChannelIterator channel = Server::find_channel(command.get_parameters()[0]);
+			if (channel->has_user(user)) {
+				std::string message = user.source() + " PRIVMSG " + channel->name() + " :" + command.get_parameters()[1];
+				Server::broadcast_to_channel(user, *channel, message);
+			}
+			else {
+				CORE_TRACE_IRC_ERR("User %s tried to send a message to a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
+				Server::reply(user, ERR_CANNOTSENDTOCHAN(user, channel));
+			}
+		}
+		else {
+			CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+			Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
+			return 1;
+		}
+	}
+	else
+	{
+		if (Server::user_exists(command.get_parameters()[0]))
+		{
+			Server::UserIterator target = Server::find_user(command.get_parameters()[0]);
+			if (target->is_away()) {
+				CORE_TRACE_IRC_ERR("User %s is away.", target->debug_name());
+				Server::reply(user, RPL_AWAY(user, target));
+			}
+			std::string message = user.source() + " PRIVMSG " + target->nickname() + " :" + command.get_parameters()[1];
+			Server::reply(*target, message);
+		}
+		else {
+			CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing user [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+			Server::reply(user, ERR_NOSUCHNICK(user, command.get_parameters()[0]));
+			return 1;
+		}
+	}
+	return 0;
+}
