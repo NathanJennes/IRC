@@ -62,10 +62,4 @@ int links(User& user, const Command& command);
 int userhost(User& user, const Command& command);
 int wallops(User& user, const Command& command);
 
-// ====================
-// Message_utils
-// ====================
-
-bool is_channel(const std::string& name);
-
 #endif //MESSAGE_H

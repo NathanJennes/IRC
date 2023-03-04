@@ -50,7 +50,7 @@ SRC_DIR			:=		src
 #	Project sources
 # ==============================================================================
 SRCS_FILE			:=		main.cpp Channel.cpp Server.cpp User.cpp Command.cpp \
-							log.cpp Message.cpp	Message_utils.cpp Utils.cpp
+							log.cpp Message.cpp Utils.cpp
 SRCS				:=		$(addprefix $(SRC_DIR)/, $(SRCS_FILE))
 OBJS				:=		$(SRCS:.cpp=.o)
 RELEASE_OBJS		:=		$(addprefix $(RELEASE_OBJDIR)/, $(OBJS))

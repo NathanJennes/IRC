@@ -105,7 +105,6 @@ void Server::initialize_command_functions()
 	m_connection_commands.insert(std::make_pair("USER", user));
 
 	// connection commands
-	m_commands.insert(std::make_pair("ERROR", error));
 	m_commands.insert(std::make_pair("OPER", oper));
 	m_commands.insert(std::make_pair("PING", ping));
 	m_commands.insert(std::make_pair("PONG", pong));

@@ -11,3 +11,16 @@ std::string to_upper(std::string str)
 	std::transform(str.begin(), str.end(), str.begin(), ::toupper);
 	return str;
 }
+
+bool is_channel(const std::string& name)
+{
+	return name[0] == '#' || name[0] == '&';
+}
+
+bool is_number(const std::string& str)
+{
+	for (std::string::const_iterator it = str.begin(); it != str.end(); ++it)
+		if (!std::isdigit(*it))
+			return false;
+	return true;
+}

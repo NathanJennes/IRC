@@ -420,36 +420,38 @@ int mode(User& user, const Command& command)
 	// Command: MODE
 	// Parameters: <target> [<modestring> [<mode arguments>...]]
 
+	CORE_TRACE("MODE command received from user %s", user.debug_name());
 	if (command.get_parameters().empty()) {
 		CORE_TRACE_IRC_ERR("User %s sent a MODE command with no parameters.", user.debug_name());
 		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
 		return 0;
 	}
 
-	if (is_channel(command.get_parameters()[0]))
+	Server::ChannelIterator channel = Server::find_channel(command.get_parameters()[0]);
+	if (channel != Server::channels().end())
 	{
-		Server::ChannelIterator channel = Server::find_channel(command.get_parameters()[0]);
-		if (channel != Server::channels().end())
-		{
-			if (command.get_parameters().size() == 1) {
-				Server::reply(user, RPL_CHANNELMODEIS(user, channel));
-				return 0;
-			}
-			if (command.get_parameters().size() == 2) {
-				if (channel->has_user(user))
-					channel->update_mode(command);
-				else {
-					CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
-					Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
-				}
-			}
+		CORE_DEBUG("Chan name %s", channel->name().c_str());
+		CORE_DEBUG("User %s is setting mode on channel [%s]", user.debug_name(), command.get_parameters()[0].c_str());
+		if (command.get_parameters().size() == 1) {
+			Server::reply(user, RPL_CHANNELMODEIS(user, channel));
+			// TODO: Send RPL_CREATIONTIME (329)
 			return 0;
 		}
-		else {
-			CORE_TRACE_IRC_ERR("User %s tried to set mode on a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
-			Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
-			return 1;
+		if (command.get_parameters().size() >= 2)
+		{
+			if (channel->has_user(user))
+				channel->update_mode(command);
+			else {
+				CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
+				Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
+			}
 		}
+		return 0;
+	}
+	else {
+		CORE_TRACE_IRC_ERR("User %s tried to set mode on a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+		Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
+		return 1;
 	}
 	// TODO: Handle user mode
 

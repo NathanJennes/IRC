@@ -5,6 +5,7 @@
 #include <iostream>
 #include <algorithm>
 #include "Channel.h"
+#include "Utils.h"
 
 Channel::UserEntry::UserEntry(const std::string& nickname)
 : m_nickname(nickname), m_is_founder(false), m_is_protected(false),
@@ -66,28 +67,23 @@ Channel::Channel(User& user, const std::string &name) :
 bool Channel::update_mode(const Command& command)
 {
 	bool value;
+	size_t	param = 0;
 
-	// TODO: parse the mode string
-
-	for (size_t i = 0; i < command.get_parameters().size(); i++)
+	CORE_TRACE("Channel::update_mode()");
+	for (size_t i = 1; i < command.get_parameters().size(); i += param + 1)
 	{
 		std::string modes = command.get_parameters()[i];
-		CORE_DEBUG("Parameter %d: %s", i, modes.c_str());
+		CORE_DEBUG("mode: %s", modes.c_str());
 
-		if (modes[0] != '+')
+		if (modes[0] == '+')
 			value = true;
 		else if (modes[0] == '-')
 			value = false;
 		else
-			return false;
+			continue;
 
-		size_t j = 0;
-		if (modes.size() == 1 && command.get_parameters().size() > i + 1)
-			modes = command.get_parameters()[++i];
-		else
-			j = 1;
-
-		for (; j < modes.size(); j++)
+		CORE_DEBUG("Value: %d", value);
+		for (size_t j = 1; j < modes.size(); j++)
 		{
 			switch (modes[j])
 			{
@@ -98,8 +94,10 @@ bool Channel::update_mode(const Command& command)
 					m_has_ban_exemptions = value;
 					break;
 				case 'l':
-					// TODO: check argument
-					m_is_user_limited = value;
+					if (command.get_parameters().size() > i + 1 + param && is_number(command.get_parameters()[i + 1 + param])) {
+						m_user_limit = static_cast<size_t>(std::stoi(command.get_parameters()[i + 1 + param++]));
+						m_is_user_limited = value;
+					}
 					break;
 				case 'i':
 					m_is_invite_only = value;
@@ -108,8 +106,10 @@ bool Channel::update_mode(const Command& command)
 					m_has_invite_exemptions = value;
 					break;
 				case 'k':
-//					m_key = command.get_parameters()[];
-					m_is_key_protected = value;
+					if (command.get_parameters().size() > i + 1 + param) {
+						m_key = command.get_parameters()[i + 1 + param++];
+						m_is_key_protected = value;
+					}
 					break;
 				case 'm':
 					m_is_moderated = value;
