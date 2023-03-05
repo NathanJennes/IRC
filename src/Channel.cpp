@@ -5,24 +5,15 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
+#include <map>
 #include "Channel.h"
 #include "Utils.h"
 
-Channel::UserEntry::UserEntry(const std::string& nickname)
-: m_nickname(nickname), m_is_founder(false), m_is_protected(false),
+Channel::UserPermissions::UserPermissions()
+: m_is_founder(false), m_is_protected(false),
   m_is_operator(false), m_is_halfop(false), m_has_voice(false) {}
 
-bool Channel::UserEntry::operator==(const std::string &nickname) const
-{
-	return nickname == m_nickname;
-}
-
-bool Channel::UserEntry::operator!=(const std::string &nickname) const
-{
-	return nickname != m_nickname;
-}
-
-std::string Channel::UserEntry::get_highest_prefix() const
+std::string Channel::UserPermissions::get_highest_prefix() const
 {
 //	if (m_is_founder)
 //		return CHANNEL_USER_PREFIX_FOUNDER;
@@ -173,32 +164,43 @@ std::string Channel::get_modes_as_str(User& user) const
 	return modes + mode_params;
 }
 
-void Channel::add_user(const User &user)
+void Channel::add_user(User &user)
 {
-	m_users.push_back(UserEntry(user.nickname()));
+	m_users[&user] = UserPermissions();
 }
 
-void Channel::remove_user(const User &user)
+void Channel::remove_user(User &user)
 {
-	remove_user(user.nickname());
+	UserIterator user_it = m_users.find(&user);
+	if (user_it != m_users.end())
+		m_users.erase(user_it);
 }
 
 void Channel::remove_user(const std::string &user_nickname)
 {
-	UserIterator user = std::find(m_users.begin(), m_users.end(), user_nickname);
-	if (user != m_users.end())
-		m_users.erase(user);
+	UserIterator user_it = find_user(user_nickname);
+	if (has_user(user_it))
+		m_users.erase(user_it);
 	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the user list of channel [%] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
-bool Channel::has_user(const User &user) const
+bool Channel::has_user(User &user) const
 {
-	return has_user(user.nickname());
+	return m_users.find(&user) != m_users.end();
 }
 
 bool Channel::has_user(const std::string &user_nickname) const
 {
-	return std::find(m_users.begin(), m_users.end(), user_nickname) != m_users.end();
+	for (ConstUserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
+		if (get_user_reference(user_it).nickname() == user_nickname)
+			return true;
+	}
+	return false;
+}
+
+bool Channel::has_user(const UserMap::iterator &user_it) const
+{
+	return user_it != m_users.end();
 }
 
 void Channel::add_to_banlist(const User &user)
@@ -251,9 +253,14 @@ void Channel::remove_from_invitelist(const std::string &user_nickname)
 	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
-void Channel::set_user_founder(const User& user, bool value)
+void Channel::set_user_founder(User& user, bool value)
 {
-	set_user_founder(user.nickname(), value);
+	if (!has_user(user)) {
+		CORE_WARN("Trying to modify permissions on a user not present in a channel");
+		return;
+	}
+
+	m_users.at(&user).set_is_founder(value);
 }
 
 void Channel::set_user_founder(const std::string& user_nickname, bool value)
@@ -261,13 +268,18 @@ void Channel::set_user_founder(const std::string& user_nickname, bool value)
 	if (!has_user(user_nickname))
 		return ;
 
-	UserIterator user = find_user(user_nickname);
-	user->set_is_founder(value);
+	UserIterator user_it = find_user(user_nickname);
+	get_user_perms_reference(user_it).set_is_founder(value);
 }
 
-void Channel::set_user_protected(const User& user, bool value)
+void Channel::set_user_protected(User& user, bool value)
 {
-	set_user_protected(user.nickname(), value);
+	if (!has_user(user)) {
+		CORE_WARN("Trying to modify permissions on a user not present in a channel");
+		return;
+	}
+
+	m_users.at(&user).set_is_protected(value);
 }
 
 void Channel::set_user_protected(const std::string& user_nickname, bool value)
@@ -275,13 +287,18 @@ void Channel::set_user_protected(const std::string& user_nickname, bool value)
 	if (!has_user(user_nickname))
 		return ;
 
-	UserIterator user = find_user(user_nickname);
-	user->set_is_protected(value);
+	UserIterator user_it = find_user(user_nickname);
+	get_user_perms_reference(user_it).set_is_protected(value);
 }
 
-void Channel::set_user_operator(const User& user, bool value)
+void Channel::set_user_operator(User& user, bool value)
 {
-	set_user_operator(user.nickname(), value);
+	if (!has_user(user)) {
+		CORE_WARN("Trying to modify permissions on a user not present in a channel");
+		return;
+	}
+
+	m_users.at(&user).set_is_operator(value);
 
 }
 
@@ -290,13 +307,18 @@ void Channel::set_user_operator(const std::string& user_nickname, bool value)
 	if (!has_user(user_nickname))
 		return ;
 
-	UserIterator user = find_user(user_nickname);
-	user->set_is_operator(value);
+	UserIterator user_it = find_user(user_nickname);
+	get_user_perms_reference(user_it).set_is_operator(value);
 }
 
-void Channel::set_user_halfop(const User& user, bool value)
+void Channel::set_user_halfop(User& user, bool value)
 {
-	set_user_halfop(user.nickname(), value);
+	if (!has_user(user)) {
+		CORE_WARN("Trying to modify permissions on a user not present in a channel");
+		return;
+	}
+
+	m_users.at(&user).set_is_halfop(value);
 }
 
 void Channel::set_user_halfop(const std::string& user_nickname, bool value)
@@ -304,13 +326,18 @@ void Channel::set_user_halfop(const std::string& user_nickname, bool value)
 	if (!has_user(user_nickname))
 		return ;
 
-	UserIterator user = find_user(user_nickname);
-	user->set_is_halfop(value);
+	UserIterator user_it = find_user(user_nickname);
+	get_user_perms_reference(user_it).set_is_halfop(value);
 }
 
-void Channel::set_user_voice_permission(const User& user, bool value)
+void Channel::set_user_voice_permission(User& user, bool value)
 {
-	set_user_voice_permission(user.nickname(), value);
+	if (!has_user(user)) {
+		CORE_WARN("Trying to modify permissions on a user not present in a channel");
+		return;
+	}
+
+	m_users.at(&user).set_has_voice(value);
 }
 
 void Channel::set_user_voice_permission(const std::string& user_nickname, bool value)
@@ -318,16 +345,15 @@ void Channel::set_user_voice_permission(const std::string& user_nickname, bool v
 	if (!has_user(user_nickname))
 		return ;
 
-	UserIterator user = find_user(user_nickname);
-	user->set_has_voice(value);
-}
-
-Channel::UserIterator Channel::find_user(const User &user)
-{
-	return find_user(user.nickname());
+	UserIterator user_it = find_user(user_nickname);
+	get_user_perms_reference(user_it).set_has_voice(value);
 }
 
 Channel::UserIterator Channel::find_user(const std::string &user_nickname)
 {
-	return std::find(m_users.begin(), m_users.end(), user_nickname);
+	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
+		if (get_user_reference(user_it).nickname() == user_nickname)
+			return user_it;
+	}
+	return m_users.end();
 }

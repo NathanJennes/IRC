@@ -16,19 +16,17 @@
 
 #include <string>
 #include <vector>
-#include "User.h"
 #include "Command.h"
+
+class User;
 
 class Channel
 {
 public:
 	/// Types
-	struct UserEntry
+	struct UserPermissions
 	{
-		explicit UserEntry(const std::string& nickname);
-
-		bool operator==(const std::string& nickname) const;
-		bool operator!=(const std::string& nickname) const;
+		explicit UserPermissions();
 
 		std::string get_highest_prefix() const;
 
@@ -38,7 +36,6 @@ public:
 		void set_is_halfop(bool new_value)		{ m_is_halfop = new_value; };
 		void set_has_voice(bool new_value)		{ m_has_voice = new_value; };
 
-		const std::string&	nickname()		const { return m_nickname; };
 		bool				is_founder()	const { return m_is_founder; };
 		bool				is_protected()	const { return m_is_protected; };
 		bool				is_operator()	const { return m_is_operator; };
@@ -46,7 +43,6 @@ public:
 		bool				has_voice()		const { return m_has_voice; };
 
 	private:
-		std::string	m_nickname;
 		bool		m_is_founder;
 		bool		m_is_protected;
 		bool		m_is_operator;
@@ -57,9 +53,13 @@ public:
 	explicit Channel(User& user, const std::string& name);
 
 	/// Typedefs
-	typedef std::vector<UserEntry>::iterator		UserIterator;
-	typedef std::vector<UserEntry>::const_iterator	ConstUserIterator;
-	typedef std::vector<std::string>::iterator		NicknameIterator;
+private:
+	typedef std::map<User*, UserPermissions>	UserMap;
+	typedef std::vector<std::string>			NicknameVector;
+public:
+	typedef UserMap::iterator					UserIterator;
+	typedef UserMap::const_iterator				ConstUserIterator;
+	typedef NicknameVector::iterator			NicknameIterator;
 
 	/// Channel information
 	void set_topic(const std::string& topic)	{ m_topic = topic; }
@@ -67,20 +67,21 @@ public:
 
 	/// Users
 	void set_user_limit(size_t limit) { m_user_limit = limit; }
-	void add_user(const User& user);
-	void remove_user(const User& user);
+	void add_user(User& user);
+	void remove_user(User& user);
 	void remove_user(const std::string& user_nickname);
-	bool has_user(const User& user) const;
+	bool has_user(User& user) const;
 	bool has_user(const std::string& user_nickname) const;
-	void set_user_founder(const User& user, bool value);
+	bool has_user(const UserIterator& user_it) const;
+	void set_user_founder(User& user, bool value);
 	void set_user_founder(const std::string& user_nickname, bool value);
-	void set_user_protected(const User& user, bool value);
+	void set_user_protected(User& user, bool value);
 	void set_user_protected(const std::string& user_nickname, bool value);
-	void set_user_operator(const User& user, bool value);
+	void set_user_operator(User& user, bool value);
 	void set_user_operator(const std::string& user_nickname, bool value);
-	void set_user_halfop(const User& user, bool value);
+	void set_user_halfop(User& user, bool value);
 	void set_user_halfop(const std::string& user_nickname, bool value);
-	void set_user_voice_permission(const User& user, bool value);
+	void set_user_voice_permission(User& user, bool value);
 	void set_user_voice_permission(const std::string& user_nickname, bool value);
 
 	/// Modes
@@ -97,23 +98,22 @@ public:
 	void remove_from_invitelist(const User& user);
 
 	/// Getters
-	const	std::string&			name()	const	{ return m_name; }
-	const	std::string&			topic()	const	{ return m_topic; }
-	char							type()	const	{ return m_type; }
+	const	std::string&			name()							const { return m_name; }
+	const	std::string&			topic()							const { return m_topic; }
+	char							type()							const { return m_type; }
 
-	size_t							user_count()	const	{ return m_users.size(); }
-	size_t							user_limit()	const	{ return m_user_limit; }
-	const	std::vector<UserEntry>&	users()			const	{ return m_users; }
+	size_t							user_count()					const { return m_users.size(); }
+	size_t							user_limit()					const { return m_user_limit; }
+	const UserMap&					users()							const { return m_users; }
+	UserMap&						users()								  { return m_users; }
 
-	const std::string&				key()				const	{ return m_key; }
-	const std::vector<std::string>&	invite_list()		const { return m_invite_list; }
-	const std::vector<std::string>&	invite_exemptions()	const { return m_invite_exemptions; }
-	const std::vector<std::string>&	ban_list()			const { return m_ban_list; }
-	const std::vector<std::string>&	ban_exemptions()	const { return m_ban_exemptions; }
+	const std::string&				key()							const { return m_key; }
+	const std::vector<std::string>&	invite_list()					const { return m_invite_list; }
+	const std::vector<std::string>&	invite_exemptions()				const { return m_invite_exemptions; }
+	const std::vector<std::string>&	ban_list()						const { return m_ban_list; }
+	const std::vector<std::string>&	ban_exemptions()				const { return m_ban_exemptions; }
 	std::string						get_modes_as_str(User& user)	const;
 
-	bool	is_ban_protected()		const { return m_is_ban_protected; }
-	bool	has_ban_exemptions()	const { return m_has_ban_exemptions; }
 	bool	is_user_limited()		const { return m_is_user_limited; }
 	bool	is_invite_only()		const { return m_is_invite_only; }
 	bool	has_invite_exemptions()	const { return m_has_invite_exemptions; }
@@ -123,35 +123,26 @@ public:
 	bool	is_topic_protected()	const { return m_is_topic_protected; }
 	bool	no_outside_messages()	const { return m_no_outside_messages; }
 
-	friend bool operator==(const Channel& lhs, const Channel& rhs) {
-		return lhs.m_name == rhs.m_name;
-	}
-
-	friend bool operator!=(const Channel& lhs, const Channel& rhs) {
-		return !(lhs == rhs);
-	}
-
 private:
 
 	/// Users
-	UserIterator	find_user(const User& user);
 	UserIterator	find_user(const std::string& user_nickname);
 
 	/// Channel information
-	std::string					m_name;
-	char						m_type;
-	std::string 				m_topic;
+	std::string	m_name;
+	char		m_type;
+	std::string m_topic;
 
 	/// Entry restrictions
-	std::vector<std::string>	m_ban_list;
-	std::vector<std::string>	m_ban_exemptions;
-	std::vector<std::string>	m_invite_list;
-	std::vector<std::string>	m_invite_exemptions;
-	std::string 				m_key;
+	NicknameVector	m_ban_list;
+	NicknameVector	m_ban_exemptions;
+	NicknameVector	m_invite_list;
+	NicknameVector	m_invite_exemptions;
+	std::string 	m_key;
 
 	/// Users
-	size_t						m_user_limit;
-	std::vector<UserEntry>		m_users;
+	size_t	m_user_limit;
+	UserMap	m_users;
 
 	/// Modes
 	bool	m_is_ban_protected;			// +b
@@ -166,5 +157,10 @@ private:
 	bool	m_no_outside_messages;		// +n
 };
 
+inline const User&		get_user_reference(const Channel::ConstUserIterator& user_it)	{ return *(user_it->first); }
+inline User&			get_user_reference(const Channel::UserIterator& user_it)		{ return *(user_it->first); }
+
+inline Channel::UserPermissions&		get_user_perms_reference(const Channel::UserIterator& user_it)		{ return user_it->second; }
+inline const Channel::UserPermissions&	get_user_perms_reference(const Channel::ConstUserIterator& user_it)	{ return user_it->second; }
 
 #endif //CHANNEL_H

@@ -248,10 +248,8 @@ int join(User& user, const Command& command)
 
 	// A JOIN command with "0" as its parameter should disconnect the user from all of its channels
 	if (params[0] == "0") {
-		for (User::ConstChannelIterator connected_channel = user.channels().begin(); connected_channel != user.channels().end(); connected_channel++) {
-			Server::ChannelIterator server_channel = Server::find_channel(*connected_channel);
-			if (Server::channel_exists(server_channel))
-				Server::disconnect_user_from_channel(user, *server_channel);
+		for (User::ChannelIterator connected_channel_it = user.channels().begin(); connected_channel_it != user.channels().end(); connected_channel_it++) {
+			Server::disconnect_user_from_channel(user, get_channel_reference(connected_channel_it));
 		}
 		return 0;
 	}
@@ -288,39 +286,33 @@ int join(User& user, const Command& command)
 		}
 	}
 
-	typedef std::vector<Channel>::iterator ChannelIter;
 	typedef std::vector<std::string>::const_iterator StringIter;
 
-	std::vector<Channel>& server_channels = Server::channels();
-	StringIter current_key = keys.begin();
+	Server::ChannelMap& server_channels = Server::channels();
+	StringIter current_key_it = keys.begin();
 
 	// For all channels in the command
-	for (StringIter requested_chan = requested_channels.begin(); requested_chan != requested_channels.end(); requested_chan++) {
+	for (StringIter requested_channel_name_it = requested_channels.begin(); requested_channel_name_it != requested_channels.end(); requested_channel_name_it++) {
 		// Find the associated Channel
-		ChannelIter server_channel = server_channels.end();
-		for (ChannelIter chan = server_channels.begin(); chan != server_channels.end(); chan++) {
-			if (*requested_chan == chan->name()) {
-				server_channel = chan;
-				break ;
-			}
-		}
+		Server::ChannelIterator server_channel_it = Server::find_channel(*requested_channel_name_it);
 
 		// If no associated channel was found, create a new channel with its name
-		if (server_channel == server_channels.end()) {
-			Server::channels().push_back(Channel(user, *requested_chan));
-			Server::ChannelIterator new_channel = Server::find_channel(*requested_chan);
-			Server::reply(user, user.source() + " JOIN " + new_channel->name());
-			Server::reply(user, RPL_TOPIC(user, (*new_channel))); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
-			Server::reply_list_channel_members_to_user(user, *new_channel);
+		if (server_channel_it == server_channels.end()) {
+			Channel& new_channel = Server::create_new_channel(user, *requested_channel_name_it);
+			Server::reply(user, user.source() + " JOIN " + new_channel.name());
+			Server::reply(user, RPL_TOPIC(user, new_channel)); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
+			Server::reply_list_channel_members_to_user(user, new_channel);
 			return 0;
 		}
 
+		Channel& channel = get_channel_reference(server_channel_it);
+
 		// If channel is invite-only
-		if (server_channel->is_invite_only()) {
+		if (channel.is_invite_only()) {
 
 			// Check if the user is in the invite-list
 			bool is_invited = false;
-			const std::vector<std::string>& invite_list = server_channel->invite_list();
+			const std::vector<std::string>& invite_list = channel.invite_list();
 			for (StringIter invited_user = invite_list.begin(); invited_user != invite_list.end(); invited_user++) {
 				if (user.nickname() == *invited_user) {
 					is_invited = true;
@@ -329,10 +321,10 @@ int join(User& user, const Command& command)
 			}
 
 			// Else, check if the channels allow for invite-exemptions
-			if (!is_invited && server_channel->has_invite_exemptions()) {
+			if (!is_invited) {
 
 				// Check if the user is part of the exemptions
-				const std::vector<std::string>& invite_exempt_list = server_channel->invite_exemptions();
+				const std::vector<std::string>& invite_exempt_list = channel.invite_exemptions();
 				for (StringIter exempted_user = invite_exempt_list.begin(); exempted_user != invite_exempt_list.end(); exempted_user++) {
 					if (user.nickname() == *exempted_user) {
 						is_invited = true;
@@ -344,8 +336,8 @@ int join(User& user, const Command& command)
 			// If the user is not invited and is not exempted from the invite-list,
 			// send error and continue to next channel
 			if (!is_invited) {
-				CORE_TRACE_IRC_ERR("User %s tried and failed to connect to channel [%s] because it was invite only.", user.debug_name(), server_channel->name().c_str());
-				Server::reply(user, ERR_INVITEONLYCHAN(user, server_channel->name()));
+				CORE_TRACE_IRC_ERR("User %s tried and failed to connect to channel [%s] because it was invite only.", user.debug_name(), channel.name().c_str());
+				Server::reply(user, ERR_INVITEONLYCHAN(user, channel.name()));
 				continue ;
 			}
 		}
@@ -355,7 +347,7 @@ int join(User& user, const Command& command)
 
 			// Check if the user is banned
 			bool is_banned = false;
-			const std::vector<std::string>& ban_list = server_channel->ban_list();
+			const std::vector<std::string>& ban_list = channel.ban_list();
 			for (StringIter banned_user_name = ban_list.begin(); banned_user_name != ban_list.end(); banned_user_name++) {
 				if (user.nickname() == *banned_user_name) {
 					is_banned = true;
@@ -365,7 +357,7 @@ int join(User& user, const Command& command)
 
 			// If the user is banned, check if the channel allows for ban-exemptions
 			if (is_banned) {
-				const std::vector<std::string>& ban_exemptions = server_channel->ban_exemptions();
+				const std::vector<std::string>& ban_exemptions = channel.ban_exemptions();
 				for (StringIter ban_exempt_user_name = ban_exemptions.begin(); ban_exempt_user_name != ban_exemptions.end(); ban_exempt_user_name++) {
 					if (user.nickname() == *ban_exempt_user_name) {
 						is_banned = false;
@@ -377,52 +369,51 @@ int join(User& user, const Command& command)
 			// If the user is banned and is not exempted from the ban-list,
 			// send error and continue to next channel
 			if (is_banned) {
-				CORE_TRACE_IRC_ERR("User %s tried and failed to connect to channel [%s] because it was banned.", user.debug_name(), server_channel->name().c_str());
-				Server::reply(user, ERR_BANNEDFROMCHAN(user, server_channel->name()));
+				CORE_TRACE_IRC_ERR("User %s tried and failed to connect to channel [%s] because it was banned.", user.debug_name(), channel.name().c_str());
+				Server::reply(user, ERR_BANNEDFROMCHAN(user, channel.name()));
 				continue ;
 			}
 		}
 
 		// If the channel requires a key
-		if (server_channel->is_key_protected()) {
+		if (channel.is_key_protected()) {
 
 			// If the user didn't provide a key, send an error and continue
-			if (current_key == keys.end()) {
-				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it didn't provide a key.", user.debug_name(), server_channel->name().c_str());
-				Server::reply(user, ERR_BADCHANNELKEY(user, server_channel->name()));
+			if (current_key_it == keys.end()) {
+				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it didn't provide a key.", user.debug_name(), channel.name().c_str());
+				Server::reply(user, ERR_BADCHANNELKEY(user, channel.name()));
 				continue ;
 			}
 
 			// If the user provided the wrong key, send an error and continue
-			if (*current_key != server_channel->key()) {
-				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it provided the wrong key.", user.debug_name(), server_channel->name().c_str());
-				Server::reply(user, ERR_BADCHANNELKEY(user, server_channel->name()));
+			if (*current_key_it != channel.key()) {
+				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it provided the wrong key.", user.debug_name(), channel.name().c_str());
+				Server::reply(user, ERR_BADCHANNELKEY(user, channel.name()));
 				continue ;
 			}
 		}
 
 		// Check the channel capacity
-		if (server_channel->is_user_limited()) {
-			if (server_channel->user_count() >= server_channel->user_limit()) {
-				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it was full.", user.debug_name(), server_channel->name().c_str());
-				Server::reply(user, ERR_CHANNELISFULL(user, server_channel->name()));
+		if (channel.is_user_limited()) {
+			if (channel.user_count() >= channel.user_limit()) {
+				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it was full.", user.debug_name(), channel.name().c_str());
+				Server::reply(user, ERR_CHANNELISFULL(user, channel.name()));
 				continue ;
 			}
 		}
 
 		// Notify all users of the channel of the newcomer
-		for (Channel::ConstUserIterator channel_user = server_channel->users().begin(); channel_user != server_channel->users().end(); channel_user++) {
-			Server::UserIterator server_user = Server::find_user(channel_user->nickname());
-			if (Server::user_exists(server_user))
-				Server::reply(*server_user, ":" + user.nickname() + " JOIN " + server_channel->name());
+		for (Channel::UserIterator channel_user_it = channel.users().begin(); channel_user_it != channel.users().end(); channel_user_it++) {
+			User& connected_user = get_user_reference(channel_user_it);
+			Server::reply(connected_user, ":" + user.nickname() + " JOIN " + channel.name());
 		}
 
-		CORE_INFO("User %s joined the channel %s", user.debug_name(), server_channel->name().c_str());
-		user.channels().push_back(server_channel->name());
-		server_channel->add_user(user);
-		Server::reply(user, user.source() + " JOIN " + server_channel->name());
-		Server::reply(user, RPL_TOPIC(user, (*server_channel))); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
-		Server::reply_list_channel_members_to_user(user, *server_channel);
+		CORE_INFO("User %s joined the channel %s", user.debug_name(), channel.name().c_str());
+		user.add_channel(channel);
+		channel.add_user(user);
+		Server::reply(user, user.source() + " JOIN " + channel.name());
+		Server::reply(user, RPL_TOPIC(user, channel)); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
+		Server::reply_list_channel_members_to_user(user, channel);
 	}
 	return 0;
 }
@@ -443,20 +434,20 @@ int mode(User& user, const Command& command)
 	Server::ChannelIterator channel = Server::find_channel(command.get_parameters()[0]);
 	if (channel != Server::channels().end())
 	{
-		CORE_DEBUG("Chan name %s", channel->name().c_str());
+		CORE_DEBUG("Chan name %s", get_channel_reference(channel).name().c_str());
 		CORE_DEBUG("User %s is setting mode on channel [%s]", user.debug_name(), command.get_parameters()[0].c_str());
 		if (command.get_parameters().size() == 1) {
-			Server::reply(user, RPL_CHANNELMODEIS(user, channel));
+			Server::reply(user, RPL_CHANNELMODEIS(user, get_channel_reference(channel)));
 			// TODO: Send RPL_CREATIONTIME (329)
 			return 0;
 		}
 		if (command.get_parameters().size() >= 2)
 		{
-			if (channel->has_user(user))
-				channel->update_mode(command);
+			if (channel->second->has_user(user))
+				channel->second->update_mode(command);
 			else {
 				CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
-				Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
+				Server::reply(user, ERR_CHANOPRIVSNEEDED(user, get_channel_reference(channel)));
 			}
 		}
 		return 0;
@@ -490,41 +481,39 @@ int privmsg(User& user, const Command& command)
 
 	if (is_channel(command.get_parameters()[0]))
 	{
-		if (Server::channel_exists(command.get_parameters()[0]))
-		{
-			Server::ChannelIterator channel = Server::find_channel(command.get_parameters()[0]);
-			if (channel->has_user(user)) {
-				std::string message = user.source() + " PRIVMSG " + channel->name() + " :" + command.get_parameters()[1];
-				Server::broadcast_to_channel(user, *channel, message);
-			}
-			else {
-				CORE_TRACE_IRC_ERR("User %s tried to send a message to a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
-				Server::reply(user, ERR_CANNOTSENDTOCHAN(user, channel));
-			}
-		}
-		else {
+		Server::ChannelIterator target_channel_it = Server::find_channel(command.get_parameters()[0]);
+		if (!Server::channel_exists(target_channel_it)) {
 			CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
 			Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
 			return 1;
 		}
+
+		Channel& target_channel = get_channel_reference(target_channel_it);
+		if (target_channel.has_user(user)) {
+			std::string message = user.source() + " PRIVMSG " + target_channel.name() + " :" + command.get_parameters()[1];
+			Server::broadcast_to_channel(user, target_channel, message);
+		} else {
+			CORE_TRACE_IRC_ERR("User %s tried to send a message to a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
+			Server::reply(user, ERR_CANNOTSENDTOCHAN(user, target_channel));
+		}
 	}
 	else
 	{
-		if (Server::user_exists(command.get_parameters()[0]))
-		{
-			Server::UserIterator target = Server::find_user(command.get_parameters()[0]);
-			if (target->is_away()) {
-				CORE_TRACE_IRC_ERR("User %s is away.", target->debug_name());
-				Server::reply(user, RPL_AWAY(user, target));
-			}
-			std::string message = user.source() + " PRIVMSG " + target->nickname() + " :" + command.get_parameters()[1];
-			Server::reply(*target, message);
-		}
-		else {
+		Server::UserIterator target_user_it = Server::find_user(command.get_parameters()[0]);
+		if (!Server::user_exists(target_user_it)) {
 			CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing user [%s].", user.debug_name(), command.get_parameters()[0].c_str());
 			Server::reply(user, ERR_NOSUCHNICK(user, command.get_parameters()[0]));
 			return 1;
 		}
+
+		User& target_user = get_user_reference(target_user_it);
+		if (target_user.is_away()) {
+			CORE_TRACE_IRC_ERR("User %s is away.", target_user.debug_name());
+			Server::reply(user, RPL_AWAY(user, target_user));
+		}
+
+		std::string message = user.source() + " PRIVMSG " + target_user.nickname() + " :" + command.get_parameters()[1];
+		Server::reply(target_user, message);
 	}
 	return 0;
 }

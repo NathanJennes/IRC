@@ -16,12 +16,17 @@
 #define MAX_MESSAGE_LENGTH 512
 #define MAX_NICKNAME_LENGTH 9
 
+class Channel;
+
 class User
 {
 public:
 	/// I/O typedefs
-	typedef std::vector<std::string>::iterator			ChannelIterator;
-	typedef std::vector<std::string>::const_iterator	ConstChannelIterator;
+private:
+	typedef std::vector<Channel*>			ChannelVector;
+public:
+	typedef ChannelVector::iterator			ChannelIterator;
+	typedef ChannelVector::const_iterator	ConstChannelIterator;
 
 	explicit User(int fd, const std::string& ip, uint16_t port);
 
@@ -33,6 +38,8 @@ public:
 
 	void		try_finish_registration();
 	bool		check_password();
+
+	void		add_channel(Channel& channel);
 
 	// Ping
 	void		take_ping_timestamp();
@@ -55,7 +62,8 @@ public:
 	bool				is_registered()		const	{ return m_is_registered; }
 	bool				need_password()		const	{ return m_need_password; }
 
-	std::vector<std::string>&	channels()				{ return m_channels; }
+	      ChannelVector&		channels()				{ return m_channels; }
+	const ChannelVector&		channels()		const	{ return m_channels; }
 
 	const std::string&			read_buffer()	const	{ return m_readbuf; }
 	const std::string&			write_buffer()	const	{ return m_writebuf; }
@@ -118,10 +126,13 @@ private:
 
 	std::string m_away_message;
 
-	std::vector<std::string>	m_channels;
+	ChannelVector	m_channels;
 
 	struct timeval	m_last_ping_timestamp;
 	long			m_ping;
 };
+
+inline Channel&		get_channel_reference(const User::ChannelIterator& channel_it)			{ return *(*channel_it); }
+inline const Channel&	get_channel_reference(const User::ConstChannelIterator& channel_it)		{ return *(*channel_it); }
 
 #endif //USER_H

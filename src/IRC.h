@@ -37,7 +37,7 @@
 #define RPL_WHOISCERTFP(nickname, certfp)						(" " + nickname + " :has client certificate fingerprint " certfp)
 #define RPL_NONE												(" :Unknown format")
 
-#define RPL_AWAY(user, target)							(SOURCE("301", user), " " + target->nickname() + " :" + target->away_message())
+#define RPL_AWAY(user, target)									(SOURCE("301", user), " " + target.nickname() + " :" + target.away_message())
 
 #define RPL_USERHOST														// TODO : Implement function to return a list of userhost
 #define RPL_UNAWAY															(":You are no longer marked as being away")
@@ -57,7 +57,7 @@
 #define RPL_LISTSTART 321
 #define RPL_LIST 322
 #define RPL_LISTEND 323
-#define RPL_CHANNELMODEIS(user, channel)				(SOURCE("324", user), " " + channel->name() + " : " + channel->get_modes_as_str(user))
+#define RPL_CHANNELMODEIS(user, channel)				(SOURCE("324", user), " " + channel.name() + " : " + channel.get_modes_as_str(user))
 #define RPL_CREATIONTIME 329
 #define RPL_WHOISACCOUNT 330
 #define RPL_NOTOPIC 331
@@ -74,7 +74,7 @@
 #define RPL_VERSION 351
 
 // TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
-#define RPL_NAMREPLY(user, channel, channel_user)		(SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + channel_user.get_highest_prefix() + channel_user.nickname())
+#define RPL_NAMREPLY(user, channel, channel_user, channel_user_perms)	(SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + channel_user_perms.get_highest_prefix() + channel_user.nickname())
 #define RPL_ENDOFNAMES(user, channel)					(SOURCE("366", user) + " " + channel.name() + " :End of /NAMES list.")
 #define RPL_LINKS 364
 #define RPL_ENDOFLINKS 365
@@ -88,7 +88,7 @@
 #define ERR_NOSUCHNICK(user, nickname)					(SOURCE("401", user) + " " + nickname + " :No such nick")
 #define ERR_NOSUCHSERVER(servername)					(SOURCE("402", user) + " " + servername + " :No such server")
 #define ERR_NOSUCHCHANNEL(user, chan_name)				(SOURCE("403", user) + " " + chan_name + " :No such channel")
-#define ERR_CANNOTSENDTOCHAN(user, channel)				(SOURCE("404", user) + " " + channel->name() + " :Cannot send to channel")
+#define ERR_CANNOTSENDTOCHAN(user, channel)				(SOURCE("404", user) + " " + channel.name() + " :Cannot send to channel")
 #define ERR_TOOMANYCHANNELS(user, channel)				(SOURCE("405", user) + " " + channel + " :You have joined too many channels")
 
 #define ERR_WASNOSUCHNICK(nickname)						(" " + nickname + " :There was no such nickname")
@@ -122,7 +122,7 @@
 #define ERR_BADCHANMASK(channel)						(" " channel " :Bad Channel Mask")
 #define ERR_NOPRIVILEGES								(" :Permission Denied- You're not an IRC operator")
 
-#define ERR_CHANOPRIVSNEEDED(user, channel)				(SOURCE("482", user) + channel->name() + " :You're not channel operator")
+#define ERR_CHANOPRIVSNEEDED(user, channel)				(SOURCE("482", user) + channel.name() + " :You're not channel operator")
 
 #define ERR_CANTKILLSERVER								(" :You cant kill a server!")
 #define ERR_NOOPERHOST									(" :No O-lines for your host")

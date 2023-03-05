@@ -107,7 +107,6 @@ bool User::check_password()
 
 void User::try_finish_registration()
 {
-	CORE_DEBUG("trying to finalize registration: %d | %s | %s | %s | %d", (int)m_is_negociating_capabilities, m_nickname.c_str(), m_username.c_str(), m_realname.c_str(), (int)m_need_password);
 	if (m_is_registered)
 		return ;
 
@@ -142,4 +141,9 @@ const char *User::debug_name()
 bool User::has_pending_command()
 {
 	return m_readbuf.find_first_of("\r\n") != std::string::npos;
+}
+
+void User::add_channel(Channel &channel)
+{
+	m_channels.push_back(&channel);
 }
