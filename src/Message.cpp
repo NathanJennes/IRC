@@ -351,7 +351,7 @@ int join(User& user, const Command& command)
 		}
 
 		// If channel has a ban-list
-		if (server_channel->is_ban_protected()) {
+		{
 
 			// Check if the user is banned
 			bool is_banned = false;
@@ -364,7 +364,7 @@ int join(User& user, const Command& command)
 			}
 
 			// If the user is banned, check if the channel allows for ban-exemptions
-			if (is_banned && server_channel->has_ban_exemptions()) {
+			if (is_banned) {
 				const std::vector<std::string>& ban_exemptions = server_channel->ban_exemptions();
 				for (StringIter ban_exempt_user_name = ban_exemptions.begin(); ban_exempt_user_name != ban_exemptions.end(); ban_exempt_user_name++) {
 					if (user.nickname() == *ban_exempt_user_name) {
