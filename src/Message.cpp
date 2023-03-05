@@ -217,6 +217,8 @@ int quit(User& user, const Command& command)
 	// Command: QUIT
 	// Parameters: [<quit message>]
 
+	Server::reply(user, RPL_MESSAGE(user, "ERROR", " :Quit"));
+
 	if (command.get_parameters().empty())
 		Server::broadcast(user, user.source() + " QUIT :Quit: ");
 	else
@@ -405,7 +407,7 @@ int join(User& user, const Command& command)
 		// Notify all users of the channel of the newcomer
 		for (Channel::UserIterator channel_user_it = channel.users().begin(); channel_user_it != channel.users().end(); channel_user_it++) {
 			User& connected_user = get_user_reference(channel_user_it);
-			Server::reply(connected_user, ":" + user.nickname() + " JOIN " + channel.name());
+			Server::reply(connected_user, user.source() + " JOIN " + channel.name());
 		}
 
 		CORE_INFO("User %s joined the channel %s", user.debug_name(), channel.name().c_str());
@@ -415,50 +417,6 @@ int join(User& user, const Command& command)
 		Server::reply(user, RPL_TOPIC(user, channel)); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
 		Server::reply_list_channel_members_to_user(user, channel);
 	}
-	return 0;
-}
-
-int mode(User& user, const Command& command)
-{
-	// https://modern.ircdocs.horse/#mode-message
-	// Command: MODE
-	// Parameters: <target> [<modestring> [<mode arguments>...]]
-
-	CORE_TRACE("MODE command received from user %s", user.debug_name());
-	if (command.get_parameters().empty()) {
-		CORE_TRACE_IRC_ERR("User %s sent a MODE command with no parameters.", user.debug_name());
-		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
-		return 0;
-	}
-
-	Server::ChannelIterator channel = Server::find_channel(command.get_parameters()[0]);
-	if (channel != Server::channels().end())
-	{
-		CORE_DEBUG("Chan name %s", get_channel_reference(channel).name().c_str());
-		CORE_DEBUG("User %s is setting mode on channel [%s]", user.debug_name(), command.get_parameters()[0].c_str());
-		if (command.get_parameters().size() == 1) {
-			Server::reply(user, RPL_CHANNELMODEIS(user, get_channel_reference(channel)));
-			// TODO: Send RPL_CREATIONTIME (329)
-			return 0;
-		}
-		if (command.get_parameters().size() >= 2)
-		{
-			if (channel->second->has_user(user))
-				channel->second->update_mode(command);
-			else {
-				CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
-				Server::reply(user, ERR_CHANOPRIVSNEEDED(user, get_channel_reference(channel)));
-			}
-		}
-		return 0;
-	}
-	else {
-		CORE_TRACE_IRC_ERR("User %s tried to set mode on a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
-		Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
-		return 1;
-	}
-	// TODO: Handle user mode
-
 	return 0;
 }
 
@@ -475,9 +433,6 @@ int privmsg(User& user, const Command& command)
 		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
 		return 0;
 	}
-
-	// TODO: Handle when too many target
-	// TODO: Handle when msg is empty
 
 	if (is_channel(command.get_parameters()[0]))
 	{

@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include "Command.h"
+#include "Mode.h"
 
 class User;
 
@@ -36,18 +37,18 @@ public:
 		void set_is_halfop(bool new_value)		{ m_is_halfop = new_value; };
 		void set_has_voice(bool new_value)		{ m_has_voice = new_value; };
 
-		bool				is_founder()	const { return m_is_founder; };
-		bool				is_protected()	const { return m_is_protected; };
-		bool				is_operator()	const { return m_is_operator; };
-		bool				is_halfop()		const { return m_is_halfop; };
-		bool				has_voice()		const { return m_has_voice; };
+		bool	is_founder()	const			{ return m_is_founder; };
+		bool	is_protected()	const			{ return m_is_protected; };
+		bool	is_operator()	const			{ return m_is_operator; };
+		bool	is_halfop()		const			{ return m_is_halfop; };
+		bool	has_voice()		const			{ return m_has_voice; };
 
 	private:
-		bool		m_is_founder;
-		bool		m_is_protected;
-		bool		m_is_operator;
-		bool		m_is_halfop;
-		bool		m_has_voice;
+		bool	m_is_founder;
+		bool	m_is_protected;
+		bool	m_is_operator;
+		bool	m_is_halfop;
+		bool	m_has_voice;
 	};
 
 	explicit Channel(User& user, const std::string& name);
@@ -85,17 +86,23 @@ public:
 	void set_user_voice_permission(const std::string& user_nickname, bool value);
 
 	/// Modes
-	bool update_mode(const Command& command);
+	bool update_mode(User &user, const std::vector<mode_param> &mode_params);
 
 	/// Entry restrictions
 	void add_to_banlist(const std::string& user_nickname);
 	void remove_from_banlist(const std::string& user_nickname);
 	void add_to_banlist(const User& user);
 	void remove_from_banlist(const User& user);
+
 	void add_to_invitelist(const std::string& user_nickname);
 	void remove_from_invitelist(const std::string& user_nickname);
 	void add_to_invitelist(const User& user);
 	void remove_from_invitelist(const User& user);
+
+	void add_to_ban_exemptions(const std::string& user_nickname);
+	void remove_from_ban_exemptions(const std::string& user_nickname);
+	void add_to_ban_exemptions(const User& user);
+	void remove_from_ban_exemptions(const User& user);
 
 	/// Getters
 	const	std::string&			name()							const { return m_name; }
@@ -114,9 +121,13 @@ public:
 	const std::vector<std::string>&	ban_exemptions()				const { return m_ban_exemptions; }
 	std::string						get_modes_as_str(User& user)	const;
 
+	bool	is_user_founder(const std::string &user_nickname);
+	bool	is_user_operator(const std::string &user_nickname);
+	bool	is_user_halfop(const std::string &user_nickname);
+	bool	is_user_has_voice(const std::string &user_nickname);
+
 	bool	is_user_limited()		const { return m_is_user_limited; }
 	bool	is_invite_only()		const { return m_is_invite_only; }
-	bool	has_invite_exemptions()	const { return m_has_invite_exemptions; }
 	bool	is_key_protected()		const { return m_is_key_protected; }
 	bool	is_moderated()			const { return m_is_moderated; }
 	bool	is_secret()				const { return m_is_secret; }
@@ -124,7 +135,6 @@ public:
 	bool	no_outside_messages()	const { return m_no_outside_messages; }
 
 private:
-
 	/// Users
 	UserIterator	find_user(const std::string& user_nickname);
 
@@ -145,11 +155,8 @@ private:
 	UserMap	m_users;
 
 	/// Modes
-	bool	m_is_ban_protected;			// +b
-	bool	m_has_ban_exemptions;		// +e
 	bool	m_is_user_limited;			// +l
 	bool	m_is_invite_only;			// +i
-	bool	m_has_invite_exemptions;	// +I
 	bool	m_is_key_protected;			// +k
 	bool	m_is_moderated;				// +m
 	bool	m_is_secret;				// +s

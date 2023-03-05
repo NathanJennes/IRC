@@ -21,6 +21,8 @@ bool is_channel(const std::string& name)
 
 bool is_number(const std::string& str)
 {
+	if (str.empty())
+		return false;
 	for (std::string::const_iterator it = str.begin(); it != str.end(); ++it)
 		if (!std::isdigit(*it))
 			return false;

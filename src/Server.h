@@ -40,12 +40,13 @@ public:
 	static void reply(User& user, const std::string& msg);
 	static void reply_welcome_user(User& user);
 	static void reply_list_channel_members_to_user(User &user, const Channel& channel);
+	static void reply_ban_list_to_user(User& user, const Channel& channel);
 
 	/// User management
-	static bool			user_exists(const std::string& user_nickname);
-	static bool			user_exists(const UserIterator& user);
-	static UserIterator	find_user(const std::string& user_nickname);
-	static bool			is_nickname_taken(const std::string& user_nickname);
+	static bool				user_exists(const std::string& user_nickname);
+	static bool				user_exists(const UserIterator& user);
+	static UserIterator		find_user(const std::string& user_nickname);
+	static bool				is_nickname_taken(const std::string& user_nickname);
 
 	/// Channel management
 	static Channel&			create_new_channel(User& first_user, const std::string& channel_name);
@@ -118,7 +119,7 @@ private:
 };
 
 inline Channel&	get_channel_reference(const Server::ChannelIterator& channel_it)	{ return *(channel_it->second); }
-inline User&		get_user_reference(const Server::UserIterator& user_it)				{ return *(*user_it); }
-inline User&		get_user_reference(User *user_ptr)									{ return *user_ptr; }
+inline User&	get_user_reference(const Server::UserIterator& user_it)				{ return *(*user_it); }
+inline User&	get_user_reference(User *user_ptr)									{ return *user_ptr; }
 
 #endif //SERVER_H

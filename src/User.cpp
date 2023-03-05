@@ -14,10 +14,12 @@
 
 User::User(int fd, const std::string& ip, uint16_t port) :
 		m_nickname("*"), m_ip(ip), m_port(port), m_fd(fd),
-		m_is_afk(false), m_is_disconnected(false),
+		m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false),
 		m_need_password(true),
+		m_is_afk(false), m_is_operator(false), m_is_invisible(true),
+		m_can_receive_wallop(true), m_can_receive_notice(true),
 		m_last_ping_timestamp(), m_ping(0)
 {
 }
@@ -146,4 +148,46 @@ bool User::has_pending_command()
 void User::add_channel(Channel &channel)
 {
 	m_channels.push_back(&channel);
+}
+
+std::string User::get_modes_as_str()	const
+{
+	std::string modes = "+";
+
+	if (is_operator())
+		modes += "o";
+	if (is_invisible())
+		modes += "i";
+	if (can_get_wallop())
+		modes += "w";
+	if (can_get_notice())
+		modes += "s";
+	return modes;
+}
+
+bool User::update_mode(const std::vector<mode_param>& mode_params)
+{
+	CORE_TRACE("mode_params size: %d", (int)mode_params.size());
+	for (size_t i = 0; i < mode_params.size(); i++)
+	{
+		const mode_param& mode = mode_params[i];
+		switch (mode.mode) {
+			case 'o':
+				// TODO: implement operator mode
+				break ;
+			case 'i':
+				m_is_invisible = mode.is_adding;
+				break ;
+			case 'w':
+				m_can_receive_wallop = mode.is_adding;
+				break ;
+			case 's':
+				m_can_receive_notice = mode.is_adding;
+				break ;
+			default:
+				Server::reply(*this, ERR_UNKNOWNMODE((*this), mode.mode));
+				return false;
+		}
+	}
+	return false;
 }

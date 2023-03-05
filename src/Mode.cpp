@@ -93,27 +93,28 @@ int mode(User& user, const Command& command)
 			return 1;
 		}
 
+		Channel& channel = get_channel_reference(channel_it);
+
 		// get channel mode
 		if (command.get_parameters().size() == 1)
 		{
-			Server::reply(user, RPL_CHANNELMODEIS(user, channel_it));
+			Server::reply(user, RPL_CHANNELMODEIS(user, channel));
 			// TODO: Send RPL_CREATIONTIME (329)
 			return 0;
 		}
 
 		// update channel mode
-		if (channel_it->is_user_operator(user) || channel_it->is_user_halfop(user)) {
+		if (channel.is_user_operator(user.nickname()) || channel.is_user_halfop(user.nickname())) {
 			std::vector<mode_param> mode_params = parse_channel_modes(command);
-			channel_it->update_mode(user, mode_params);
+			channel.update_mode(user, mode_params);
 			return 0;
 		}
 		else {
 			CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] without being an operator.", user.debug_name(), command.get_parameters()[0].c_str());
-			Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel_it));
+			Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel.name()));
 			return 1;
 		}
 	}
-
 	// TODO: Handle user mode
 
 	return 0;

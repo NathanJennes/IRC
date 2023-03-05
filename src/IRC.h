@@ -20,7 +20,7 @@
 #define RPL_ISUPPORT(user, tokens)						(SOURCE("005", user) + " " + tokens +" :are supported by this server")
 
 #define RPL_BOUNCE	// RECOMMENDED BY THE RFC TO NOT BE USED
-#define RPL_UMODEIS(set_usermodes)								(" " set_usermodes)
+#define RPL_UMODEIS(user)								(SOURCE("221", user) + " " + user.get_modes_as_str())
 
 #define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)	(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers")
 #define RPL_LUSEROP(nbr_opers)									(" " nbr_opers " :operator(s) online")
@@ -78,8 +78,8 @@
 #define RPL_ENDOFNAMES(user, channel)					(SOURCE("366", user) + " " + channel.name() + " :End of /NAMES list.")
 #define RPL_LINKS 364
 #define RPL_ENDOFLINKS 365
-#define RPL_BANLIST 367
-#define RPL_ENDOFBANLIST 368
+#define RPL_BANLIST(user, channel, ban_user)			(SOURCE("367", user) + " " + channel.name() + " " + ban_user)
+#define RPL_ENDOFBANLIST(user, channel)					(SOURCE("368", user) + " " + channel.name() + " :End of channel ban list")
 #define RPL_ENDOFWHOWAS 369
 #define RPL_INFO 371
 #define RPL_ENDOFINFO 374
@@ -113,16 +113,16 @@
 #define ERR_ALREADYREGISTERED(user)						(SOURCE("462", user) + " :You may not registered")
 #define ERR_PASSWDMISMATCH(user)						(SOURCE("464", user) + " :Password incorrect")
 #define ERR_YOUREBANNEDCREEP(user)						(SOURCE("465", user) + " :You are banned from this server")
-#define ERR_CHANNELISFULL(user, channel)				(SOURCE("471", user) + " " + channel + " :Cannot join channel (+l)")
-#define ERR_UNKNOWNMODE(user, mode)						(SOURCE("472", user) + " " + mode + " :is unknown mode char to me")
-#define ERR_INVITEONLYCHAN(user, channel)				(SOURCE("473", user) + " " + channel + " :Cannot join channel (+i)")
-#define ERR_BANNEDFROMCHAN(user, channel)				(SOURCE("474", user) + " " + channel + " :Cannot join channel (+b)")
-#define ERR_BADCHANNELKEY(user, channel)				(SOURCE("475", user) + " " + channel + " :Cannot join channel (+k)")
+#define ERR_CHANNELISFULL(user, channel)				(SOURCE("471", user) + " " + channel + " :Cannot join channel (Channel full)")
+#define ERR_UNKNOWNMODE(user, mode)						(SOURCE("472", user) + " " +   mode  + " :is unknown mode character")
+#define ERR_INVITEONLYCHAN(user, channel)				(SOURCE("473", user) + " " + channel + " :Cannot join channel (invite-only)")
+#define ERR_BANNEDFROMCHAN(user, channel)				(SOURCE("474", user) + " " + channel + " :Cannot join channel (you're banned)")
+#define ERR_BADCHANNELKEY(user, channel)				(SOURCE("475", user) + " " + channel + " :Cannot join channel (Wrong key)")
 
 #define ERR_BADCHANMASK(channel)						(" " channel " :Bad Channel Mask")
-#define ERR_NOPRIVILEGES								(" :Permission Denied- You're not an IRC operator")
+#define ERR_NOPRIVILEGES								(" :Permission Denied - You're not an IRC operator")
 
-#define ERR_CHANOPRIVSNEEDED(user, channel)				(SOURCE("482", user) + channel.name() + " :You're not channel operator")
+#define ERR_CHANOPRIVSNEEDED(user, chan_name)			(SOURCE("482", user) + chan_name + " :You're not channel operator")
 
 #define ERR_CANTKILLSERVER								(" :You cant kill a server!")
 #define ERR_NOOPERHOST									(" :No O-lines for your host")

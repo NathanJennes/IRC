@@ -7,6 +7,7 @@
 
 #include "User.h"
 #include "Command.h"
+#include "Mode.h"
 
 // Connection messages
 int auth(User& user, const Command& command);
@@ -39,7 +40,6 @@ int time_cmd(User& user, const Command& command);
 int stats(User& user, const Command& command);
 int help(User& user, const Command& command);
 int info(User& user, const Command& command);
-int mode(User& user, const Command& command);
 
 // sending messages
 int privmsg(User& user, const Command& command);
