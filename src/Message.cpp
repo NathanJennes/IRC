@@ -232,9 +232,6 @@ int join(User& user, const Command& command)
 	//  Command: JOIN
 	//  Parameters: <channel>{,<channel>} [<key>{,<key>}]
 
-	// TODO: handle alternative parameter "0"
-	// TODO: handle empty JOIN command (to make a user quit all its connected channels)
-
 	// If we receive a source, simply ignore the command as it may come from a server
 	if (!command.get_source().source_name.empty()) {
 		CORE_TRACE_IRC_ERR("Got a <source> inside a JOIN message from %s. Did the message come from a server ?", user.debug_name());
@@ -246,6 +243,16 @@ int join(User& user, const Command& command)
 	// If the parameter list is empty, ignore the command and return an error
 	if (params.empty() || params[0].empty()) {
 		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	// A JOIN command with "0" as its parameter should disconnect the user from all of its channels
+	if (params[0] == "0") {
+		for (User::ConstChannelIterator connected_channel = user.channels().begin(); connected_channel != user.channels().end(); connected_channel++) {
+			Server::ChannelIterator server_channel = Server::find_channel(*connected_channel);
+			if (Server::channel_exists(server_channel))
+				Server::disconnect_user_from_channel(user, *server_channel);
+		}
 		return 0;
 	}
 

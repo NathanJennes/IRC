@@ -47,6 +47,8 @@ public:
 	static bool			is_nickname_taken(const std::string& user_nickname);
 
 	/// Channel management
+	static void				disconnect_user_from_channel(User& user, const std::string& channel_name);
+	static void				disconnect_user_from_channel(User& user, Channel& channel);
 	static bool				channel_exists(const std::string& channel_name);
 	static bool				channel_exists(const ChannelIterator& channel);
 	static ChannelIterator	find_channel(const std::string& channel_name);

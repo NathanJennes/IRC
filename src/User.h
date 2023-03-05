@@ -19,6 +19,10 @@
 class User
 {
 public:
+	/// I/O typedefs
+	typedef std::vector<std::string>::iterator			ChannelIterator;
+	typedef std::vector<std::string>::const_iterator	ConstChannelIterator;
+
 	explicit User(int fd, const std::string& ip, uint16_t port);
 
 	ssize_t		receive_message();

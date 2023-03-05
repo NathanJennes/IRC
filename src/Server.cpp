@@ -372,3 +372,24 @@ Server::ChannelIterator Server::find_channel(const std::string &channel_name)
 	}
 	return m_channels.end();
 }
+
+void Server::disconnect_user_from_channel(User &user, const std::string &channel_name)
+{
+	ChannelIterator channel = find_channel(channel_name);
+	if (channel != m_channels.end())
+		disconnect_user_from_channel(user, *channel);
+}
+
+void Server::disconnect_user_from_channel(User &user, Channel &channel)
+{
+	// Remove the user from the channel
+	channel.remove_user(user);
+	reply(user, SOURCE("PART", user) + " " + channel.name());
+
+	// Notify other channel users
+	for (Channel::ConstUserIterator channel_user = channel.users().begin(); channel_user != channel.users().end(); channel_user++) {
+		UserIterator server_user = find_user(channel_user->nickname());
+		if (server_user != m_users.end())
+			reply(*server_user, SOURCE("PART", user) + " " + channel.name());
+	}
+}
