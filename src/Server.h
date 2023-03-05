@@ -39,12 +39,13 @@ public:
 	/// Complex replies
 	static void reply_welcome_user(User& user);
 	static void reply_list_channel_members_to_user(User &user, const Channel& channel);
+	static void reply_ban_list_to_user(User& user, const Channel& channel);
 
 	/// User management
-	static bool			user_exists(const std::string& user_nickname);
-	static bool			user_exists(const UserIterator& user);
-	static UserIterator	find_user(const std::string& user_nickname);
-	static bool			is_nickname_taken(const std::string& user_nickname);
+	static bool				user_exists(const std::string& user_nickname);
+	static bool				user_exists(const UserIterator& user);
+	static UserIterator		find_user(const std::string& user_nickname);
+	static bool				is_nickname_taken(const std::string& user_nickname);
 
 	/// Channel management
 	static void				disconnect_user_from_channel(User& user, const std::string& channel_name);
@@ -54,11 +55,11 @@ public:
 	static ChannelIterator	find_channel(const std::string& channel_name);
 
 	/// Server information
-	static const std::string&						network_name()			{ return m_network_name; }
-	static const std::string&						server_name()			{ return m_server_name; }
-	static       bool								is_running()			{ return m_is_running; }
-	static const std::string&						creation_date()			{ return m_creation_date; }
-	static const std::string&						password()				{ return m_password; }
+	static const std::string&			network_name()			{ return m_network_name; }
+	static const std::string&			server_name()			{ return m_server_name; }
+	static       bool					is_running()			{ return m_is_running; }
+	static const std::string&			creation_date()			{ return m_creation_date; }
+	static const std::string&			password()				{ return m_password; }
 
 	/// User & Channels
 	static       std::vector<Channel>&	channels()				{ return m_channels; }

@@ -7,6 +7,8 @@
 #include <string>
 #include "Channel.h"
 #include "Utils.h"
+#include "Server.h"
+#include "IRC.h"
 
 Channel::UserEntry::UserEntry(const std::string& nickname)
 : m_nickname(nickname), m_is_founder(false), m_is_protected(false),
@@ -40,18 +42,14 @@ std::string Channel::UserEntry::get_highest_prefix() const
 Channel::Channel(User& user, const std::string &name) :
 	m_name(name),
 	m_user_limit(),
-	m_is_ban_protected(),
-	m_has_ban_exemptions(),
 	m_is_user_limited(),
 	m_is_invite_only(),
-	m_has_invite_exemptions(),
 	m_is_key_protected(),
 	m_is_moderated(),
 	m_is_secret(),
 	m_is_topic_protected(),
 	m_no_outside_messages()
 {
-	// TODO: have a look into this
 	if (name[0] == CHANNEL_TYPE_SHARED_SYMBOL) {
 		m_type = CHANNEL_TYPE_SHARED_SYMBOL;
 		m_is_topic_protected = true; // +t
@@ -65,68 +63,74 @@ Channel::Channel(User& user, const std::string &name) :
 	set_user_operator(user, true);
 }
 
-bool Channel::update_mode(const Command& command)
+bool Channel::update_mode(User &user, const std::vector<mode_param> &mode_params)
 {
-	bool value;
-	size_t	param = 0;
+	int value;
 
-	CORE_TRACE("Channel::update_mode()");
-	for (size_t i = 1; i < command.get_parameters().size(); i += param + 1)
+	for (size_t i = 0; i < mode_params.size(); i++)
 	{
-		std::string modes = command.get_parameters()[i];
-		CORE_DEBUG("mode: %s", modes.c_str());
-
-		if (modes[0] == '+')
-			value = true;
-		else if (modes[0] == '-')
-			value = false;
-		else
-			continue;
-
-		CORE_DEBUG("Value: %d", value);
-		for (size_t j = 1; j < modes.size(); j++)
-		{
-			switch (modes[j])
-			{
-				case 'b':
-					m_is_ban_protected = value;
-					break;
-				case 'e':
-					m_has_ban_exemptions = value;
-					break;
-				case 'l':
-					if (command.get_parameters().size() > i + 1 + param && is_number(command.get_parameters()[i + 1 + param])) {
-						m_user_limit = static_cast<size_t>(std::atoi(command.get_parameters()[i + 1 + param++].c_str()));
-						m_is_user_limited = value;
-					}
-					break;
-				case 'i':
-					m_is_invite_only = value;
-					break;
-				case 'I':
-					m_has_invite_exemptions = value;
-					break;
-				case 'k':
-					if (command.get_parameters().size() > i + 1 + param) {
-						m_key = command.get_parameters()[i + 1 + param++];
-						m_is_key_protected = value;
-					}
-					break;
-				case 'm':
-					m_is_moderated = value;
-					break;
-				case 's':
-					m_is_secret = value;
-					break;
-				case 't':
-					m_is_topic_protected = value;
-					break;
-				case 'n':
-					m_no_outside_messages = value;
-					break;
-				default:
-					return false;
-			}
+		mode_param mode_param = mode_params[i];
+		switch (mode_param.mode) {
+			case 'b':
+				if (mode_param.arg.empty()) {
+					Server::reply_ban_list_to_user(user, *this);
+				}
+				if (mode_param.is_adding)
+					add_to_banlist(mode_param.arg);
+				else if (!mode_param.is_adding)
+					remove_from_banlist(mode_param.arg);
+				break;
+			case 'e':
+				if (mode_param.is_adding)
+					add_to_ban_exemptions(mode_param.arg);
+				else if (!mode_param.is_adding)
+					remove_from_ban_exemptions(mode_param.arg);
+				break;
+			case 'I':
+				if (mode_param.is_adding)
+					add_to_invitelist(mode_param.arg);
+				else if (!mode_param.is_adding)
+					remove_from_invitelist(mode_param.arg);
+				break;
+			case 'i':
+				m_is_invite_only = mode_param.is_adding;
+				break;
+			case 'k':
+				if (mode_param.is_adding) {
+					m_key = mode_param.arg;
+					m_is_key_protected = mode_param.is_adding;
+				}
+				else if (!mode_param.is_adding) {
+					m_is_key_protected = mode_param.is_adding;
+					m_key = "";
+				}
+				break;
+			case 'l':
+				value = std::atoi(mode_param.arg.c_str());
+				if (mode_param.is_adding && is_number(mode_param.arg) && value > 0) {
+					m_is_user_limited = mode_param.is_adding;
+					m_user_limit = static_cast<size_t>(value);
+				}
+				else if (!mode_param.is_adding) {
+					m_is_user_limited = false;
+					m_user_limit = 0;
+				}
+				break;
+			case 'n':
+				m_no_outside_messages = mode_param.is_adding;
+				break;
+			case 'm':
+				m_is_moderated = mode_param.is_adding;
+				break;
+			case 's':
+				m_is_secret = mode_param.is_adding;
+				break;
+			case 't':
+				m_is_topic_protected = mode_param.is_adding;
+				break;
+			default:
+				Server::reply(user, ERR_UNKNOWNMODE(user, mode_param.mode));
+				break;
 		}
 	}
 	return true;
@@ -139,10 +143,6 @@ std::string Channel::get_modes_as_str(User& user) const
 
 	bool hidden = has_user(user);
 
-	if (m_is_ban_protected)
-		modes += "b";
-	if (m_has_ban_exemptions)
-		modes += "e";
 	if (m_is_invite_only)
 		modes += "i";
 
@@ -167,8 +167,6 @@ std::string Channel::get_modes_as_str(User& user) const
 		modes += "s";
 	if (m_is_topic_protected)
 		modes += "t";
-	if (m_has_invite_exemptions)
-		modes += "I";
 
 	return modes + mode_params;
 }
@@ -330,4 +328,56 @@ Channel::UserIterator Channel::find_user(const User &user)
 Channel::UserIterator Channel::find_user(const std::string &user_nickname)
 {
 	return std::find(m_users.begin(), m_users.end(), user_nickname);
+}
+
+bool Channel::is_user_founder(const User &user)
+{
+	UserIterator it = find_user(user);
+	if (it != m_users.end())
+		return it->is_founder();
+	return false;
+}
+
+bool Channel::is_user_operator(const User &user)
+{
+	UserIterator it = find_user(user);
+	if (it != m_users.end())
+		return it->is_operator();
+	return false;
+}
+
+bool Channel::is_user_halfop(const User &user)
+{
+	UserIterator it = find_user(user);
+	if (it != m_users.end())
+		return it->is_halfop();
+	return false;
+}
+
+bool Channel::is_user_has_voice(const User &user)
+{
+	UserIterator it = find_user(user);
+	if (it != m_users.end())
+		return it->has_voice();
+	return false;
+}
+
+void Channel::add_to_ban_exemptions(const std::string &user_nickname)
+{
+	(void)user_nickname;
+}
+
+void Channel::remove_from_ban_exemptions(const std::string &user_nickname)
+{
+	(void)user_nickname;
+}
+
+void Channel::add_to_ban_exemptions(const User &user)
+{
+	(void)user;
+}
+
+void Channel::remove_from_ban_exemptions(const User &user)
+{
+	(void)user;
 }

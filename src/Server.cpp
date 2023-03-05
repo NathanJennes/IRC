@@ -45,8 +45,6 @@ void Server::signal_handler(int signal)
 
 bool Server::initialize(uint16_t port)
 {
-	m_network_name = "IRC Server";
-
 	m_server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_server_socket < 0) {
 		CORE_ERROR("socket: %s", strerror(errno));
@@ -392,4 +390,10 @@ void Server::disconnect_user_from_channel(User &user, Channel &channel)
 		if (server_user != m_users.end())
 			reply(*server_user, user.source() + " PART " + channel.name());
 	}
+}
+
+void Server::reply_ban_list_to_user(User &user, const Channel &channel)
+{
+	Server::reply(user, RPL_BANLIST(user, channel, "*!*@*"));
+	Server::reply(user, RPL_ENDOFBANLIST(user, channel));
 }

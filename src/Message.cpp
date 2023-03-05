@@ -329,7 +329,7 @@ int join(User& user, const Command& command)
 			}
 
 			// Else, check if the channels allow for invite-exemptions
-			if (!is_invited && server_channel->has_invite_exemptions()) {
+			if (!is_invited) {
 
 				// Check if the user is part of the exemptions
 				const std::vector<std::string>& invite_exempt_list = server_channel->invite_exemptions();
@@ -427,66 +427,19 @@ int join(User& user, const Command& command)
 	return 0;
 }
 
-int mode(User& user, const Command& command)
-{
-	// https://modern.ircdocs.horse/#mode-message
-	// Command: MODE
-	// Parameters: <target> [<modestring> [<mode arguments>...]]
-
-	CORE_TRACE("MODE command received from user %s", user.debug_name());
-	if (command.get_parameters().empty()) {
-		CORE_TRACE_IRC_ERR("User %s sent a MODE command with no parameters.", user.debug_name());
-		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
-		return 0;
-	}
-
-	Server::ChannelIterator channel = Server::find_channel(command.get_parameters()[0]);
-	if (channel != Server::channels().end())
-	{
-		CORE_DEBUG("Chan name %s", channel->name().c_str());
-		CORE_DEBUG("User %s is setting mode on channel [%s]", user.debug_name(), command.get_parameters()[0].c_str());
-		if (command.get_parameters().size() == 1) {
-			Server::reply(user, RPL_CHANNELMODEIS(user, channel));
-			// TODO: Send RPL_CREATIONTIME (329)
-			return 0;
-		}
-		if (command.get_parameters().size() >= 2)
-		{
-			if (channel->has_user(user))
-				channel->update_mode(command);
-			else {
-				CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
-				Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
-			}
-		}
-		return 0;
-	}
-	else {
-		CORE_TRACE_IRC_ERR("User %s tried to set mode on a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
-		Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
-		return 1;
-	}
-	// TODO: Handle user mode
-
-	return 0;
-}
-
 int privmsg(User& user, const Command& command)
 {
 	// https://modern.ircdocs.horse/#privmsg-message
 	// Command: PRIVMSG
 	// Parameters: <target>{,<target>} <text to be sent>
 
-	// TODO: Handle when target is empty
+	// check if channel is
 	if (command.get_parameters().size() < 2)
 	{
 		CORE_TRACE_IRC_ERR("User %s sent a PRIVMSG command with less than 2 parameters.", user.debug_name());
 		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
 		return 0;
 	}
-
-	// TODO: Handle when too many target
-	// TODO: Handle when msg is empty
 
 	if (is_channel(command.get_parameters()[0]))
 	{
