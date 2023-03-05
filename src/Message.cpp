@@ -234,7 +234,6 @@ int join(User& user, const Command& command)
 
 	// TODO: handle alternative parameter "0"
 	// TODO: handle empty JOIN command (to make a user quit all its connected channels)
-	// TODO: once joining a channel, the server should send to all users connected to the channel a JOIN command to signal them
 
 	// If we receive a source, simply ignore the command as it may come from a server
 	if (!command.get_source().source_name.empty()) {
@@ -402,6 +401,13 @@ int join(User& user, const Command& command)
 				Server::reply(user, ERR_CHANNELISFULL(user, server_channel->name()));
 				continue ;
 			}
+		}
+
+		// Notify all users of the channel of the newcomer
+		for (Channel::ConstUserIterator channel_user = server_channel->users().begin(); channel_user != server_channel->users().end(); channel_user++) {
+			Server::UserIterator server_user = Server::find_user(channel_user->nickname());
+			if (Server::user_exists(server_user))
+				Server::reply(*server_user, ":" + user.nickname() + " JOIN " + server_channel->name());
 		}
 
 		CORE_INFO("User %s joined the channel %s", user.debug_name(), server_channel->name().c_str());
