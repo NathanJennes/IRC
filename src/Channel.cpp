@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <string>
 #include "Channel.h"
 #include "Utils.h"
 
@@ -95,7 +96,7 @@ bool Channel::update_mode(const Command& command)
 					break;
 				case 'l':
 					if (command.get_parameters().size() > i + 1 + param && is_number(command.get_parameters()[i + 1 + param])) {
-						m_user_limit = static_cast<size_t>(std::stoi(command.get_parameters()[i + 1 + param++]));
+						m_user_limit = static_cast<size_t>(std::atoi(command.get_parameters()[i + 1 + param++].c_str()));
 						m_is_user_limited = value;
 					}
 					break;
