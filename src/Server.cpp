@@ -384,12 +384,12 @@ void Server::disconnect_user_from_channel(User &user, Channel &channel)
 {
 	// Remove the user from the channel
 	channel.remove_user(user);
-	reply(user, SOURCE("PART", user) + " " + channel.name());
+	reply(user, user.source() + " PART " + channel.name());
 
 	// Notify other channel users
 	for (Channel::ConstUserIterator channel_user = channel.users().begin(); channel_user != channel.users().end(); channel_user++) {
 		UserIterator server_user = find_user(channel_user->nickname());
 		if (server_user != m_users.end())
-			reply(*server_user, SOURCE("PART", user) + " " + channel.name());
+			reply(*server_user, user.source() + " PART " + channel.name());
 	}
 }
