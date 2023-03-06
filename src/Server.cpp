@@ -123,6 +123,7 @@ void Server::initialize_command_functions()
 
 	// server commands
 	m_commands.insert(std::make_pair("motd", motd));
+	m_commands.insert(std::make_pair("version", version));
 }
 
 bool Server::update()
