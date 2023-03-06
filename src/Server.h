@@ -71,6 +71,7 @@ public:
 	static const std::string&	user_modes()			{ return m_user_modes; }
 	static const std::string&	channel_modes()			{ return m_channel_modes; }
 	static const std::string&	channel_modes_param()	{ return m_channel_modes_parameter; }
+	static const std::string&	motd_string()			{ return m_motd; }
 
 	/// Setters
 	static void	set_is_running(bool new_state)					{ m_is_running = new_state; }
@@ -79,6 +80,8 @@ public:
 
 private:
 	// Member functions
+	static void	initialize_command_functions();
+	static bool	get_server_motd(const std::string& path);
 	static bool	initialize_config_file();
 	static void	accept_new_connections();
 	static void	poll_events();
@@ -86,8 +89,6 @@ private:
 	static void	handle_messages();
 	static void	execute_command(User& user, const Command& command);
 	static void	check_for_closed_connexions();
-
-	static void	initialize_command_functions();
 
 	/// Users
 	static User&				create_new_user(int fd, const std::string& ip, uint16_t port);
@@ -116,6 +117,8 @@ private:
 	// Message function prototype
 	static std::map<std::string, command_function>	m_commands;
 	static std::map<std::string, command_function>	m_connection_commands;
+
+	static std::string			m_motd;
 };
 
 inline Channel&	get_channel_reference(const Server::ChannelIterator& channel_it)	{ return *(channel_it->second); }

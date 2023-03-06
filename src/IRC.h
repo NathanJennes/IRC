@@ -88,13 +88,13 @@
 
 #define RPL_MOTD(user, motd)							(SOURCE("372", user) + " :- " + motd)
 #define RPL_ENDOFINFO(user)								(SOURCE("374", user) + " :End of /INFO list.")
-#define RPL_MOTDSTART(user)								(SOURCE("375", user) + " :- " + Server::name() + " Message of the day - ")
+#define RPL_MOTDSTART(user)								(SOURCE("375", user) + " :- " + Server::server_name() + " Message of the day - ")
 #define RPL_ENDOFMOTD(user)								(SOURCE("376", user) + " :End of /MOTD command.")
 
 #define ERR_UNKNOWNERROR(ERRCODE)						(" " ERRCODE " :Unknown error")
 
 #define ERR_NOSUCHNICK(user, nickname)					(SOURCE("401", user) + " " + nickname + " :No such nick")
-#define ERR_NOSUCHSERVER(servername)					(SOURCE("402", user) + " " + servername + " :No such server")
+#define ERR_NOSUCHSERVER(user, servername)				(SOURCE("402", user) + " " + servername + " :No such server")
 #define ERR_NOSUCHCHANNEL(user, chan_name)				(SOURCE("403", user) + " " + chan_name + " :No such channel")
 #define ERR_CANNOTSENDTOCHAN(user, channel)				(SOURCE("404", user) + " " + channel.name() + " :Cannot send to channel")
 #define ERR_TOOMANYCHANNELS(user, channel)				(SOURCE("405", user) + " " + channel + " :You have joined too many channels")
