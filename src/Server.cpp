@@ -327,12 +327,6 @@ void Server::reply_welcome_user(User &user)
 	reply(user, RPL_MYINFO(user));
 }
 
-void Server::try_reply_list_channel_members_to_user(User &user, const std::string &channel_name)
-{
-	(void)user;
-	(void)channel_name;
-}
-
 void Server::reply_list_channel_members_to_user(User &user, const Channel& channel)
 {
 	for (Channel::ConstUserIterator channel_user_it = channel.users().begin(); channel_user_it != channel.users().end(); channel_user_it++) {
@@ -386,19 +380,19 @@ Server::ChannelIterator Server::find_channel(const std::string &channel_name)
 
 void Server::try_disconnect_user_from_channel(User &user, const std::string &channel_name, const std::string& reason)
 {
-	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
-	if (!Server::channel_exists(channel_it)) {
-		Server::reply(user, ERR_NOSUCHCHANNEL(user, channel_name));
+	ChannelIterator channel_it = find_channel(channel_name);
+	if (!channel_exists(channel_it)) {
+		reply(user, ERR_NOSUCHCHANNEL(user, channel_name));
 		return ;
 	}
 
 	Channel& channel = get_channel_reference(channel_it);
 	if (!channel.has_user(user)) {
-		Server::reply(user, ERR_NOTONCHANNEL(user, channel));
+		reply(user, ERR_NOTONCHANNEL(user, channel));
 		return ;
 	}
 
-	Server::disconnect_user_from_channel(user, channel, reason);
+	disconnect_user_from_channel(user, channel, reason);
 }
 
 void Server::disconnect_user_from_channel(User &user, Channel &channel, const std::string& reason)
