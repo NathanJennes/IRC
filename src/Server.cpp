@@ -377,28 +377,28 @@ Server::ChannelIterator Server::find_channel(const std::string &channel_name)
 	return m_channels.find(channel_name);
 }
 
-void Server::disconnect_user_from_channel(User &user, const std::string &channel_name)
+void Server::disconnect_user_from_channel(User &user, const std::string &channel_name, const std::string& reason)
 {
 	ChannelIterator channel_it = find_channel(channel_name);
 	if (channel_exists(channel_it))
-		disconnect_user_from_channel(user, get_channel_reference(channel_it));
+		disconnect_user_from_channel(user, get_channel_reference(channel_it), reason);
 }
 
-void Server::disconnect_user_from_channel(User &user, Channel &channel)
+void Server::disconnect_user_from_channel(User &user, Channel &channel, const std::string& reason)
 {
 	// Remove the user from the channel
 	channel.remove_user(user);
-	reply(user, user.source() + " PART " + channel.name());
+	reply(user, user.source() + " PART " + channel.name() + " " + reason);
 
 	// Notify other channel users
 	for (Channel::UserIterator channel_user_it = channel.users().begin(); channel_user_it != channel.users().end(); channel_user_it++)
-		reply(get_user_reference(channel_user_it), user.source() + " PART " + channel.name());
+		reply(get_user_reference(channel_user_it), user.source() + " PART " + channel.name() + " " + reason);
 }
 
-void Server::disconnect_user_from_channels(User &user)
+void Server::disconnect_user_from_channels(User &user, const std::string& reason)
 {
 	for (User::ChannelIterator channel_it = user.channels().begin(); channel_it != user.channels().end(); channel_it++)
-		disconnect_user_from_channel(user, get_channel_reference(channel_it));
+		disconnect_user_from_channel(user, get_channel_reference(channel_it), reason);
 }
 
 User& Server::create_new_user(int fd, const std::string &ip, uint16_t port)
