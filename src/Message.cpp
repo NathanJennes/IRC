@@ -488,6 +488,54 @@ int names(User& user, const Command& command)
 	return 0;
 }
 
+int topic(User& user, const Command& command)
+{
+	//  https://modern.ircdocs.horse/#topic-message
+	//  Command: TOPIC
+	//  Parameters: <channel> [<topic>]
+
+	const std::vector<std::string>& params = command.get_parameters();
+
+	// Check parameter count
+	if (params.empty() || params[0].empty()) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	// Retrieve the channel
+	const std::string& channel_name = params[0];
+	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
+	if (!Server::channel_exists(channel_it)) {
+		Server::reply(user, ERR_NOSUCHCHANNEL(user, channel_name));
+		return 0;
+	}
+
+	Channel& channel = get_channel_reference(channel_it);
+
+	// If a topic was supplied, try to update the channel's topic
+	if (params.size() > 1) {
+		// Check if the user can modify the topic
+		if (channel.is_topic_protected()
+			&& !channel.is_user_operator(user) && !channel.is_user_halfop(user)) {
+			Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel.name()));
+			return 0;
+		}
+
+		// Update the channel's topic
+		const std::string& new_topic = params[1];
+		channel.set_topic(new_topic, user);
+
+		// Notify everyone on the channel of the new topic
+		channel.broadcast_topic();
+		return 0;
+	}
+
+	// Notify the user of the channel's topic
+	channel.send_topic_to_user(user);
+
+	return 0;
+}
+
 int privmsg(User& user, const Command& command)
 {
 	// https://modern.ircdocs.horse/#privmsg-message
