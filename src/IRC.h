@@ -75,7 +75,7 @@
 
 // TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
 #define RPL_NAMREPLY(user, channel, channel_user, channel_user_perms)	(SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + channel_user_perms.get_highest_prefix() + channel_user.nickname())
-#define RPL_ENDOFNAMES(user, channel)					(SOURCE("366", user) + " " + channel.name() + " :End of /NAMES list.")
+#define RPL_ENDOFNAMES(user, channel)					(SOURCE("366", user) + " " + channel + " :End of /NAMES list.")
 #define RPL_LINKS 364
 #define RPL_ENDOFLINKS 365
 #define RPL_BANLIST(user, channel, ban_user)			(SOURCE("367", user) + " " + channel.name() + " " + ban_user)

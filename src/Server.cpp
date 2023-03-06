@@ -327,12 +327,18 @@ void Server::reply_welcome_user(User &user)
 	reply(user, RPL_MYINFO(user));
 }
 
+void Server::try_reply_list_channel_members_to_user(User &user, const std::string &channel_name)
+{
+	(void)user;
+	(void)channel_name;
+}
+
 void Server::reply_list_channel_members_to_user(User &user, const Channel& channel)
 {
 	for (Channel::ConstUserIterator channel_user_it = channel.users().begin(); channel_user_it != channel.users().end(); channel_user_it++) {
 		reply(user, RPL_NAMREPLY(user, channel, (*channel_user_it->first), channel_user_it->second));
 	}
-	reply(user, RPL_ENDOFNAMES(user, channel));
+	reply(user, RPL_ENDOFNAMES(user, channel.name()));
 }
 
 bool Server::user_exists(const Server::UserIterator &user)
