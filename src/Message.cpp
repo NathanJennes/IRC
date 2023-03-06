@@ -420,6 +420,60 @@ int join(User& user, const Command& command)
 	return 0;
 }
 
+static void try_disconnect_user_from_channel(User& user, const std::string& channel_name, const std::string& reason)
+{
+	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
+	if (!Server::channel_exists(channel_it)) {
+		Server::reply(user, ERR_NOSUCHCHANNEL(user, channel_name));
+		return ;
+	}
+
+	Channel& channel = get_channel_reference(channel_it);
+	if (!channel.has_user(user)) {
+		Server::reply(user, ERR_NOTONCHANNEL(user, channel));
+		return ;
+	}
+
+	Server::disconnect_user_from_channel(user, channel, reason);
+}
+
+int part(User& user, const Command& command)
+{
+	//  https://modern.ircdocs.horse/#part-message
+	//  Command: PART
+	//  Parameters: <channel>{,<channel>} [<reason>]
+
+	const std::vector<std::string>& params = command.get_parameters();
+
+	// Check for parameter count
+	if (params.empty() || params[0].empty()) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	// Retrieve the reason if there is one
+	std::string reason;
+	if (params.size() == 2) {
+		reason = params[1];
+	}
+
+	// Iterate over all the channels and disconnect the user from them
+	std::string requested_channel;
+	const std::string& first_param = params[0];
+	size_t last_pos = 0;
+	size_t new_pos = first_param.find_first_of(',');
+	while (new_pos != std::string::npos)
+	{
+		requested_channel = first_param.substr(last_pos, new_pos - last_pos);
+		last_pos = new_pos;
+		new_pos = first_param.find_first_of(',');
+		try_disconnect_user_from_channel(user, requested_channel, reason);
+	}
+	requested_channel = first_param.substr(last_pos);
+	try_disconnect_user_from_channel(user, requested_channel, reason);
+	return 0;
+}
+
 int privmsg(User& user, const Command& command)
 {
 	// https://modern.ircdocs.horse/#privmsg-message
