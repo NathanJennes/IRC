@@ -356,12 +356,22 @@ Channel::UserIterator Channel::find_user(const std::string &user_nickname)
 	return m_users.end();
 }
 
+bool Channel::is_user_founder(const User &user)
+{
+	return is_user_founder(user.nickname());
+}
+
 bool Channel::is_user_founder(const std::string &user_nickname)
 {
 	UserIterator it = find_user(user_nickname);
 	if (it != m_users.end())
 		return get_user_perms_reference(it).is_founder();
 	return false;
+}
+
+bool Channel::is_user_operator(const User &user)
+{
+	return is_user_operator(user.nickname());
 }
 
 bool Channel::is_user_operator(const std::string &user_nickname)
@@ -372,12 +382,22 @@ bool Channel::is_user_operator(const std::string &user_nickname)
 	return false;
 }
 
+bool Channel::is_user_halfop(const User &user)
+{
+	return is_user_halfop(user.nickname());
+}
+
 bool Channel::is_user_halfop(const std::string &user_nickname)
 {
 	UserIterator it = find_user(user_nickname);
 	if (it != m_users.end())
 		return get_user_perms_reference(it).is_halfop();
 	return false;
+}
+
+bool Channel::is_user_has_voice(const User &user)
+{
+	return is_user_has_voice(user.nickname());
 }
 
 bool Channel::is_user_has_voice(const std::string &user_nickname)

@@ -121,9 +121,13 @@ public:
 	const std::vector<std::string>&	ban_exemptions()				const { return m_ban_exemptions; }
 	std::string						get_modes_as_str(User& user)	const;
 
+	bool	is_user_founder(const User& user);
 	bool	is_user_founder(const std::string &user_nickname);
+	bool	is_user_operator(const User& user);
 	bool	is_user_operator(const std::string &user_nickname);
+	bool	is_user_halfop(const User& user);
 	bool	is_user_halfop(const std::string &user_nickname);
+	bool	is_user_has_voice(const User& user);
 	bool	is_user_has_voice(const std::string &user_nickname);
 
 	bool	is_user_limited()		const { return m_is_user_limited; }
