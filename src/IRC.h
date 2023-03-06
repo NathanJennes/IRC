@@ -76,13 +76,21 @@
 // TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
 #define RPL_NAMREPLY(user, channel, channel_user, channel_user_perms)	(SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + channel_user_perms.get_highest_prefix() + channel_user.nickname())
 #define RPL_ENDOFNAMES(user, channel)					(SOURCE("366", user) + " " + channel.name() + " :End of /NAMES list.")
+
 #define RPL_LINKS 364
-#define RPL_ENDOFLINKS 365
+
+#define RPL_ENDOFLINKS(user)							(SOURCE("365", user) + " :End of /LINKS list.")
 #define RPL_BANLIST(user, channel, ban_user)			(SOURCE("367", user) + " " + channel.name() + " " + ban_user)
 #define RPL_ENDOFBANLIST(user, channel)					(SOURCE("368", user) + " " + channel.name() + " :End of channel ban list")
-#define RPL_ENDOFWHOWAS 369
+#define RPL_ENDOFWHOWAS(user)							(SOURCE("369", user) + " :End of WHOWAS")
+
 #define RPL_INFO 371
-#define RPL_ENDOFINFO 374
+
+#define RPL_MOTD(user, motd)							(SOURCE("372", user) + " :- " + motd)
+#define RPL_ENDOFINFO(user)								(SOURCE("374", user) + " :End of /INFO list.")
+#define RPL_MOTDSTART(user)								(SOURCE("375", user) + " :- " + Server::name() + " Message of the day - ")
+#define RPL_ENDOFMOTD(user)								(SOURCE("376", user) + " :End of /MOTD command.")
+
 #define ERR_UNKNOWNERROR(ERRCODE)						(" " ERRCODE " :Unknown error")
 
 #define ERR_NOSUCHNICK(user, nickname)					(SOURCE("401", user) + " " + nickname + " :No such nick")
@@ -90,16 +98,12 @@
 #define ERR_NOSUCHCHANNEL(user, chan_name)				(SOURCE("403", user) + " " + chan_name + " :No such channel")
 #define ERR_CANNOTSENDTOCHAN(user, channel)				(SOURCE("404", user) + " " + channel.name() + " :Cannot send to channel")
 #define ERR_TOOMANYCHANNELS(user, channel)				(SOURCE("405", user) + " " + channel + " :You have joined too many channels")
-
-#define ERR_WASNOSUCHNICK(nickname)						(" " + nickname + " :There was no such nickname")
-#define ERR_NOORIGIN									(" :No origin specified") // 409
-
+#define ERR_WASNOSUCHNICK(user, nickname)				(SOURCE("406", user) + " " + nickname + " :There was no such nickname")
+#define ERR_NOORIGIN(user)								(SOURCE("409", user) + " :No origin specified")
 #define ERR_INVALIDCAPCMD(user, command)				(SOURCE("410", user) + " " + command + " :Invalid CAP command")
-
-#define ERR_INPUTTOOLONG								(" :Input too long")
-#define ERR_UNKNOWNCOMMAND(command)						(" " + command + " :Unknown command")
-#define ERR_NOMOTD										(" :MOTD File is missing")
-
+#define ERR_INPUTTOOLONG(user)							(SOURCE("414", user) + " :Input too long")
+#define ERR_UNKNOWNCOMMAND(user, command)				(SOURCE("421", user) + " " + command + " :Unknown command")
+#define ERR_NOMOTD(user)								(SOURCE(user, "422") + " :MOTD File is missing")
 #define ERR_NONICKNAMEGIVEN(user)						(SOURCE("431", user) + " :No nickname given")
 #define ERR_ERRONEUSNICKNAME(user, new_nick)			(SOURCE("431", user) + " " + new_nick + " :Erroneous nickname")
 #define ERR_NICKNAMEINUSE(user, new_nick)				(SOURCE("432", user) + " " + new_nick + " :Nickname is already in use")
