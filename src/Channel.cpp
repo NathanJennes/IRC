@@ -162,6 +162,13 @@ std::string Channel::get_modes_as_str(User& user) const
 	return modes + mode_params;
 }
 
+void Channel::set_topic(const std::string &topic, const User& user)
+{
+	m_topic = topic;
+	m_last_user_to_modify_topic = user.source();
+	m_topic_modification_date = time(NULL);
+}
+
 void Channel::add_user(User &user)
 {
 	m_users[&user] = UserPermissions();
@@ -426,4 +433,52 @@ void Channel::add_to_ban_exemptions(const User &user)
 void Channel::remove_from_ban_exemptions(const User &user)
 {
 	(void)user;
+}
+
+void Channel::send_topic_content_to_user(User &user)
+{
+	// If the topic was never set, do not send a topic
+	if (m_topic_modification_date == 0)
+		return ;
+
+	if (m_topic.empty())
+		Server::reply(user, RPL_NOTOPIC(m_last_user_to_modify_topic, *this));
+	else
+		Server::reply(user, RPL_TOPIC(m_last_user_to_modify_topic, *this));
+}
+
+void Channel::send_topic_timestamp_to_user(User &user)
+{
+	// If the topic was never set, do not send a topic
+	if (m_topic_modification_date == 0)
+		return ;
+
+	Server::reply(user, RPL_TOPICWHOTIME(user, *this));
+}
+
+void Channel::send_topic_to_user_if_set(User &user)
+{
+	if (!m_topic.empty())
+		send_topic_to_user(user);
+}
+
+void Channel::send_topic_to_user(User &user)
+{
+	send_topic_content_to_user(user);
+	send_topic_timestamp_to_user(user);
+}
+
+void Channel::broadcast_topic()
+{
+	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++)
+		send_topic_to_user(get_user_reference(user_it));
+}
+
+void Channel::broadcast_topic(User &user_to_avoid)
+{
+	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
+		User& user = get_user_reference(user_it);
+		if (user != user_to_avoid)
+			send_topic_to_user(user);
+	}
 }

@@ -16,6 +16,7 @@
 
 #include <string>
 #include <vector>
+#include <ctime>
 #include "Command.h"
 #include "Mode.h"
 
@@ -63,8 +64,14 @@ public:
 	typedef NicknameVector::iterator			NicknameIterator;
 
 	/// Channel information
-	void set_topic(const std::string& topic)	{ m_topic = topic; }
-	void set_key(const std::string& key)		{ m_key = key; }
+	void set_topic(const std::string& topic, const User& user);
+	void set_key(const std::string& key)							{ m_key = key; }
+
+	/// Replies
+	void send_topic_to_user(User& user);
+	void send_topic_to_user_if_set(User& user);
+	void broadcast_topic();
+	void broadcast_topic(User& user_to_avoid);
 
 	/// Users
 	void set_user_limit(size_t limit) { m_user_limit = limit; }
@@ -105,9 +112,12 @@ public:
 	void remove_from_ban_exemptions(const User& user);
 
 	/// Getters
-	const	std::string&			name()							const { return m_name; }
-	const	std::string&			topic()							const { return m_topic; }
-	char							type()							const { return m_type; }
+	const	std::string&			name()								const { return m_name; }
+	const	std::string&			topic()								const { return m_topic; }
+	const	std::string&			last_user_to_modify_topic()			const { return m_last_user_to_modify_topic; }
+	const	std::time_t&			topic_modification_date()			const { return m_topic_modification_date; }
+			std::string				topic_modification_date_as_str()	const { return to_string(topic_modification_date()); }
+	char							type()								const { return m_type; }
 
 	size_t							user_count()					const { return m_users.size(); }
 	size_t							user_limit()					const { return m_user_limit; }
@@ -142,10 +152,16 @@ private:
 	/// Users
 	UserIterator	find_user(const std::string& user_nickname);
 
+	/// Replies
+	void send_topic_content_to_user(User& user);
+	void send_topic_timestamp_to_user(User& user);
+
 	/// Channel information
 	std::string	m_name;
 	char		m_type;
-	std::string m_topic;
+	std::string	m_topic;
+	std::string	m_last_user_to_modify_topic;
+	std::time_t	m_topic_modification_date;
 
 	/// Entry restrictions
 	NicknameVector	m_ban_list;

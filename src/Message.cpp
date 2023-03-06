@@ -302,7 +302,7 @@ int join(User& user, const Command& command)
 		if (server_channel_it == server_channels.end()) {
 			Channel& new_channel = Server::create_new_channel(user, *requested_channel_name_it);
 			Server::reply(user, USER_SOURCE("JOIN", user) + " " + new_channel.name());
-			Server::reply(user, RPL_TOPIC(user, new_channel)); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
+			new_channel.send_topic_to_user_if_set(user);
 			Server::reply_list_channel_members_to_user(user, new_channel);
 			return 0;
 		}
@@ -414,7 +414,7 @@ int join(User& user, const Command& command)
 		user.add_channel(channel);
 		channel.add_user(user);
 		Server::reply(user, USER_SOURCE("JOIN", user) + " " + channel.name());
-		Server::reply(user, RPL_TOPIC(user, channel)); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
+		channel.send_topic_to_user_if_set(user);
 		Server::reply_list_channel_members_to_user(user, channel);
 	}
 	return 0;
