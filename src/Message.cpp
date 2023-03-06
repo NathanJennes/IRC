@@ -420,23 +420,6 @@ int join(User& user, const Command& command)
 	return 0;
 }
 
-static void try_disconnect_user_from_channel(User& user, const std::string& channel_name, const std::string& reason)
-{
-	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
-	if (!Server::channel_exists(channel_it)) {
-		Server::reply(user, ERR_NOSUCHCHANNEL(user, channel_name));
-		return ;
-	}
-
-	Channel& channel = get_channel_reference(channel_it);
-	if (!channel.has_user(user)) {
-		Server::reply(user, ERR_NOTONCHANNEL(user, channel));
-		return ;
-	}
-
-	Server::disconnect_user_from_channel(user, channel, reason);
-}
-
 int part(User& user, const Command& command)
 {
 	//  https://modern.ircdocs.horse/#part-message
@@ -467,10 +450,10 @@ int part(User& user, const Command& command)
 		requested_channel = first_param.substr(last_pos, new_pos - last_pos);
 		last_pos = new_pos;
 		new_pos = first_param.find_first_of(',');
-		try_disconnect_user_from_channel(user, requested_channel, reason);
+		Server::try_disconnect_user_from_channel(user, requested_channel, reason);
 	}
 	requested_channel = first_param.substr(last_pos);
-	try_disconnect_user_from_channel(user, requested_channel, reason);
+	Server::try_disconnect_user_from_channel(user, requested_channel, reason);
 	return 0;
 }
 
