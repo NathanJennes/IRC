@@ -22,4 +22,6 @@ std::string to_string(T value)
 	return str;
 }
 
+std::string get_current_date();
+
 #endif //UTILS_H

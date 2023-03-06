@@ -4,6 +4,8 @@
 
 #include <cctype>
 #include <algorithm>
+#include <ctime>
+#include <cstring>
 #include "Utils.h"
 
 std::string to_upper(std::string str)
@@ -27,4 +29,17 @@ bool is_number(const std::string& str)
 		if (!std::isdigit(*it))
 			return false;
 	return true;
+}
+
+// Get current date/time, format is YYYY-MM-DD.HH:mm:ss
+std::string get_current_date()
+{
+	std::time_t now = time(0);
+	std::tm tstruct = *localtime(&now);
+
+	char buffer[80];
+	std::memset(buffer, 0, sizeof(buffer));
+	std::strftime(buffer, sizeof(buffer), "%A %d %B %Y %X", &tstruct);
+
+	return buffer;
 }
