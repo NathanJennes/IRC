@@ -86,7 +86,7 @@ int nick(User& user, const Command& command)
 		if (!user.is_registered())
 		{
 			user.set_nickname("Guest" + to_string(Server::users().size()));
-			Server::reply(user, user.source() + " NICK :" + user.nickname());
+			Server::reply(user, USER_SOURCE("NICK", user) + " :" + user.nickname());
 			return 0;
 		}
 		Server::reply(user, ERR_NICKNAMEINUSE(user, command.get_parameters()[0]));
@@ -94,9 +94,9 @@ int nick(User& user, const Command& command)
 	}
 
 	if (user.is_registered())
-		Server::reply(user, user.source() + " NICK :" + command.get_parameters()[0]);
+		Server::reply(user, USER_SOURCE("NICK", user) + " :" + command.get_parameters()[0]);
 	user.set_nickname(command.get_parameters()[0]);
-	Server::reply(user, user.source() + " NICK :" + command.get_parameters()[0]);
+	Server::reply(user, USER_SOURCE("NICK", user) + " :" + command.get_parameters()[0]);
 	return 0;
 }
 
@@ -220,9 +220,9 @@ int quit(User& user, const Command& command)
 	Server::reply(user, RPL_MESSAGE(user, "ERROR", " :Quit"));
 
 	if (command.get_parameters().empty())
-		Server::broadcast(user, user.source() + " QUIT :Quit: ");
+		Server::broadcast(user, USER_SOURCE("QUIT", user) + " :Quit: ");
 	else
-		Server::broadcast(user, user.source() + " QUIT :Quit: " + command.get_parameters()[0]);
+		Server::broadcast(user, USER_SOURCE("QUIT", user) + " :Quit: " + command.get_parameters()[0]);
 	user.disconnect();
 	return 0;
 }
@@ -301,7 +301,7 @@ int join(User& user, const Command& command)
 		// If no associated channel was found, create a new channel with its name
 		if (server_channel_it == server_channels.end()) {
 			Channel& new_channel = Server::create_new_channel(user, *requested_channel_name_it);
-			Server::reply(user, user.source() + " JOIN " + new_channel.name());
+			Server::reply(user, USER_SOURCE("JOIN", user) + " " + new_channel.name());
 			Server::reply(user, RPL_TOPIC(user, new_channel)); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
 			Server::reply_list_channel_members_to_user(user, new_channel);
 			return 0;
@@ -407,13 +407,13 @@ int join(User& user, const Command& command)
 		// Notify all users of the channel of the newcomer
 		for (Channel::UserIterator channel_user_it = channel.users().begin(); channel_user_it != channel.users().end(); channel_user_it++) {
 			User& connected_user = get_user_reference(channel_user_it);
-			Server::reply(connected_user, user.source() + " JOIN " + channel.name());
+			Server::reply(connected_user, USER_SOURCE("JOIN", user) + " " + channel.name());
 		}
 
 		CORE_INFO("User %s joined the channel %s", user.debug_name(), channel.name().c_str());
 		user.add_channel(channel);
 		channel.add_user(user);
-		Server::reply(user, user.source() + " JOIN " + channel.name());
+		Server::reply(user, USER_SOURCE("JOIN", user) + " " + channel.name());
 		Server::reply(user, RPL_TOPIC(user, channel)); //TODO: The channel should manage sending the topic, since if it's empty, other real irc servers don't send this message at all.
 		Server::reply_list_channel_members_to_user(user, channel);
 	}
@@ -513,7 +513,7 @@ int privmsg(User& user, const Command& command)
 
 		Channel& target_channel = get_channel_reference(target_channel_it);
 		if (target_channel.has_user(user)) {
-			std::string message = user.source() + " PRIVMSG " + target_channel.name() + " :" + command.get_parameters()[1];
+			std::string message = USER_SOURCE("PRIVMSG", user) + " " + target_channel.name() + " :" + command.get_parameters()[1];
 			Server::broadcast_to_channel(user, target_channel, message);
 		} else {
 			CORE_TRACE_IRC_ERR("User %s tried to send a message to a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
@@ -535,7 +535,7 @@ int privmsg(User& user, const Command& command)
 			Server::reply(user, RPL_AWAY(user, target_user));
 		}
 
-		std::string message = user.source() + " PRIVMSG " + target_user.nickname() + " :" + command.get_parameters()[1];
+		std::string message = USER_SOURCE("PRIVMSG", user) + " " + target_user.nickname() + " :" + command.get_parameters()[1];
 		Server::reply(target_user, message);
 	}
 	return 0;

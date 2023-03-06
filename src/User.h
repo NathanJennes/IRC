@@ -35,7 +35,7 @@ public:
 	ssize_t		send_message();
 	std::string	get_next_command_str();
 	bool		has_pending_command();
-	std::string	source();
+	std::string	source() const;
 
 	void		try_finish_registration();
 	bool		check_password();

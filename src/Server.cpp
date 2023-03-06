@@ -424,11 +424,11 @@ void Server::disconnect_user_from_channel(User &user, Channel &channel, const st
 {
 	// Remove the user from the channel
 	channel.remove_user(user);
-	reply(user, user.source() + " PART " + channel.name() + " " + reason);
+	reply(user, USER_SOURCE("PART", user) + " " + channel.name() + " " + reason);
 
 	// Notify other channel users
 	for (Channel::UserIterator channel_user_it = channel.users().begin(); channel_user_it != channel.users().end(); channel_user_it++)
-		reply(get_user_reference(channel_user_it), user.source() + " PART " + channel.name() + " " + reason);
+		reply(get_user_reference(channel_user_it), USER_SOURCE("PART", user) + " " + channel.name() + " " + reason);
 }
 
 void Server::disconnect_user_from_channels(User &user, const std::string& reason)
