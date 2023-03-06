@@ -350,6 +350,7 @@ void Server::reply_welcome_user(User &user)
 	reply(user, RPL_YOURHOST(user));
 	reply(user, RPL_CREATED(user));
 	reply(user, RPL_MYINFO(user));
+	reply(user, RPL_ISUPPORT(user));
 	motd(user, Command(""));
 }
 
@@ -498,4 +499,45 @@ void Server::reply_ban_list_to_user(User &user, const Channel &channel)
 {
 	Server::reply(user, RPL_BANLIST(user, channel, "*!*@*"));
 	Server::reply(user, RPL_ENDOFBANLIST(user, channel));
+}
+
+std::string Server::supported_tokens(User& user)
+{
+	std::string tokens;
+
+	tokens += "AWAYLEN= ";
+	tokens += "CASEMAPPING= ";
+	tokens += "CHANLIMIT= ";
+	tokens += "CHANMODES=beI,,kl,mnst ";
+	tokens += "CHANNELLEN= ";
+	tokens += "CHANTYPES=#& ";
+	tokens += "ELIST=MNUCT ";
+	tokens += "EXCEPTS ";
+	tokens += "EXTBAN=,";
+	tokens += "HOSTLEN= ";
+	tokens += "INVEX ";
+	tokens += "KICKLEN= ";
+	tokens += "MAXLIST=beI: ";
+
+	Server::reply(user, RPL_MESSAGE(user, "005", tokens + " :are supported by this server"));
+
+	// =========================
+
+	tokens.clear();
+
+	tokens += "MAXTARGETS= ";
+	tokens += "MODES=9 ";
+	tokens += "NETWORK=FT_IRC";
+	tokens += "NICKLEN= ";
+	tokens += "PREFIX=~&@%+ ";
+//	tokens += "SAFELIST= ";
+	tokens += "SILENCE= ";
+	tokens += "STATUSMSG=@+ ";
+	tokens += "TARGMAX= ";
+	tokens += "TOPICLEN= ";
+	tokens += "USERLEN= ";
+
+	Server::reply(user, RPL_MESSAGE(user, "005", tokens + " :are supported by this server"));
+
+	return tokens;
 }

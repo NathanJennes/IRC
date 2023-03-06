@@ -13,7 +13,7 @@
 #include "Channel.h"
 #include "Command.h"
 
-#define SERVER_VERSION "0.2"
+#define SERVER_VERSION "ft_irc v0.5"
 
 class Server
 {
@@ -65,6 +65,7 @@ public:
 	static       bool			is_running()			{ return m_is_running; }
 	static const std::string&	creation_date()			{ return m_creation_date; }
 	static const std::string&	password()				{ return m_password; }
+	static       std::string	supported_tokens(User& user);
 
 	/// User & Channels
 	static       ChannelMap&	channels()				{ return m_channels; }
