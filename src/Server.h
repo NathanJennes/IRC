@@ -36,6 +36,7 @@ public:
 	/// Replies
 	static void broadcast(const std::string& msg);
 	static void broadcast(User& user_to_avoid, const std::string &msg);
+	static void broadcast_to_channel(Channel& channel, const std::string& msg);
 	static void broadcast_to_channel(User& user_to_avoid, Channel& channel, const std::string& msg);
 	static void reply(User& user, const std::string& msg);
 	static void reply_welcome_user(User& user);

@@ -258,6 +258,13 @@ void Server::broadcast(User& user_to_avoid, const std::string &msg)
 	}
 }
 
+void Server::broadcast_to_channel(Channel& channel, const std::string& msg)
+{
+	CORE_TRACE("BROADCASTING [%s] TO %s from %s", msg.c_str(), channel.name().c_str());
+	for (Channel::UserIterator user_it = channel.users().begin(); user_it != channel.users().end(); user_it++)
+		reply(get_user_reference(user_it), msg);
+}
+
 void Server::broadcast_to_channel(User& user_to_avoid, Channel& channel, const std::string& msg)
 {
 	CORE_TRACE("BROADCASTING [%s] TO %s from %s", msg.c_str(), channel.name().c_str(), user_to_avoid.nickname().c_str());
