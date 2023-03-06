@@ -122,7 +122,7 @@
 #define ERR_BADCHANMASK(channel)						(" " channel " :Bad Channel Mask")
 #define ERR_NOPRIVILEGES								(" :Permission Denied - You're not an IRC operator")
 
-#define ERR_CHANOPRIVSNEEDED(user, chan_name)			(SOURCE("482", user) + chan_name + " :You're not channel operator")
+#define ERR_CHANOPRIVSNEEDED(user, channel)				(SOURCE("482", user) + " " + channel + " :You're not channel operator")
 
 #define ERR_CANTKILLSERVER								(" :You cant kill a server!")
 #define ERR_NOOPERHOST									(" :No O-lines for your host")
