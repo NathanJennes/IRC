@@ -43,6 +43,9 @@ public:
 	static void reply_ban_list_to_user(User& user, const Channel& channel);
 
 	/// User management
+	static void				disconnect_user_from_channel(User& user, const std::string& channel_name, const std::string& reason = "");
+	static void				disconnect_user_from_channel(User& user, Channel& channel, const std::string& reason = "");
+	static void				disconnect_user_from_channels(User& user, const std::string& reason = "");
 	static bool				user_exists(const std::string& user_nickname);
 	static bool				user_exists(const UserIterator& user);
 	static UserIterator		find_user(const std::string& user_nickname);
@@ -51,9 +54,6 @@ public:
 	/// Channel management
 	static Channel&			create_new_channel(User& first_user, const std::string& channel_name);
 	static void				remove_channel(Channel& channel);
-	static void				disconnect_user_from_channel(User& user, const std::string& channel_name, const std::string& reason = "");
-	static void				disconnect_user_from_channel(User& user, Channel& channel, const std::string& reason = "");
-	static void				disconnect_user_from_channels(User& user, const std::string& reason = "");
 	static bool				channel_exists(const std::string& channel_name);
 	static bool				channel_exists(const ChannelIterator& channel);
 	static ChannelIterator	find_channel(const std::string& channel_name);
