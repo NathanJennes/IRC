@@ -39,6 +39,7 @@ public:
 	static void broadcast_to_channel(User& user_to_avoid, Channel& channel, const std::string& msg);
 	static void reply(User& user, const std::string& msg);
 	static void reply_welcome_user(User& user);
+	static void try_reply_list_channel_members_to_user(User& user, const std::string& channel_name);
 	static void reply_list_channel_members_to_user(User &user, const Channel& channel);
 	static void reply_ban_list_to_user(User& user, const Channel& channel);
 

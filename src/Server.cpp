@@ -113,6 +113,7 @@ void Server::initialize_command_functions()
 	// channel commands
 	m_commands.insert(std::make_pair("JOIN", join));
 	m_commands.insert(std::make_pair("PART", part));
+	m_commands.insert(std::make_pair("NAMES", names));
 	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("PRIVMSG", privmsg));
 }
@@ -325,6 +326,23 @@ void Server::reply_welcome_user(User &user)
 	reply(user, RPL_YOURHOST(user));
 	reply(user, RPL_CREATED(user));
 	reply(user, RPL_MYINFO(user));
+}
+
+void Server::try_reply_list_channel_members_to_user(User &user, const std::string &channel_name)
+{
+	ChannelIterator channel_it = find_channel(channel_name);
+	if (!channel_exists(channel_it)) {
+		reply(user, RPL_ENDOFNAMES(user, channel_name));
+		return ;
+	}
+
+	Channel& channel = get_channel_reference(channel_it);
+	if (channel.is_secret() && !channel.has_user(user)) {
+		reply(user, RPL_ENDOFNAMES(user, channel_name));
+		return ;
+	}
+
+	reply_list_channel_members_to_user(user, channel);
 }
 
 void Server::reply_list_channel_members_to_user(User &user, const Channel& channel)
