@@ -261,9 +261,9 @@ void Server::broadcast(User& user_to_avoid, const std::string &msg)
 void Server::broadcast_to_channel(User& user_to_avoid, Channel& channel, const std::string& msg)
 {
 	CORE_TRACE("BROADCASTING [%s] TO %s from %s", msg.c_str(), channel.name().c_str(), user_to_avoid.nickname().c_str());
-	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
+	for (Channel::UserIterator user_it = channel.users().begin(); user_it != channel.users().end(); user_it++) {
 		User& user = get_user_reference(user_it);
-		if (channel.has_user(user) && user != user_to_avoid)
+		if (user != user_to_avoid)
 			reply(user, msg);
 	}
 }
