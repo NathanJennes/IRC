@@ -435,27 +435,6 @@ void Channel::remove_from_ban_exemptions(const User &user)
 	(void)user;
 }
 
-void Channel::send_topic_content_to_user(User &user)
-{
-	// If the topic was never set, do not send a topic
-	if (m_topic_modification_date == 0)
-		return ;
-
-	if (m_topic.empty())
-		Server::reply(user, RPL_NOTOPIC(m_last_user_to_modify_topic, *this));
-	else
-		Server::reply(user, RPL_TOPIC(m_last_user_to_modify_topic, *this));
-}
-
-void Channel::send_topic_timestamp_to_user(User &user)
-{
-	// If the topic was never set, do not send a topic
-	if (m_topic_modification_date == 0)
-		return ;
-
-	Server::reply(user, RPL_TOPICWHOTIME(user, *this));
-}
-
 void Channel::send_topic_to_user_if_set(User &user)
 {
 	if (!m_topic.empty())
@@ -464,8 +443,16 @@ void Channel::send_topic_to_user_if_set(User &user)
 
 void Channel::send_topic_to_user(User &user)
 {
-	send_topic_content_to_user(user);
-	send_topic_timestamp_to_user(user);
+	// If the topic was never set, do not send a topic
+	if (m_topic_modification_date == 0)
+		return ;
+
+	if (m_topic.empty())
+		Server::reply(user, RPL_NOTOPIC(m_last_user_to_modify_topic, *this));
+	else {
+		Server::reply(user, RPL_TOPIC(m_last_user_to_modify_topic, *this));
+		Server::reply(user, RPL_TOPICWHOTIME(user, *this));
+	}
 }
 
 void Channel::broadcast_topic()

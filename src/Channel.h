@@ -152,10 +152,6 @@ private:
 	/// Users
 	UserIterator	find_user(const std::string& user_nickname);
 
-	/// Replies
-	void send_topic_content_to_user(User& user);
-	void send_topic_timestamp_to_user(User& user);
-
 	/// Channel information
 	std::string	m_name;
 	char		m_type;
