@@ -17,7 +17,7 @@
 #define RPL_YOURHOST(user)					(SOURCE("002", user) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
 #define RPL_CREATED(user)					(SOURCE("003", user) + " :This server was created " + Server::creation_date())
 #define RPL_MYINFO(user)					(SOURCE("004", user) + " " + Server::server_name() + " " SERVER_VERSION " " + Server::user_modes() + " " + Server::channel_modes() +  " " + Server::channel_modes_param())
-#define RPL_ISUPPORT(user, tokens)			(SOURCE("005", user) + " " + tokens +" :are supported by this server")
+#define RPL_ISUPPORT(user)					Server::supported_tokens(user)
 
 #define RPL_BOUNCE	// RECOMMENDED BY THE RFC TO NOT BE USED
 #define RPL_UMODEIS(user)								(SOURCE("221", user) + " " + user.get_modes_as_str())
@@ -71,7 +71,7 @@
 #define RPL_ENDOFINVEXLIST 347
 #define RPL_EXCEPTLIST 348
 #define RPL_ENDOFEXCEPTLIST 349
-#define RPL_VERSION 351
+#define RPL_VERSION(user, comment)						(SOURCE("351", user) + " " SERVER_VERSION " " + Server::server_name() + " :" + comment)
 
 // TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
 #define RPL_NAMREPLY(user, channel, channel_user, channel_user_perms)	(SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + channel_user_perms.get_highest_prefix() + channel_user.nickname())
