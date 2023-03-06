@@ -43,7 +43,7 @@ public:
 	void		add_channel(Channel& channel);
 
 	// Mode
-	bool 		update_mode(const std::vector<mode_param>& mode_params);
+	bool 		update_mode(const std::vector<ModeParam>& mode_params);
 
 	// Ping
 	void		take_ping_timestamp();

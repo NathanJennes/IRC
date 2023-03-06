@@ -165,12 +165,12 @@ std::string User::get_modes_as_str()	const
 	return modes;
 }
 
-bool User::update_mode(const std::vector<mode_param>& mode_params)
+bool User::update_mode(const std::vector<ModeParam>& mode_params)
 {
 	CORE_TRACE("mode_params size: %d", (int)mode_params.size());
 	for (size_t i = 0; i < mode_params.size(); i++)
 	{
-		const mode_param& mode = mode_params[i];
+		const ModeParam& mode = mode_params[i];
 		switch (mode.mode) {
 			case 'o':
 				// TODO: implement operator mode

@@ -86,7 +86,7 @@ public:
 	void set_user_voice_permission(const std::string& user_nickname, bool value);
 
 	/// Modes
-	bool update_mode(User &user, const std::vector<mode_param> &mode_params);
+	bool update_mode(User &user, const std::vector<ModeParam> &mode_params);
 
 	/// Entry restrictions
 	void add_to_banlist(const std::string& user_nickname);

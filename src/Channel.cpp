@@ -54,13 +54,13 @@ Channel::Channel(User& user, const std::string &name) :
 	set_user_operator(user, true);
 }
 
-bool Channel::update_mode(User &user, const std::vector<mode_param> &mode_params)
+bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 {
 	int value;
 
 	for (size_t i = 0; i < mode_params.size(); i++)
 	{
-		mode_param mode_param = mode_params[i];
+		ModeParam mode_param = mode_params[i];
 		switch (mode_param.mode) {
 			case 'b':
 				if (mode_param.arg.empty()) {

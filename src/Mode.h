@@ -11,12 +11,12 @@
 class User;
 class Command;
 
-typedef struct mode_param
+struct ModeParam
 {
 	bool		is_adding;
 	char		mode;
 	std::string	arg;
-}	mode_param;
+};
 
 int mode(User& user, const Command& command);
 
