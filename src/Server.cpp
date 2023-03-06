@@ -30,6 +30,7 @@ int					Server::m_server_socket;
 bool				Server::m_is_running = true;
 bool				Server::m_is_readonly = true;
 std::string			Server::m_password;
+std::string			Server::m_motd;
 
 std::vector<pollfd>	Server::m_pollfds;
 
@@ -85,6 +86,8 @@ bool Server::initialize(uint16_t port)
 		m_is_readonly = true;
 	}
 
+	get_server_motd("config/motd.txt");
+
 	pollfd m_server_pollfd = {};
 	m_server_pollfd.fd = m_server_socket;
 	m_server_pollfd.events = POLLIN;
@@ -117,6 +120,10 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("NAMES", names));
 	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("PRIVMSG", privmsg));
+
+	// server commands
+	m_commands.insert(std::make_pair("motd", motd));
+	m_commands.insert(std::make_pair("version", version));
 }
 
 bool Server::update()
@@ -223,7 +230,7 @@ void Server::execute_command(User &user, const Command &cmd)
 		else if (m_commands.find(cmd.get_command()) != m_commands.end())
 			reply(user, ERR_NOTREGISTERED(user));
 		else
-			reply(user, ERR_UNKNOWNCOMMAND(cmd.get_command()));
+			reply(user, ERR_UNKNOWNCOMMAND(user, cmd.get_command()));
 		return ;
 	}
 
@@ -233,7 +240,7 @@ void Server::execute_command(User &user, const Command &cmd)
 	else if (m_connection_commands.find(cmd.get_command()) != m_connection_commands.end())
 		reply(user, ERR_ALREADYREGISTERED(user));
 	else
-		reply(user, ERR_UNKNOWNCOMMAND(cmd.get_command()));
+		reply(user, ERR_UNKNOWNCOMMAND(user, cmd.get_command()));
 }
 
 void Server::reply(User& user, const std::string &msg)
@@ -274,6 +281,23 @@ void Server::broadcast_to_channel(User& user_to_avoid, Channel& channel, const s
 		if (user != user_to_avoid)
 			reply(user, msg);
 	}
+}
+
+bool Server::get_server_motd(const std::string& path)
+{
+	std::fstream modt_file(path.c_str(), std::ios::in);
+	if (!modt_file.is_open()) {
+		CORE_ERROR("%s: %s", path.c_str(), strerror(errno));
+		return false;
+	}
+
+	m_motd.clear();
+
+	std::string line;
+	while (std::getline(modt_file, line))
+		m_motd += line + '\n';
+
+	return true;
 }
 
 bool Server::initialize_config_file()
@@ -334,6 +358,8 @@ void Server::reply_welcome_user(User &user)
 	reply(user, RPL_YOURHOST(user));
 	reply(user, RPL_CREATED(user));
 	reply(user, RPL_MYINFO(user));
+	reply(user, RPL_ISUPPORT(user));
+	motd(user, Command(""));
 }
 
 void Server::try_reply_list_channel_members_to_user(User &user, const std::string &channel_name)
@@ -481,4 +507,45 @@ void Server::reply_ban_list_to_user(User &user, const Channel &channel)
 {
 	Server::reply(user, RPL_BANLIST(user, channel, "*!*@*"));
 	Server::reply(user, RPL_ENDOFBANLIST(user, channel));
+}
+
+std::string Server::supported_tokens(User& user)
+{
+	std::string tokens;
+
+	tokens += "AWAYLEN= ";
+	tokens += "CASEMAPPING= ";
+	tokens += "CHANLIMIT= ";
+	tokens += "CHANMODES=beI,,kl,mnst ";
+	tokens += "CHANNELLEN= ";
+	tokens += "CHANTYPES=#& ";
+	tokens += "ELIST=MNUCT ";
+	tokens += "EXCEPTS ";
+	tokens += "EXTBAN=,";
+	tokens += "HOSTLEN= ";
+	tokens += "INVEX ";
+	tokens += "KICKLEN= ";
+	tokens += "MAXLIST=beI: ";
+
+	Server::reply(user, RPL_MESSAGE(user, "005", tokens + " :are supported by this server"));
+
+	// =========================
+
+	tokens.clear();
+
+	tokens += "MAXTARGETS= ";
+	tokens += "MODES=9 ";
+	tokens += "NETWORK=FT_IRC";
+	tokens += "NICKLEN= ";
+	tokens += "PREFIX=~&@%+ ";
+//	tokens += "SAFELIST= ";
+	tokens += "SILENCE= ";
+	tokens += "STATUSMSG=@+ ";
+	tokens += "TARGMAX= ";
+	tokens += "TOPICLEN= ";
+	tokens += "USERLEN= ";
+
+	Server::reply(user, RPL_MESSAGE(user, "005", tokens + " :are supported by this server"));
+
+	return tokens;
 }

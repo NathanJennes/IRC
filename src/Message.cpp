@@ -588,3 +588,46 @@ int privmsg(User& user, const Command& command)
 	}
 	return 0;
 }
+
+int motd(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#motd-message
+	// Command: MOTD
+	// Parameters: [<target>]
+
+	if (command.get_parameters().size() == 1) {
+		CORE_TRACE_IRC_ERR("User %s sent a MOTD to a non-existing server", user.debug_name());
+		Server::reply(user, ERR_NOSUCHSERVER(user, command.get_parameters()[0]));
+		return 1;
+	}
+
+	std::stringstream motd(Server::motd_string());
+	std::string line;
+
+	Server::reply(user, RPL_MOTDSTART(user));
+	while (std::getline(motd, line))
+	{
+		CORE_TRACE("MOTD line: %s", line.c_str());
+		Server::reply(user, RPL_MOTD(user, line));
+	}
+	Server::reply(user, RPL_ENDOFMOTD(user));
+
+	return 0;
+}
+
+int version(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#version-message
+	// Command: VERSION
+	// Parameters: [<target>]
+
+	if (command.get_parameters().size() == 1) {
+		CORE_TRACE_IRC_ERR("User %s sent a VERSION to a non-existing server", user.debug_name());
+		Server::reply(user, ERR_NOSUCHSERVER(user, command.get_parameters()[0]));
+		return 1;
+	}
+
+	Server::reply(user, RPL_VERSION(user, ""));
+	Server::reply(user, RPL_ISUPPORT(user));
+	return 0;
+}
