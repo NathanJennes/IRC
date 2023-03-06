@@ -51,9 +51,9 @@ public:
 	/// Channel management
 	static Channel&			create_new_channel(User& first_user, const std::string& channel_name);
 	static void				remove_channel(Channel& channel);
-	static void				disconnect_user_from_channel(User& user, const std::string& channel_name);
-	static void				disconnect_user_from_channel(User& user, Channel& channel);
-	static void				disconnect_user_from_channels(User& user);
+	static void				disconnect_user_from_channel(User& user, const std::string& channel_name, const std::string& reason = "");
+	static void				disconnect_user_from_channel(User& user, Channel& channel, const std::string& reason = "");
+	static void				disconnect_user_from_channels(User& user, const std::string& reason = "");
 	static bool				channel_exists(const std::string& channel_name);
 	static bool				channel_exists(const ChannelIterator& channel);
 	static ChannelIterator	find_channel(const std::string& channel_name);

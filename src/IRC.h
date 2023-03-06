@@ -104,9 +104,9 @@
 #define ERR_ERRONEUSNICKNAME(user, new_nick)			(SOURCE("431", user) + " " + new_nick + " :Erroneous nickname")
 #define ERR_NICKNAMEINUSE(user, new_nick)				(SOURCE("432", user) + " " + new_nick + " :Nickname is already in use")
 
-#define ERR_USERNOTINCHANNEL(nickname, channel)			(" " + nickname + " " channel " :They aren't on that channel")
-#define ERR_NOTONCHANNEL(channel)						(" " channel " :You're not on that channel")
-#define ERR_USERONCHANNEL(nickname, channel)			(" " + nickname + " " channel " :is already on channel")
+#define ERR_USERNOTINCHANNEL(user, nickname, channel)	(SOURCE("441", user) + " " + nickname + " " + channel.name() + " :They aren't on that channel")
+#define ERR_NOTONCHANNEL(user, channel)					(SOURCE("442", user) + " " + channel.name() + " :You're not on that channel")
+#define ERR_USERONCHANNEL(user, nickname, channel)		(SOURCE("443", user) + " " + nickname + " " + channel.name() + " :is already on channel")
 
 #define ERR_NOTREGISTERED(user)							(SOURCE("451", user) + " :You have not registered")
 #define ERR_NEEDMOREPARAMS(user, command)				(SOURCE("461", user) + " " + command.get_command() + " :Not enough parameters")
