@@ -378,11 +378,21 @@ Server::ChannelIterator Server::find_channel(const std::string &channel_name)
 	return m_channels.find(channel_name);
 }
 
-void Server::disconnect_user_from_channel(User &user, const std::string &channel_name, const std::string& reason)
+void Server::try_disconnect_user_from_channel(User &user, const std::string &channel_name, const std::string& reason)
 {
-	ChannelIterator channel_it = find_channel(channel_name);
-	if (channel_exists(channel_it))
-		disconnect_user_from_channel(user, get_channel_reference(channel_it), reason);
+	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
+	if (!Server::channel_exists(channel_it)) {
+		Server::reply(user, ERR_NOSUCHCHANNEL(user, channel_name));
+		return ;
+	}
+
+	Channel& channel = get_channel_reference(channel_it);
+	if (!channel.has_user(user)) {
+		Server::reply(user, ERR_NOTONCHANNEL(user, channel));
+		return ;
+	}
+
+	Server::disconnect_user_from_channel(user, channel, reason);
 }
 
 void Server::disconnect_user_from_channel(User &user, Channel &channel, const std::string& reason)
