@@ -7,17 +7,17 @@
 
 #include "Server.h"
 
-#define SOURCE(numeric, user) (":" + Server::server_name() + " " + numeric + " " + user.nickname())
+#define SOURCE(numeric, user) 				(":" + Server::server_name() + " " + numeric + " " + user.nickname())
 
-#define RPL_CAP(user, command, msg) (SOURCE("CAP", user) + " " + command + msg)
-#define RPL_MESSAGE(user, command, msg) (SOURCE(command, user) + " " + msg)
+#define RPL_CAP(user, command, msg) 		(SOURCE("CAP", user) + " " + command + msg)
+#define RPL_MESSAGE(user, command, msg) 	(SOURCE(command, user) + " " + msg)
 
 // RPL CODES
-#define RPL_WELCOME(user)								(SOURCE("001", user) + " :Welcome to the " + Server::network_name() + " Network, " + user.nickname())
-#define RPL_YOURHOST(user)								(SOURCE("002", user) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
-#define RPL_CREATED(user)								(SOURCE("003", user) + " :This server was created " + Server::creation_date())
-#define RPL_MYINFO(user)								(SOURCE("004", user) + " " + Server::server_name() + " " SERVER_VERSION " " + Server::user_modes() + " " + Server::channel_modes() +  " " + Server::channel_modes_param())
-#define RPL_ISUPPORT(user, tokens)						(SOURCE("005", user) + " " + tokens +" :are supported by this server")
+#define RPL_WELCOME(user)					(SOURCE("001", user) + " :Welcome to the " + Server::network_name() + " Network, " + user.nickname())
+#define RPL_YOURHOST(user)					(SOURCE("002", user) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
+#define RPL_CREATED(user)					(SOURCE("003", user) + " :This server was created " + Server::creation_date())
+#define RPL_MYINFO(user)					(SOURCE("004", user) + " " + Server::server_name() + " " SERVER_VERSION " " + Server::user_modes() + " " + Server::channel_modes() +  " " + Server::channel_modes_param())
+#define RPL_ISUPPORT(user, tokens)			(SOURCE("005", user) + " " + tokens +" :are supported by this server")
 
 #define RPL_BOUNCE	// RECOMMENDED BY THE RFC TO NOT BE USED
 #define RPL_UMODEIS(user)								(SOURCE("221", user) + " " + user.get_modes_as_str())
@@ -126,8 +126,10 @@
 
 #define ERR_CANTKILLSERVER								(" :You cant kill a server!")
 #define ERR_NOOPERHOST									(" :No O-lines for your host")
-#define ERR_UMODEUNKNOWNFLAG							(" :Unknown MODE flag")
-#define ERR_USERSDONTMATCH								(" :Cant change mode for other users")
+
+#define ERR_UMODEUNKNOWNFLAG(user, mode)				(SOURCE("501", user), + " :Unknown MODE flag " + mode)
+#define ERR_USERSDONTMATCH(user)						(SOURCE("502", user), + " :Can't change mode for other users")
+
 #define ERR_HELPNOTFOUND(topic)							(" " topic " :No help available on this topic")
 #define ERR_INVALIDKEY(target_chan)						(" " target_chan " :Key is not well-formed")
 #define RPL_STARTTLS									(" :STARTTLS successful, proceed with TLS handshake")

@@ -8,7 +8,6 @@
 #include <sys/time.h>
 #include "Server.h"
 #include "User.h"
-#include "Message.h"
 #include "log.h"
 #include "IRC.h"
 
@@ -16,10 +15,8 @@ User::User(int fd, const std::string& ip, uint16_t port) :
 		m_nickname("*"), m_ip(ip), m_port(port), m_fd(fd),
 		m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
-		m_is_registered(false), m_is_negociating_capabilities(false),
-		m_need_password(true),
-		m_is_afk(false), m_is_operator(false), m_is_invisible(true),
-		m_can_receive_wallop(true), m_can_receive_notice(true),
+		m_is_registered(false), m_is_negociating_capabilities(false), m_need_password(true),
+		m_is_afk(false), m_is_operator(false), m_is_invisible(false), m_can_receive_wallop(false), m_can_receive_notice(false),
 		m_last_ping_timestamp(), m_ping(0)
 {
 }
@@ -167,27 +164,60 @@ std::string User::get_modes_as_str()	const
 
 bool User::update_mode(const std::vector<ModeParam>& mode_params)
 {
-	CORE_TRACE("mode_params size: %d", (int)mode_params.size());
+	std::string plus_modes_update = "+";
+	std::string minus_modes_update = "-";
+	bool updated;
+
 	for (size_t i = 0; i < mode_params.size(); i++)
 	{
 		const ModeParam& mode = mode_params[i];
+
 		switch (mode.mode) {
 			case 'o':
-				// TODO: implement operator mode
+				if (is_operator() && !mode.is_adding) {
+					m_is_operator = mode.is_adding;
+					minus_modes_update += mode.mode;
+					updated = true;
+				}
 				break ;
 			case 'i':
-				m_is_invisible = mode.is_adding;
+				if (is_invisible() != mode.is_adding) {
+					m_is_invisible = mode.is_adding;
+					updated = true;
+				}
 				break ;
 			case 'w':
-				m_can_receive_wallop = mode.is_adding;
+				if (can_get_wallop() != mode.is_adding) {
+					m_can_receive_wallop = mode.is_adding;
+					updated = true;
+				}
 				break ;
 			case 's':
-				m_can_receive_notice = mode.is_adding;
+				if (can_get_notice() != mode.is_adding) {
+					m_can_receive_notice = mode.is_adding;
+					updated = true;
+				}
 				break ;
 			default:
-				Server::reply(*this, ERR_UNKNOWNMODE((*this), mode.mode));
-				return false;
+				Server::reply(*this, ERR_UMODEUNKNOWNFLAG((*this), mode.mode));
+				break ;
 		}
+
+		CORE_DEBUG("User %s updated mode %c to %d", debug_name(), mode.mode, mode.is_adding ? 1 : 0);
+
+		if (!updated)
+			continue;
+
+		if (mode.is_adding)
+			plus_modes_update += mode.mode;
+		else
+			minus_modes_update += mode.mode;
+		updated = false;
 	}
+
+	if (plus_modes_update.size() == 1) plus_modes_update = "";
+	if (minus_modes_update.size() == 1) minus_modes_update = "";
+
+	Server::reply(*this, RPL_MESSAGE((*this), "MODE", plus_modes_update + minus_modes_update));
 	return false;
 }
