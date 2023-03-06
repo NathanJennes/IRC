@@ -13,9 +13,9 @@ std::vector<ModeParam> parse_channel_modes(const Command& command)
 {
 	std::vector<ModeParam> modes;
 
-	std::string cmd_parameter = command.get_parameters()[1];
+	const std::string& cmd_parameter = command.get_parameters()[1];
 	size_t param = 1;
-	bool value;
+	bool value = true;
 
 	for (size_t j = 0; j < cmd_parameter.size(); ++j)
 	{
@@ -31,7 +31,7 @@ std::vector<ModeParam> parse_channel_modes(const Command& command)
 		} else if (j == 0)
 			value = true;
 
-		CORE_DEBUG("Mode: %c, value: %d", command.get_parameters()[i][j], value);
+		CORE_DEBUG("Mode: %c, value: %d", cmd_parameter[j], value);
 
 		mode_param.is_adding = value;
 		mode_param.mode = cmd_parameter[j];

@@ -166,7 +166,7 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 {
 	std::string plus_modes_update = "+";
 	std::string minus_modes_update = "-";
-	bool updated;
+	bool updated = false;
 
 	for (size_t i = 0; i < mode_params.size(); i++)
 	{
