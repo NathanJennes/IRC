@@ -7,38 +7,40 @@
 
 #include "Server.h"
 
-#define SERVER_SOURCE(numeric, user) 				(":" + Server::server_name() + " " + numeric + " " + user.nickname())
+#define SERVER_SOURCE(numeric, user) 				(":" + Server::info().name() + " " + numeric + " " + user.nickname())
 #define USER_SOURCE(command_or_numeric, user)		(":" + user.source() + " " + command_or_numeric)
 
-#define RPL_CAP(user, command, msg) 		(SERVER_SOURCE("CAP", user) + " " + command + " :" + msg)
-#define RPL_MESSAGE(user, command, msg) 	(SERVER_SOURCE(command, user) + " " + msg)
+#define RPL_CAP(user, command, msg) 				(SERVER_SOURCE("CAP", user) + " " + command + " :" + msg)
+#define RPL_MESSAGE(user, command, msg) 			(SERVER_SOURCE(command, user) + " " + msg)
 
 // RPL CODES
-#define RPL_WELCOME(user)					(SERVER_SOURCE("001", user) + " :Welcome to the " + Server::network_name() + " Network, " + user.nickname())
-#define RPL_YOURHOST(user)					(SERVER_SOURCE("002", user) + " :Your host is " + Server::server_name() + ", running version " SERVER_VERSION)
-#define RPL_CREATED(user)					(SERVER_SOURCE("003", user) + " :This server was created " + Server::creation_date())
-#define RPL_MYINFO(user)					(SERVER_SOURCE("004", user) + " " + Server::server_name() + " " SERVER_VERSION " " + Server::user_modes() + " " + Server::channel_modes() +  " " + Server::channel_modes_param())
-#define RPL_ISUPPORT(user)					Server::supported_tokens(user)
+#define RPL_WELCOME(user)							(SERVER_SOURCE("001", user) + " :Welcome to the " + Server::info().network_name() + " Network, " + user.nickname())
+#define RPL_YOURHOST(user)							(SERVER_SOURCE("002", user) + " :Your host is " + Server::info().name() + ", running version " + Server::info().version())
+#define RPL_CREATED(user)							(SERVER_SOURCE("003", user) + " :This server was created " + Server::info().creation_date())
+#define RPL_MYINFO(user)							(SERVER_SOURCE("004", user) + " " + Server::info().name() + " " + Server::info().version() + " " + "<user modes>" + " " + "<cahnnel modes>" +  " " + "<channel mode param>")
+#define RPL_ISUPPORT(user)							Server::supported_tokens(user)
 
-#define RPL_BOUNCE	// RECOMMENDED BY THE RFC TO NOT BE USED
-#define RPL_UMODEIS(user)								(SERVER_SOURCE("221", user) + " " + user.get_modes_as_str())
+#define RPL_BOUNCE	// Recommanded to not be used
+#define RPL_UMODEIS(user)							(SERVER_SOURCE("221", user) + " " + user.get_modes_as_str())
 
 #define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)	(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers")
 #define RPL_LUSEROP(nbr_opers)									(" " nbr_opers " :operator(s) online")
 #define RPL_LUSERUNKNOWN(nbr_unknown)							(" " nbr_unknown " :unknown connection(s)")
 #define RPL_LUSERCHANNELS(nbr_channels)							(" " nbr_channels " :channels formed")
 #define RPL_LUSERME(nbr_users, nbr_servers)						(" :I have " nbr_users " clients and " nbr_servers " servers")
-#define RPL_ADMINME(servename)									(" " + servename + " :Administrative info")
-#define RPL_ADMINLOC1(admin_location)							(" " admin_location)
-#define RPL_ADMINLOC2(hosting_location)							(" " hosting_location)
-#define RPL_ADMINEMAIL(admin_email)								(" " admin_email)
+
+#define RPL_ADMINME(user, server_name)				(SERVER_SOURCE("256", user) + " " + server_name + " :Administrative info")
+#define RPL_ADMINLOC1(user, server_location)		(SERVER_SOURCE("257", user) + " :Server location - " + server_location)
+#define RPL_ADMINLOC2(user, hosting_info)			(SERVER_SOURCE("258", user) + " :Hosting location - " + hosting_info)
+#define RPL_ADMINEMAIL(user, admin_info)			(SERVER_SOURCE("259", user) + " :" + admin_info)
+
 #define RPL_TRYAGAIN(command)									(" " command " :Please wait a while and try again.")
 #define RPL_LOCALUSERS(current_users, max_users)				(" :Current local users " current_users " max " max_users)
 #define RPL_GLOBALUSERS(current_users, max_users)				(" :Current global users " current_users " max " max_users)
 #define RPL_WHOISCERTFP(nickname, certfp)						(" " + nickname + " :has client certificate fingerprint " certfp)
 #define RPL_NONE												(" :Unknown format")
 
-#define RPL_AWAY(user, target)									(SERVER_SOURCE("301", user), " " + target.nickname() + " :" + target.away_message())
+#define RPL_AWAY(user, target)						(SERVER_SOURCE("301", user), " " + target.nickname() + " :" + target.away_message())
 
 #define RPL_USERHOST														// TODO : Implement function to return a list of userhost
 #define RPL_UNAWAY															(":You are no longer marked as being away")
@@ -72,7 +74,7 @@
 #define RPL_ENDOFINVEXLIST 347
 #define RPL_EXCEPTLIST 348
 #define RPL_ENDOFEXCEPTLIST 349
-#define RPL_VERSION(user, comment)						(SERVER_SOURCE("351", user) + " " SERVER_VERSION " " + Server::server_name() + " :" + comment)
+#define RPL_VERSION(user, comment)						(SERVER_SOURCE("351", user) + " " + Server::info().version() + " " + Server::info().name() + " :" + comment)
 
 // TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
 #define RPL_NAMREPLY(user, channel, channel_user, channel_user_perms)	(SERVER_SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + channel_user_perms.get_highest_prefix() + channel_user.nickname())
@@ -89,7 +91,7 @@
 
 #define RPL_MOTD(user, motd)							(SERVER_SOURCE("372", user) + " :- " + motd)
 #define RPL_ENDOFINFO(user)								(SERVER_SOURCE("374", user) + " :End of /INFO list.")
-#define RPL_MOTDSTART(user)								(SERVER_SOURCE("375", user) + " :- " + Server::server_name() + " Message of the day - ")
+#define RPL_MOTDSTART(user)								(SERVER_SOURCE("375", user) + " :- " + Server::info().name() + " Message of the day - ")
 #define RPL_ENDOFMOTD(user)								(SERVER_SOURCE("376", user) + " :End of /MOTD command.")
 
 #define ERR_UNKNOWNERROR(ERRCODE)						(" " ERRCODE " :Unknown error")
