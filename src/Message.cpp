@@ -505,7 +505,7 @@ int motd(User& user, const Command& command)
 		return 1;
 	}
 
-	std::stringstream motd(Server::motd_string());
+	std::stringstream motd(Server::info().motd());
 	std::string line;
 
 	Server::reply(user, RPL_MOTDSTART(user));
