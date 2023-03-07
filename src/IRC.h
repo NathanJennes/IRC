@@ -55,9 +55,9 @@
 #define RPL_ENDOFWHOIS(nickname)											(" " + nickname + " :End of /WHOIS list.")
 #define RPL_WHOISCHANNELS() 												""// TODO : Implement function to return a list of channels
 #define RPL_WHOISSPECIAL(nickname, msg)										(" " + nickname + " :" msg)
-#define RPL_LISTSTART 321
-#define RPL_LIST 322
-#define RPL_LISTEND 323
+#define RPL_LISTSTART(user)													(SERVER_SOURCE("321", user) + " Channel :Users Name")
+#define RPL_LIST(user, channel)												(SERVER_SOURCE("322", user) + " " + (channel).name() + " " + (channel).user_count_as_str() + " :" + (channel).topic())
+#define RPL_LISTEND(user)													(SERVER_SOURCE("323", user) + " :End of /LIST")
 #define RPL_CHANNELMODEIS(user, channel)				(SERVER_SOURCE("324", user), " " + channel.name() + " : " + channel.get_modes_as_str(user))
 #define RPL_CREATIONTIME 329
 #define RPL_WHOISACCOUNT 330

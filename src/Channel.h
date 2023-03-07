@@ -130,6 +130,7 @@ public:
 	char							type()								const { return m_type; }
 
 	size_t							user_count()					const { return m_users.size(); }
+	std::string						user_count_as_str()				const { return to_string(m_users.size()); }
 	size_t							user_limit()					const { return m_user_limit; }
 	const UserMap&					users()							const { return m_users; }
 	UserMap&						users()								  { return m_users; }
