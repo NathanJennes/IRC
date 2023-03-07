@@ -90,7 +90,7 @@ int mode(User& user, const Command& command)
 		return 0;
 	}
 
-	if (is_channel(command.get_parameters()[0]))
+	if (Channel::is_name_valid(command.get_parameters()[0]))
 	{
 		Server::ChannelIterator channel_it = Server::find_channel(command.get_parameters()[0]);
 

@@ -9,7 +9,6 @@
 #include <sstream>
 
 std::string	to_upper(std::string str);
-bool 		is_channel(const std::string& name);
 bool 		is_number(const std::string& str);
 
 
