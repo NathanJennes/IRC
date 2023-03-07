@@ -118,6 +118,7 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("PART", part));
 	m_commands.insert(std::make_pair("TOPIC", topic));
 	m_commands.insert(std::make_pair("NAMES", names));
+	m_commands.insert(std::make_pair("LIST", list));
 	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("PRIVMSG", privmsg));
 
@@ -507,6 +508,17 @@ void Server::reply_ban_list_to_user(User &user, const Channel &channel)
 {
 	Server::reply(user, RPL_BANLIST(user, channel, "*!*@*"));
 	Server::reply(user, RPL_ENDOFBANLIST(user, channel));
+}
+
+void Server::reply_channel_list_to_user(User &user)
+{
+	Server::reply(user, RPL_LISTSTART(user));
+	for (ConstChannelIterator channel_it = m_channels.begin(); channel_it != m_channels.end(); channel_it++) {
+		const Channel& channel = get_channel_reference(channel_it);
+		if (!channel.is_secret() || channel.has_user(user))
+			Server::reply(user, RPL_LIST(user, channel));
+	}
+	Server::reply(user, RPL_LISTEND(user));
 }
 
 std::string Server::supported_tokens(User& user)

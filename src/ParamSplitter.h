@@ -17,7 +17,9 @@ public:
 	ParamSplitter(bool condition, const Command& command, size_t command_parameter_index);
 
 	std::string	next_param();
+	std::string	peek_next_param()	{ std::string param = next_param(); reset(); return param; }
 	bool		reached_end() const { return m_pos >= m_param.size(); }
+	void		reset()				{ m_pos = 0; }
 
 private:
 	typedef std::string::size_type	index_type;

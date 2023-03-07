@@ -26,6 +26,7 @@ public:
 	typedef UserVector::iterator			UserIterator;
 	typedef std::map<std::string, Channel*>	ChannelMap;
 	typedef ChannelMap::iterator			ChannelIterator;
+	typedef ChannelMap::const_iterator		ConstChannelIterator;
 
 	/// Server management
 	static bool initialize(uint16_t port);
@@ -43,6 +44,7 @@ public:
 	static void try_reply_list_channel_members_to_user(User& user, const std::string& channel_name);
 	static void reply_list_channel_members_to_user(User &user, const Channel& channel);
 	static void reply_ban_list_to_user(User& user, const Channel& channel);
+	static void reply_channel_list_to_user(User& user);
 
 	/// User management
 	static void				try_disconnect_user_from_channel(User& user, const std::string& channel_name, const std::string& reason = "");
@@ -124,8 +126,9 @@ private:
 	static std::string			m_motd;
 };
 
-inline Channel&	get_channel_reference(const Server::ChannelIterator& channel_it)	{ return *(channel_it->second); }
-inline User&	get_user_reference(const Server::UserIterator& user_it)				{ return *(*user_it); }
-inline User&	get_user_reference(User *user_ptr)									{ return *user_ptr; }
+inline Channel&			get_channel_reference(const Server::ChannelIterator& channel_it)		{ return *(channel_it->second); }
+inline const Channel&	get_channel_reference(const Server::ConstChannelIterator& channel_it)	{ return *(channel_it->second); }
+inline User&			get_user_reference(const Server::UserIterator& user_it)					{ return *(*user_it); }
+inline User&			get_user_reference(User *user_ptr)										{ return *user_ptr; }
 
 #endif //SERVER_H

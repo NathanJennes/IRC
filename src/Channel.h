@@ -16,6 +16,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <ctime>
 #include "Command.h"
 #include "Mode.h"

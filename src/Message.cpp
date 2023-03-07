@@ -9,6 +9,7 @@
 #include "Server.h"
 #include "Message.h"
 #include "ParamSplitter.h"
+#include "ConditionalChannelList.h"
 
 int auth(User& user, const Command& command)
 {
@@ -441,6 +442,77 @@ int topic(User& user, const Command& command)
 	// Notify the user of the channel's topic
 	channel.send_topic_to_user(user);
 
+	return 0;
+}
+
+int list(User& user, const Command& command)
+{
+	//  https://modern.ircdocs.horse/#list-message
+	//  Command: LIST
+	//  Parameters: [<channel>{,<channel>}] [<elistcond>{,<elistcond>}]
+
+	const std::vector<std::string>& params = command.get_parameters();
+
+	// No parameters supplied, list all channels that are not secret to the user
+	if (params.empty()) {
+		Server::reply_channel_list_to_user(user);
+		return 0;
+	}
+
+	ParamSplitter<','> splitter(command, 0);
+	ConditionalChannelList channel_list;
+
+	// If the first subparameter of the first parameter is a channel name,
+	//  treat this parameter list as a list of channel names
+	if (Channel::is_name_valid(splitter.peek_next_param())) {
+		while (!splitter.reached_end()) {
+			Server::ChannelIterator channel_it = Server::find_channel(splitter.next_param());
+			if (Server::channel_exists(channel_it))
+				channel_list.add_channel(channel_it->second);
+		}
+
+		// Set up the parser for condition parsing
+		splitter = ParamSplitter<','>(params.size() > 1, command, 1);
+	} else {
+		// No channel list was supplied, get all the channels from the server
+		channel_list.load_from_server();
+	}
+
+	// Else, treat this parameter list as a list of conditions
+	while (!splitter.reached_end()) {
+		std::string condition = splitter.next_param();
+
+		if (condition.empty())
+			continue;
+
+		if (condition[0] == '>' && is_number(&condition[1]))
+			channel_list.keep_if_user_count_greater_than(static_cast<std::size_t>(atoi(&condition[1])));
+		else if (condition[0] == '<' && is_number(&condition[1]))
+			channel_list.keep_if_user_count_less_than(static_cast<std::size_t>(atoi(&condition[1])));
+		else if (condition.size() > 2 && is_number(&condition[2])) {
+			char condition_type = condition[0];
+			char condition_comparison = condition[1];
+			std::time_t number = static_cast<std::time_t>(atoi(&condition[2]));
+
+			if (condition_type == 'C' && condition_comparison == '>')
+				channel_list.keep_if_created_greater_than(number);
+			else if (condition_type == 'C' && condition_comparison == '<')
+				channel_list.keep_if_created_less_than(number);
+			else if (condition_type == 'T' && condition_comparison == '>')
+				channel_list.keep_if_topic_changed_greater_than(number);
+			else if (condition_type == 'T' && condition_comparison == '<')
+				channel_list.keep_if_topic_changed_less_than(number);
+			else
+				return 0;
+		} else
+			return 0;
+	}
+
+	Server::reply(user, RPL_LISTSTART(user));
+	const std::vector<Channel*> selected_channels = channel_list.channels();
+	for (std::size_t i = 0; i < selected_channels.size(); i++)
+		Server::reply(user, RPL_LIST(user, *selected_channels[i]));
+	Server::reply(user, RPL_LISTEND(user));
 	return 0;
 }
 
