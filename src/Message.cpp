@@ -151,7 +151,7 @@ int ping(User& user, const Command& command)
 	}
 
 	// Simply reply with a PONG command and pass through the given token
-	Server::reply(user, "PONG " + Server::server_name() + " " + command.get_parameters()[0]);
+	Server::reply(user, "PONG " + Server::info().name() + " " + command.get_parameters()[0]);
 	return 0;
 }
 
