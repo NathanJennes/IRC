@@ -311,70 +311,21 @@ int join(User& user, const Command& command)
 
 		// If channel is invite-only
 		if (channel.is_invite_only()) {
-
-			// Check if the user is in the invite-list
-			bool is_invited = false;
-			const std::vector<std::string>& invite_list = channel.invite_list();
-			for (StringIter invited_user = invite_list.begin(); invited_user != invite_list.end(); invited_user++) {
-				if (user.nickname() == *invited_user) {
-					is_invited = true;
-					break ;
-				}
-			}
-
-			// Else, check if the channels allow for invite-exemptions
-			if (!is_invited) {
-
-				// Check if the user is part of the exemptions
-				const std::vector<std::string>& invite_exempt_list = channel.invite_exemptions();
-				for (StringIter exempted_user = invite_exempt_list.begin(); exempted_user != invite_exempt_list.end(); exempted_user++) {
-					if (user.nickname() == *exempted_user) {
-						is_invited = true;
-						break ;
-					}
-				}
-			}
-
 			// If the user is not invited and is not exempted from the invite-list,
 			// send error and continue to next channel
-			if (!is_invited) {
+			if (!channel.is_user_invited(user)) {
 				CORE_TRACE_IRC_ERR("User %s tried and failed to connect to channel [%s] because it was invite only.", user.debug_name(), channel.name().c_str());
 				Server::reply(user, ERR_INVITEONLYCHAN(user, channel.name()));
 				continue ;
 			}
 		}
 
-		// If channel has a ban-list
-		{
-
-			// Check if the user is banned
-			bool is_banned = false;
-			const std::vector<std::string>& ban_list = channel.ban_list();
-			for (StringIter banned_user_name = ban_list.begin(); banned_user_name != ban_list.end(); banned_user_name++) {
-				if (user.nickname() == *banned_user_name) {
-					is_banned = true;
-					break ;
-				}
-			}
-
-			// If the user is banned, check if the channel allows for ban-exemptions
-			if (is_banned) {
-				const std::vector<std::string>& ban_exemptions = channel.ban_exemptions();
-				for (StringIter ban_exempt_user_name = ban_exemptions.begin(); ban_exempt_user_name != ban_exemptions.end(); ban_exempt_user_name++) {
-					if (user.nickname() == *ban_exempt_user_name) {
-						is_banned = false;
-						break ;
-					}
-				}
-			}
-
-			// If the user is banned and is not exempted from the ban-list,
-			// send error and continue to next channel
-			if (is_banned) {
-				CORE_TRACE_IRC_ERR("User %s tried and failed to connect to channel [%s] because it was banned.", user.debug_name(), channel.name().c_str());
-				Server::reply(user, ERR_BANNEDFROMCHAN(user, channel.name()));
-				continue ;
-			}
+		// If the user is banned and is not exempted from the ban-list,
+		// send error and continue to next channel
+		if (channel.is_user_banned(user)) {
+			CORE_TRACE_IRC_ERR("User %s tried and failed to connect to channel [%s] because it was banned.", user.debug_name(), channel.name().c_str());
+			Server::reply(user, ERR_BANNEDFROMCHAN(user, channel.name()));
+			continue ;
 		}
 
 		// If the channel requires a key

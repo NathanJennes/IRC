@@ -469,3 +469,43 @@ void Channel::broadcast_topic(User &user_to_avoid)
 			send_topic_to_user(user);
 	}
 }
+
+bool Channel::is_user_invited(User &user)
+{
+	return is_user_invited(user.nickname());
+}
+
+bool Channel::is_user_invited(const std::string &user_nickname)
+{
+	for (ConstNicknameIterator nickname_it = m_invite_list.begin(); nickname_it != m_invite_list.end(); nickname_it++) {
+		if (user_nickname == *nickname_it)
+			return true;
+	}
+
+	for (ConstNicknameIterator nickname_it = m_invite_exemptions.begin(); nickname_it != m_invite_exemptions.end(); nickname_it++) {
+		if (user_nickname == *nickname_it)
+			return true;
+	}
+
+	return false;
+}
+
+bool Channel::is_user_banned(User &user)
+{
+	return is_user_banned(user.nickname());
+}
+
+bool Channel::is_user_banned(const std::string &user_nickname)
+{
+	for (ConstNicknameIterator nickname_it = m_ban_exemptions.begin(); nickname_it != m_ban_exemptions.end(); nickname_it++) {
+		if (user_nickname == *nickname_it)
+			return false;
+	}
+
+	for (ConstNicknameIterator nickname_it = m_ban_list.begin(); nickname_it != m_ban_list.end(); nickname_it++) {
+		if (user_nickname == *nickname_it)
+			return true;
+	}
+
+	return false;
+}

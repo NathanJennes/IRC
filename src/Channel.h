@@ -62,6 +62,7 @@ public:
 	typedef UserMap::iterator					UserIterator;
 	typedef UserMap::const_iterator				ConstUserIterator;
 	typedef NicknameVector::iterator			NicknameIterator;
+	typedef NicknameVector::const_iterator		ConstNicknameIterator;
 
 	/// Channel information
 	void set_topic(const std::string& topic, const User& user);
@@ -96,20 +97,24 @@ public:
 	bool update_mode(User &user, const std::vector<ModeParam> &mode_params);
 
 	/// Entry restrictions
-	void add_to_banlist(const std::string& user_nickname);
-	void remove_from_banlist(const std::string& user_nickname);
 	void add_to_banlist(const User& user);
+	void add_to_banlist(const std::string& user_nickname);
 	void remove_from_banlist(const User& user);
+	void remove_from_banlist(const std::string& user_nickname);
 
-	void add_to_invitelist(const std::string& user_nickname);
-	void remove_from_invitelist(const std::string& user_nickname);
+	bool is_user_invited(User& user);
+	bool is_user_invited(const std::string& user_nickname);
 	void add_to_invitelist(const User& user);
+	void add_to_invitelist(const std::string& user_nickname);
 	void remove_from_invitelist(const User& user);
+	void remove_from_invitelist(const std::string& user_nickname);
 
-	void add_to_ban_exemptions(const std::string& user_nickname);
-	void remove_from_ban_exemptions(const std::string& user_nickname);
+	bool is_user_banned(User& user);
+	bool is_user_banned(const std::string& user_nickname);
 	void add_to_ban_exemptions(const User& user);
+	void add_to_ban_exemptions(const std::string& user_nickname);
 	void remove_from_ban_exemptions(const User& user);
+	void remove_from_ban_exemptions(const std::string& user_nickname);
 
 	/// Getters
 	const	std::string&			name()								const { return m_name; }
