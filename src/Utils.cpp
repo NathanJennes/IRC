@@ -18,9 +18,23 @@ bool is_number(const std::string& str)
 {
 	if (str.empty())
 		return false;
+
 	for (std::string::const_iterator it = str.begin(); it != str.end(); ++it)
 		if (!std::isdigit(*it))
 			return false;
+
+	return true;
+}
+
+bool is_number(char *str)
+{
+	if (!str)
+		return false;
+
+	for (size_t i = 0; str[i]; i++)
+		if (!std::isdigit(str[i]))
+			return false;
+
 	return true;
 }
 

@@ -10,7 +10,7 @@
 
 std::string	to_upper(std::string str);
 bool 		is_number(const std::string& str);
-
+bool 		is_number(char *str);
 
 template<typename T>
 std::string to_string(T value)
