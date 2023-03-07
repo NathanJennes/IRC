@@ -187,20 +187,24 @@ int user(User& user, const Command& command)
 	// Parameters: <username> 0 * <realname>
 
 	if (user.nickname().empty()) {
+		CORE_TRACE_IRC_ERR("A PASS message was received but the user doesn't have a nickname yet");
 		return 1;
 	}
 
 	if (user.is_registered()) {
+		CORE_TRACE_IRC_ERR("A PASS message was received but the user is already registered");
 		Server::reply(user, ERR_ALREADYREGISTERED(user));
 		return 1;
 	}
 
 	if (command.get_parameters().size() < 4) {
+		CORE_TRACE_IRC_ERR("A PASS message was received but not enough parameters were given");
 		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
 		return 1;
 	}
 
-	if (command.get_parameters()[0].length() < 1) {
+	if (command.get_parameters()[0].empty()) {
+		CORE_TRACE_IRC_ERR("A PASS message was received but the username given is empty");
 		Server::reply(user, RPL_MESSAGE(user, "USER", ":username too short"));
 		return 1;
 	}
