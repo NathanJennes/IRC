@@ -32,14 +32,16 @@ std::string Channel::UserPermissions::get_highest_prefix() const
 
 Channel::Channel(User& user, const std::string &name) :
 	m_name(name),
-	m_user_limit(),
-	m_is_user_limited(),
-	m_is_invite_only(),
-	m_is_key_protected(),
-	m_is_moderated(),
-	m_is_secret(),
-	m_is_topic_protected(),
-	m_no_outside_messages()
+	m_creation_date(time(NULL)),
+	m_topic_modification_date(m_creation_date),
+	m_user_limit(0),
+	m_is_user_limited(false),
+	m_is_invite_only(false),
+	m_is_key_protected(false),
+	m_is_moderated(false),
+	m_is_secret(false),
+	m_is_topic_protected(false),
+	m_no_outside_messages(false)
 {
 	if (name[0] == CHANNEL_TYPE_SHARED_SYMBOL) {
 		m_type = CHANNEL_TYPE_SHARED_SYMBOL;

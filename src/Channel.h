@@ -122,6 +122,7 @@ public:
 
 	/// Getters
 	const	std::string&			name()								const { return m_name; }
+	const	std::time_t&			creation_date()						const { return m_creation_date; }
 	const	std::string&			topic()								const { return m_topic; }
 	const	std::string&			last_user_to_modify_topic()			const { return m_last_user_to_modify_topic; }
 	const	std::time_t&			topic_modification_date()			const { return m_topic_modification_date; }
@@ -163,6 +164,7 @@ private:
 
 	/// Channel information
 	std::string	m_name;
+	std::time_t	m_creation_date;
 	char		m_type;
 	std::string	m_topic;
 	std::string	m_last_user_to_modify_topic;
