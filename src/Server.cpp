@@ -102,6 +102,7 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("PRIVMSG", privmsg));
 
 	// server commands
+	m_commands.insert(std::make_pair("ADMIN", admin));
 	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("MOTD", motd));
 	m_commands.insert(std::make_pair("VERSION", version));

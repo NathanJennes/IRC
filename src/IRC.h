@@ -28,10 +28,12 @@
 #define RPL_LUSERUNKNOWN(nbr_unknown)							(" " nbr_unknown " :unknown connection(s)")
 #define RPL_LUSERCHANNELS(nbr_channels)							(" " nbr_channels " :channels formed")
 #define RPL_LUSERME(nbr_users, nbr_servers)						(" :I have " nbr_users " clients and " nbr_servers " servers")
-#define RPL_ADMINME(servename)									(" " + servename + " :Administrative info")
-#define RPL_ADMINLOC1(admin_location)							(" " admin_location)
-#define RPL_ADMINLOC2(hosting_location)							(" " hosting_location)
-#define RPL_ADMINEMAIL(admin_email)								(" " admin_email)
+
+#define RPL_ADMINME(user, server_name)				(SERVER_SOURCE("256", user) + " " + server_name + " :Administrative info")
+#define RPL_ADMINLOC1(user, server_location)		(SERVER_SOURCE("257", user) + " :Server location - " + server_location)
+#define RPL_ADMINLOC2(user, hosting_info)			(SERVER_SOURCE("258", user) + " :Hosting location - " + hosting_info)
+#define RPL_ADMINEMAIL(user, admin_info)			(SERVER_SOURCE("259", user) + " :" + admin_info)
+
 #define RPL_TRYAGAIN(command)									(" " command " :Please wait a while and try again.")
 #define RPL_LOCALUSERS(current_users, max_users)				(" :Current local users " current_users " max " max_users)
 #define RPL_GLOBALUSERS(current_users, max_users)				(" :Current global users " current_users " max " max_users)

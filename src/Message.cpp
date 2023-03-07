@@ -535,3 +535,23 @@ int version(User& user, const Command& command)
 	Server::reply(user, RPL_ISUPPORT(user));
 	return 0;
 }
+
+int admin(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#admin-message
+	// Command: ADMIN
+	// Parameters: [<target>]
+
+	if (command.get_parameters().size() == 1 && !Server::user_exists(command.get_parameters()[0])) {
+		CORE_TRACE_IRC_ERR("User %s sent an ADMIN to a non-existing server", user.debug_name());
+		Server::reply(user, ERR_NOSUCHSERVER(user, command.get_parameters()[0]));
+		return 1;
+	}
+
+	Server::reply(user, RPL_ADMINME(user, Server::info().name()));
+	Server::reply(user, RPL_ADMINLOC1(user, Server::info().server_location()));
+	Server::reply(user, RPL_ADMINLOC2(user, Server::info().hosting_location()));
+	Server::reply(user, RPL_ADMINEMAIL(user, "Serveur admin - " + Server::info().admin_name()));
+	Server::reply(user, RPL_ADMINEMAIL(user, "<" + Server::info().email()) + ">");
+	return 0;
+}
