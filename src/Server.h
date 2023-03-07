@@ -12,8 +12,7 @@
 #include "User.h"
 #include "Channel.h"
 #include "Command.h"
-
-#define SERVER_VERSION "ft_irc v0.5"
+#include "ServerInfo.h"
 
 class Server
 {
@@ -61,31 +60,22 @@ public:
 	static ChannelIterator	find_channel(const std::string& channel_name);
 
 	/// Server information
-	static const std::string&	network_name()			{ return m_network_name; }
-	static const std::string&	server_name()			{ return m_server_name; }
+	static       ServerInfo& 	info() 					{ return m_server_info; }
 	static       bool			is_running()			{ return m_is_running; }
-	static const std::string&	creation_date()			{ return m_creation_date; }
 	static const std::string&	password()				{ return m_password; }
 	static       std::string	supported_tokens(User& user);
 
 	/// User & Channels
 	static       ChannelMap&	channels()				{ return m_channels; }
 	static       UserVector&	users()					{ return m_users; }
-	static const std::string&	user_modes()			{ return m_user_modes; }
-	static const std::string&	channel_modes()			{ return m_channel_modes; }
-	static const std::string&	channel_modes_param()	{ return m_channel_modes_parameter; }
-	static const std::string&	motd_string()			{ return m_motd; }
 
 	/// Setters
-	static void	set_is_running(bool new_state)					{ m_is_running = new_state; }
-	static void	set_server_name(const std::string& server_name)	{ m_server_name = server_name; }
-	static void set_password(const std::string& password)		{ m_password = password; }
+	static void	set_is_running(bool new_state)				{ m_is_running = new_state; }
+	static void set_password(const std::string& password)	{ m_password = password; }
 
 private:
 	// Member functions
 	static void	initialize_command_functions();
-	static bool	get_server_motd(const std::string& path);
-	static bool	initialize_config_file();
 	static void	accept_new_connections();
 	static void	poll_events();
 	static void	handle_events();
@@ -98,8 +88,7 @@ private:
 	static void					remove_user(User& user);
 
 	// Member variables
-	static std::string			m_network_name;
-	static std::string			m_server_name;
+	static ServerInfo			m_server_info;
 	static int					m_server_socket;
 	static std::string			m_password;
 
@@ -111,16 +100,10 @@ private:
 
 	static const int			m_server_backlog;
 	static const int			m_timeout;
-	static const std::string	m_creation_date;
-	static const std::string	m_user_modes;
-	static const std::string	m_channel_modes;
-	static const std::string	m_channel_modes_parameter;
 
 	// Message function prototype
 	static std::map<std::string, command_function>	m_commands;
 	static std::map<std::string, command_function>	m_connection_commands;
-
-	static std::string			m_motd;
 };
 
 inline Channel&	get_channel_reference(const Server::ChannelIterator& channel_it)	{ return *(channel_it->second); }

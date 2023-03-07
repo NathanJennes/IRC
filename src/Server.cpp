@@ -2,35 +2,23 @@
 // Created by nathan on 2/16/23.
 //
 
-#include <fstream>
-#include <sstream>
-#include <cstring>
 #include <arpa/inet.h>
 #include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
-#include <string>
 #include <algorithm>
+#include "Server.h"
 #include "log.h"
 #include "IRC.h"
-#include "Server.h"
 #include "Message.h"
-#include "Command.h"
 
 const int			Server::m_server_backlog = 10;
 const int			Server::m_timeout = 20;
-const std::string	Server::m_creation_date = "2021-02-16 23:00:00";
-const std::string	Server::m_user_modes = "none";
-const std::string	Server::m_channel_modes = "none";
-const std::string	Server::m_channel_modes_parameter = "none";
 
-std::string			Server::m_network_name = "GigaChat";
-std::string			Server::m_server_name = "localhost";
+ServerInfo			Server::m_server_info;
 int					Server::m_server_socket;
 bool				Server::m_is_running = true;
-bool				Server::m_is_readonly = true;
 std::string			Server::m_password;
-std::string			Server::m_motd;
 
 std::vector<pollfd>	Server::m_pollfds;
 
@@ -83,7 +71,7 @@ bool Server::initialize(uint16_t port)
 	m_pollfds.push_back(m_server_pollfd);
 
 	initialize_command_functions();
-	get_server_motd("config/motd.txt");
+	m_server_info.initialize();
 
 	m_is_running = true;
 
@@ -111,12 +99,12 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("PART", part));
 	m_commands.insert(std::make_pair("TOPIC", topic));
 	m_commands.insert(std::make_pair("NAMES", names));
-	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("PRIVMSG", privmsg));
 
 	// server commands
-	m_commands.insert(std::make_pair("motd", motd));
-	m_commands.insert(std::make_pair("version", version));
+	m_commands.insert(std::make_pair("MODE", mode));
+	m_commands.insert(std::make_pair("MOTD", motd));
+	m_commands.insert(std::make_pair("VERSION", version));
 }
 
 bool Server::update()
@@ -276,40 +264,6 @@ void Server::broadcast_to_channel(User& user_to_avoid, Channel& channel, const s
 		if (user != user_to_avoid)
 			reply(user, msg);
 	}
-}
-
-bool Server::get_server_motd(const std::string& path)
-{
-	std::fstream modt_file(path.c_str(), std::ios::in);
-	if (!modt_file.is_open()) {
-		CORE_ERROR("%s: %s", path.c_str(), strerror(errno));
-		return false;
-	}
-
-	m_motd.clear();
-
-	std::string line;
-	while (std::getline(modt_file, line))
-		m_motd += line + '\n';
-
-	return true;
-}
-
-bool Server::initialize_config_file()
-{
-	std::fstream banlist_file("banlist.txt", std::ios::in | std::ios::out | std::ios::app);
-	if (!banlist_file.is_open()) {
-		CORE_ERROR("banlist.txt: %s", strerror(errno));
-		return false;
-	}
-
-	std::fstream whitelist_file("whitelist.txt", std::ios::in | std::ios::out | std::ios::app);
-	if (!whitelist_file.is_open()) {
-		CORE_ERROR("whitelist.txt: %s", strerror(errno));
-		return false;
-	}
-
-	return true;
 }
 
 void Server::check_for_closed_connexions()
