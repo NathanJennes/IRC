@@ -10,7 +10,7 @@
 #define SERVER_SOURCE(numeric, user) 				(":" + Server::server_name() + " " + numeric + " " + user.nickname())
 #define USER_SOURCE(command_or_numeric, user)		(":" + user.source() + " " + command_or_numeric)
 
-#define RPL_CAP(user, command, msg) 		(SERVER_SOURCE("CAP", user) + " " + command + msg)
+#define RPL_CAP(user, command, msg) 		(SERVER_SOURCE("CAP", user) + " " + command + " :" + msg)
 #define RPL_MESSAGE(user, command, msg) 	(SERVER_SOURCE(command, user) + " " + msg)
 
 // RPL CODES
