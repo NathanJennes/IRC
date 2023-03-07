@@ -8,6 +8,7 @@
 #include "Command.h"
 #include "Server.h"
 #include "Message.h"
+#include "ParamSplitter.h"
 
 int auth(User& user, const Command& command)
 {
@@ -256,55 +257,27 @@ int join(User& user, const Command& command)
 		return 0;
 	}
 
-	// Retrieve all channels names
-	std::vector<std::string> requested_channels;
-	{
-		const std::string& first_param = params[0];
-		size_t last_pos = 0;
-		size_t new_pos = first_param.find_first_of(',');
-		while (new_pos != std::string::npos)
-		{
-			requested_channels.push_back(first_param.substr(last_pos, new_pos - last_pos));
-			last_pos = new_pos;
-			new_pos = first_param.find_first_of(',');
-		}
 
-		std::string last_channel = first_param.substr(last_pos);
-		if (!last_channel.empty())
-			requested_channels.push_back(last_channel);
-	}
-
-	// Retrieve all keys
-	std::vector<std::string> keys;
-	if (params.size() > 1) {
-		const std::string& second_param = params[1];
-		size_t last_pos = 0;
-		size_t new_pos = second_param.find_first_of(',');
-		while (new_pos != std::string::npos)
-		{
-			keys.push_back(second_param.substr(last_pos, new_pos - last_pos));
-			last_pos = new_pos;
-			new_pos = second_param.find_first_of(',');
-		}
-	}
-
-	typedef std::vector<std::string>::const_iterator StringIter;
-
-	Server::ChannelMap& server_channels = Server::channels();
-	StringIter current_key_it = keys.begin();
+	ParamSplitter<','> channel_splitter(command, 0);
+	ParamSplitter<','> key_splitter(command.get_parameters().size() > 1, command, 1);
 
 	// For all channels in the command
-	for (StringIter requested_channel_name_it = requested_channels.begin(); requested_channel_name_it != requested_channels.end(); requested_channel_name_it++) {
+	while (!channel_splitter.reached_end()) {
+		// Get the next channel name to join and the corresponding key
+		std::string requested_channel_name = channel_splitter.next_param();
+		std::string current_key = key_splitter.next_param();
+
 		// Find the associated Channel
-		Server::ChannelIterator server_channel_it = Server::find_channel(*requested_channel_name_it);
+		Server::ChannelIterator server_channel_it = Server::find_channel(requested_channel_name);
 
 		// If no associated channel was found, create a new channel with its name
-		if (server_channel_it == server_channels.end()) {
-			Channel& new_channel = Server::create_new_channel(user, *requested_channel_name_it);
+		if (!Server::channel_exists(requested_channel_name)) {
+			Channel& new_channel = Server::create_new_channel(user, requested_channel_name);
+			CORE_INFO("User %s created the channel %s", user.debug_name(), new_channel.name().c_str());
 			Server::reply(user, USER_SOURCE("JOIN", user) + " " + new_channel.name());
 			new_channel.send_topic_to_user_if_set(user);
 			Server::reply_list_channel_members_to_user(user, new_channel);
-			return 0;
+			continue ;
 		}
 
 		Channel& channel = get_channel_reference(server_channel_it);
@@ -330,17 +303,17 @@ int join(User& user, const Command& command)
 
 		// If the channel requires a key
 		if (channel.is_key_protected()) {
-
 			// If the user didn't provide a key, send an error and continue
-			if (current_key_it == keys.end()) {
+			if (key_splitter.reached_end()) {
 				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it didn't provide a key.", user.debug_name(), channel.name().c_str());
 				Server::reply(user, ERR_BADCHANNELKEY(user, channel.name()));
 				continue ;
 			}
 
 			// If the user provided the wrong key, send an error and continue
-			if (*current_key_it != channel.key()) {
-				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it provided the wrong key.", user.debug_name(), channel.name().c_str());
+			if (current_key != channel.key()) {
+				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it provided the wrong key. Provided [%s], needed [%s].",
+					user.debug_name(), channel.name().c_str(), current_key.c_str(), channel.key().c_str());
 				Server::reply(user, ERR_BADCHANNELKEY(user, channel.name()));
 				continue ;
 			}
@@ -392,19 +365,9 @@ int part(User& user, const Command& command)
 	}
 
 	// Iterate over all the channels and disconnect the user from them
-	std::string requested_channel;
-	const std::string& first_param = params[0];
-	size_t last_pos = 0;
-	size_t new_pos = first_param.find_first_of(',');
-	while (new_pos != std::string::npos)
-	{
-		requested_channel = first_param.substr(last_pos, new_pos - last_pos);
-		last_pos = new_pos;
-		new_pos = first_param.find_first_of(',');
-		Server::try_disconnect_user_from_channel(user, requested_channel, reason);
-	}
-	requested_channel = first_param.substr(last_pos);
-	Server::try_disconnect_user_from_channel(user, requested_channel, reason);
+	ParamSplitter<','> channel_splitter(command, 0);
+	while (!channel_splitter.reached_end())
+		Server::try_disconnect_user_from_channel(user, channel_splitter.next_param(), reason);
 	return 0;
 }
 
@@ -423,19 +386,9 @@ int names(User& user, const Command& command)
 	}
 
 	// Iterate over all the channels and list connected users to the user
-	std::string requested_channel;
-	const std::string& first_param = params[0];
-	size_t last_pos = 0;
-	size_t new_pos = first_param.find_first_of(',');
-	while (new_pos != std::string::npos)
-	{
-		requested_channel = first_param.substr(last_pos, new_pos - last_pos);
-		last_pos = new_pos;
-		new_pos = first_param.find_first_of(',');
-		Server::try_reply_list_channel_members_to_user(user, requested_channel);
-	}
-	requested_channel = first_param.substr(last_pos);
-	Server::try_reply_list_channel_members_to_user(user, requested_channel);
+	ParamSplitter<','> channel_splitter(command, 0);
+	while (!channel_splitter.reached_end())
+		Server::try_reply_list_channel_members_to_user(user, channel_splitter.next_param());
 	return 0;
 }
 
