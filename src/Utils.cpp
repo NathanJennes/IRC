@@ -14,13 +14,6 @@ std::string to_upper(std::string str)
 	return str;
 }
 
-bool is_channel(const std::string& name)
-{
-	if (name.empty())
-		return false;
-	return name[0] == '#' || name[0] == '&';
-}
-
 bool is_number(const std::string& str)
 {
 	if (str.empty())
