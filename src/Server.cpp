@@ -61,7 +61,6 @@ bool Server::initialize(uint16_t port)
 
 	struct sockaddr_in params = {};
 	bzero(&params, sizeof(params));
-
 	params.sin_family = AF_INET;
 	params.sin_addr.s_addr = INADDR_ANY;
 	params.sin_port = htons(port);
@@ -76,23 +75,17 @@ bool Server::initialize(uint16_t port)
 		return false;
 	}
 
-	initialize_command_functions();
-
-	m_is_running = true;
-	m_is_readonly = false;
-
-	if (!initialize_config_file()) {
-		CORE_WARN("Server is in readonly mode");
-		m_is_readonly = true;
-	}
-
-	get_server_motd("config/motd.txt");
-
+	// setup server pollfd
 	pollfd m_server_pollfd = {};
 	m_server_pollfd.fd = m_server_socket;
 	m_server_pollfd.events = POLLIN;
 	m_server_pollfd.revents = 0;
 	m_pollfds.push_back(m_server_pollfd);
+
+	initialize_command_functions();
+	get_server_motd("config/motd.txt");
+
+	m_is_running = true;
 
 	return true;
 }

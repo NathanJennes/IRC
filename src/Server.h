@@ -108,7 +108,6 @@ private:
 	static ChannelMap			m_channels;
 
 	static bool					m_is_running;
-	static bool					m_is_readonly;
 
 	static const int			m_server_backlog;
 	static const int			m_timeout;
