@@ -177,7 +177,7 @@ void Channel::add_user(User &user)
 void Channel::remove_user(User &user)
 {
 	UserIterator user_it = m_users.find(&user);
-	if (user_it != m_users.end())
+	if (has_user(user_it))
 		m_users.erase(user_it);
 }
 
