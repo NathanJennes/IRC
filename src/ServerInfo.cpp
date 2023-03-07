@@ -17,7 +17,7 @@ void ServerInfo::initialize()
 	m_network_name = "GigaChat";
 	m_server_location = "Lyon, France";
 	m_hosting_location = "Lyon, France";
-	m_server_creation_date = to_string(time(NULL));
+	m_server_creation_date = get_current_date();
 	get_server_motd("config/motd.txt");
 	m_admin_name = "cybattis njennes";
 	m_admin_email = "support@gigachat.net";
