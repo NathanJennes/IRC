@@ -509,3 +509,24 @@ bool Channel::is_user_banned(const std::string &user_nickname)
 
 	return false;
 }
+
+bool Channel::is_name_valid(const std::string &channel_name)
+{
+	if (channel_name.empty())
+		return false;
+
+	if (!is_channel_type_char(channel_name[0]))
+		return false;
+
+	const char invalid_characters[] = {0x20, 0x07, 0x2C, 0x00};
+	std::string::size_type invalid_character_pos = channel_name.find_first_of(invalid_characters);
+	if (invalid_character_pos != std::string::npos)
+		return false;
+
+	return true;
+}
+
+bool Channel::is_channel_type_char(char c)
+{
+	return c == CHANNEL_TYPE_SHARED_SYMBOL || c == CHANNEL_TYPE_LOCAL_SYMBOL;
+}

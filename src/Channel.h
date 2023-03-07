@@ -64,6 +64,10 @@ public:
 	typedef NicknameVector::iterator			NicknameIterator;
 	typedef NicknameVector::const_iterator		ConstNicknameIterator;
 
+	/// Channel related checks
+	static bool is_name_valid(const std::string& channel_name);
+	static bool is_channel_type_char(char c);
+
 	/// Channel information
 	void set_topic(const std::string& topic, const User& user);
 	void set_key(const std::string& key)							{ m_key = key; }
