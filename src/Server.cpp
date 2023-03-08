@@ -100,8 +100,8 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("TOPIC", topic));
 	m_commands.insert(std::make_pair("NAMES", names));
 	m_commands.insert(std::make_pair("LIST", list));
-	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("PRIVMSG", privmsg));
+	m_commands.insert(std::make_pair("INVITE", invite));
 
 	// server commands
 	m_commands.insert(std::make_pair("ADMIN", admin));

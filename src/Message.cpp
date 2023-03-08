@@ -629,3 +629,63 @@ int admin(User& user, const Command& command)
 	Server::reply(user, RPL_ADMINEMAIL(user, "<" + Server::info().email()) + ">");
 	return 0;
 }
+
+int invite(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#invite-message
+	// Command: INVITE
+	// Parameters: <nickname> <channel>
+
+	if (command.get_parameters().empty()) {
+		Server::reply_list_of_channel_invite_to_user(user);
+		return 0;
+	}
+
+	if (command.get_parameters().size() < 2) {
+		CORE_TRACE_IRC_ERR("User %s sent an INVITE command with less than 2 parameters.", user.debug_name());
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 1;
+	}
+
+	Server::UserIterator target_user_it = Server::find_user(command.get_parameters()[0]);
+	if (!Server::user_exists(target_user_it)) {
+		CORE_TRACE_IRC_ERR("User %s sent an INVITE command to a non-existing user [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+		Server::reply(user, ERR_NOSUCHNICK(user, command.get_parameters()[0]));
+		return 1;
+	}
+
+	Server::ChannelIterator channel_it = Server::find_channel(command.get_parameters()[1]);
+	if (!Server::channel_exists(channel_it)) {
+		CORE_TRACE_IRC_ERR("User %s sent an INVITE command to a non-existing channel [%s].", user.debug_name(), command.get_parameters()[1].c_str());
+		Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[1]));
+		return 1;
+	}
+
+	Channel& channel = get_channel_reference(channel_it);
+	if (!channel.has_user(user)) {
+		CORE_TRACE_IRC_ERR("User %s sent an INVITE command to a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[1].c_str());
+		Server::reply(user, ERR_NOTONCHANNEL(user, channel));
+		return 1;
+	}
+
+	if (!channel.is_user_operator(user)) {
+		CORE_TRACE_IRC_ERR("User %s sent an INVITE command to a channel [%s] he is not an operator in.", user.debug_name(), command.get_parameters()[1].c_str());
+		Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
+		return 1;
+	}
+
+	if (channel.has_user(command.get_parameters()[0])) {
+		CORE_TRACE_IRC_ERR("User %s sent an INVITE command to [%s] who are already in the channel.", user.debug_name(), command.get_parameters()[1].c_str());
+		Server::reply(user, ERR_USERONCHANNEL(user, command.get_parameters()[0], channel));
+		return 1;
+	}
+
+	if (!channel.is_user_invited_or_exempted(command.get_parameters()[0]))
+		channel.add_to_invitelist(command.get_parameters()[0]);
+
+	User& target_user = get_user_reference(target_user_it);
+
+	Server::reply(user, RPL_INVITING(user, target_user.nickname(), channel.name()));
+	Server::reply(get_user_reference(target_user_it), USER_SOURCE("INVITE", user) + " " + target_user.nickname() + " :" + channel.name());
+	return 0;
+}
