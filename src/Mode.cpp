@@ -3,7 +3,7 @@
 //
 
 #include "Server.h"
-#include "IRC.h"
+#include "Numerics.h"
 #include "Mode.h"
 #include <algorithm>
 
@@ -106,8 +106,9 @@ int mode(User& user, const Command& command)
 		// get channel mode
 		if (command.get_parameters().size() == 1)
 		{
+			CORE_TRACE("User %s requested channel mode on channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
 			Server::reply(user, RPL_CHANNELMODEIS(user, channel));
-			// TODO: Send RPL_CREATIONTIME (329)
+			Server::reply(user, RPL_CREATIONTIME(user, channel));
 			return 0;
 		}
 
@@ -119,7 +120,7 @@ int mode(User& user, const Command& command)
 		}
 		else {
 			CORE_TRACE_IRC_ERR("User %s tried to set mode on a channel [%s] without being an operator.", user.debug_name(), command.get_parameters()[0].c_str());
-			Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel.name()));
+			Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
 			return 1;
 		}
 	}
@@ -153,6 +154,4 @@ int mode(User& user, const Command& command)
 		target_user.update_mode(mode_params);
 		return 0;
 	}
-
-	return 0;
 }

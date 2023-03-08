@@ -4,13 +4,13 @@
 
 #include <arpa/inet.h>
 #include <cerrno>
-#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 #include <algorithm>
+#include <cstring>
 #include "Server.h"
 #include "log.h"
-#include "IRC.h"
+#include "Numerics.h"
 #include "Message.h"
 
 const int			Server::m_server_backlog = 10;
@@ -104,6 +104,7 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("KICK", kick));
 	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("PRIVMSG", privmsg));
+	m_commands.insert(std::make_pair("INVITE", invite));
 
 	// server commands
 	m_commands.insert(std::make_pair("ADMIN", admin));
@@ -277,7 +278,7 @@ void Server::check_for_closed_connexions()
 		User& user = get_user_reference(m_users[i]);
 		if (user.is_disconnected()) {
 			CORE_INFO("%s disconnected", user.nickname().c_str());
-			m_pollfds.erase(m_pollfds.begin() + static_cast<long>(i));
+			m_pollfds.erase(m_pollfds.begin() + static_cast<long>(i + 1));
 			close(user.fd());
 			remove_user(user);
 		}
@@ -456,13 +457,6 @@ void Server::remove_channel(Channel &channel)
 	delete &channel;
 }
 
-
-void Server::reply_ban_list_to_user(User &user, const Channel &channel)
-{
-	Server::reply(user, RPL_BANLIST(user, channel, "*!*@*"));
-	Server::reply(user, RPL_ENDOFBANLIST(user, channel));
-}
-
 void Server::reply_channel_list_to_user(User &user)
 {
 	Server::reply(user, RPL_LISTSTART(user));
@@ -490,9 +484,9 @@ std::string Server::supported_tokens(User& user)
 	tokens += "HOSTLEN= ";
 	tokens += "INVEX ";
 	tokens += "KICKLEN= ";
-	tokens += "MAXLIST=beI: ";
+	tokens += "MAXLIST=beI ";
 
-	Server::reply(user, RPL_MESSAGE(user, "005", tokens + " :are supported by this server"));
+	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));
 
 	// =========================
 
@@ -510,7 +504,46 @@ std::string Server::supported_tokens(User& user)
 	tokens += "TOPICLEN= ";
 	tokens += "USERLEN= ";
 
-	Server::reply(user, RPL_MESSAGE(user, "005", tokens + " :are supported by this server"));
+	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));
 
 	return tokens;
+}
+
+void Server::reply_channel_ban_list_to_user(User &user, const Channel &channel)
+{
+	CORE_TRACE("Channel ban list size %d", channel.ban_list().size());
+	for (size_t i = 0; i < channel.ban_list().size(); i++)
+		Server::reply(user, RPL_BANLIST(user, channel, channel.ban_list()[i]));
+	Server::reply(user, RPL_ENDOFBANLIST(user, channel));
+}
+
+void Server::reply_channel_ban_exempt_list_to_user(User &user, const Channel &channel)
+{
+	for (size_t i = 0; i < channel.ban_exemptions().size(); i++)
+		Server::reply(user, RPL_EXCEPTLIST(user, channel, channel.ban_exemptions()[i]));
+	Server::reply(user, RPL_ENDOFEXCEPTLIST(user, channel));
+}
+
+void Server::reply_channel_invite_exempt_list_to_user(User &user, const Channel &channel)
+{
+	CORE_DEBUG("Channel invite exempt list size %d", channel.invite_exemptions().size());
+	for (size_t i = 0; i < channel.invite_exemptions().size(); i++)
+		Server::reply(user, RPL_INVEXLIST(user, channel, channel.invite_exemptions()[i]));
+	Server::reply(user, RPL_ENDOFINVEXLIST(user, channel));
+}
+
+void Server::reply_list_of_channel_invite_to_user(User &user)
+{
+	Server::ConstChannelIterator channel_it = m_channels.begin();
+	for (; channel_it != m_channels.end(); channel_it++)
+	{
+		const Channel& channel = get_channel_reference(channel_it);
+		for (size_t i = 0; i < channel.invite_list().size(); ++i) {
+			if (channel.invite_list().at(i) == user.nickname()) {
+				Server::reply(user, RPL_INVITELIST(user, channel.name()));
+				break ;
+			}
+		}
+	}
+	Server::reply(user, RPL_ENDOFINVITELIST(user, channel_it->first));
 }

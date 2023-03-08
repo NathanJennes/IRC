@@ -2,15 +2,16 @@
 // Created by nathan on 2/16/23.
 //
 
-#ifndef IRC_H
-#define IRC_H
+#ifndef NUMERICS_H
+#define NUMERICS_H
 
 #include "Server.h"
 
 #define SERVER_SOURCE(numeric, user) 				(":" + Server::info().name() + " " + numeric + " " + user.nickname())
-#define USER_SOURCE(command_or_numeric, user)		(":" + user.source() + " " + command_or_numeric)
+#define USER_SOURCE(command_or_numeric, user)		(":" + (user).source() + " " + command_or_numeric)
 
 #define RPL_CAP(user, command, msg) 				(SERVER_SOURCE("CAP", user) + " " + command + " :" + msg)
+#define RPL_MODE(user, msg) 						(USER_SOURCE("MODE", user) + " " + (user).nickname() + " " + msg)
 #define RPL_MESSAGE(user, command, msg) 			(SERVER_SOURCE(command, user) + " " + msg)
 
 // RPL CODES
@@ -19,8 +20,6 @@
 #define RPL_CREATED(user)							(SERVER_SOURCE("003", user) + " :This server was created " + Server::info().creation_date())
 #define RPL_MYINFO(user)							(SERVER_SOURCE("004", user) + " " + Server::info().name() + " " + Server::info().version() + " " + "<user modes>" + " " + "<cahnnel modes>" +  " " + "<channel mode param>")
 #define RPL_ISUPPORT(user)							Server::supported_tokens(user)
-
-#define RPL_BOUNCE	// Recommanded to not be used
 #define RPL_UMODEIS(user)							(SERVER_SOURCE("221", user) + " " + user.get_modes_as_str())
 
 #define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)	(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers")
@@ -45,9 +44,10 @@
 #define RPL_USERHOST														// TODO : Implement function to return a list of userhost
 #define RPL_UNAWAY															(":You are no longer marked as being away")
 #define RPL_NOWAWAY															(":You have been marked as being away")
-#define RPL_WHOREPLY(channel, username, hostname, servername, \
-					 nickname, flags, hopcount, realname)					(" " channel " " username " " hostname " " + servername + " " + nickname + " " flags " :"hopcount " " realname)
-#define RPL_ENDOFWHO(mask)													(" " mask " :End of /WHO list.")
+
+#define RPL_WHOREPLY(user, channel, flags, hopcount)	(SERVER_SOURCE("352", user) + " " + (channel).name() + " " + user.username() + " " + hostname + " " + Server::info.name() + " " + user.nickname() + " " + flags + " :" + hopcount + " " + user.realname())
+#define RPL_ENDOFWHO(user, mask)						(SERVER_SOURCE("352", user) + " " + mask + " :End of /WHO list.")
+
 #define RPL_WHOISREGNICK(nickname)											(" " + nickname + " :is a registered nick")
 #define RPL_WHOISUSER(nickname, username, hostname, realname)				(" " + nickname + " " username " " hostname " * :" realname)
 #define RPL_WHOISSERVER(nickname, servername, serverinfo)					(" " + nickname + " " + servername + " :" serverinfo)
@@ -57,23 +57,28 @@
 #define RPL_ENDOFWHOIS(nickname)											(" " + nickname + " :End of /WHOIS list.")
 #define RPL_WHOISCHANNELS() 												""// TODO : Implement function to return a list of channels
 #define RPL_WHOISSPECIAL(nickname, msg)										(" " + nickname + " :" msg)
-#define RPL_LISTSTART(user)													(SERVER_SOURCE("321", user) + " Channel :Users Name")
-#define RPL_LIST(user, channel)												(SERVER_SOURCE("322", user) + " " + (channel).name() + " " + (channel).user_count_as_str() + " :" + (channel).topic())
-#define RPL_LISTEND(user)													(SERVER_SOURCE("323", user) + " :End of /LIST")
-#define RPL_CHANNELMODEIS(user, channel)				(SERVER_SOURCE("324", user), " " + channel.name() + " : " + channel.get_modes_as_str(user))
-#define RPL_CREATIONTIME 329
+
+#define RPL_LISTSTART(user)								(SERVER_SOURCE("321", user) + " Channel :Users Name")
+#define RPL_LIST(user, channel)							(SERVER_SOURCE("322", user) + " " + (channel).name() + " " + (channel).user_count_as_str() + " :" + (channel).topic())
+#define RPL_LISTEND(user)								(SERVER_SOURCE("323", user) + " :End of /LIST")
+#define RPL_CHANNELMODEIS(user, channel)				(SERVER_SOURCE("324", user) + " " + channel.name() + " " + channel.get_modes_as_str(user))
+#define RPL_CREATIONTIME(user, channel)					(SERVER_SOURCE("329", user) + " " + channel.name() + " " + channel.creation_date_as_str())
 #define RPL_WHOISACCOUNT 330
 #define RPL_NOTOPIC(user_that_modified, channel)		(":" + user_that_modified + " TOPIC " + (channel).name() + " :")
 #define RPL_TOPIC(user_that_modified, channel)			(":" + user_that_modified + " TOPIC " + (channel).name() + " :" + (channel).topic())
 #define RPL_TOPICWHOTIME(user,channel)					(SERVER_SOURCE("333", user) + " " + (channel).name() + " " + (channel).last_user_to_modify_topic() + " " + (channel).topic_modification_date_as_str())
-#define RPL_INVITELIST 336
-#define RPL_ENDOFINVITELIST 337
+
+#define RPL_INVITELIST(user, channel)					(SERVER_SOURCE("336", user) + " " + channel)
+#define RPL_ENDOFINVITELIST(user, channel)				(SERVER_SOURCE("337", user) + " " + channel + " :End of channel invite list")
+
 #define RPL_WHOISACTUALLY 338
-#define RPL_INVITING 341
-#define RPL_INVEXLIST 346
-#define RPL_ENDOFINVEXLIST 347
-#define RPL_EXCEPTLIST 348
-#define RPL_ENDOFEXCEPTLIST 349
+
+#define RPL_INVITING(user, nick, channel_name)			(SERVER_SOURCE("341", user) + " " + nick + " " + channel_name)
+
+#define RPL_INVEXLIST(user, channel, mask)				(SERVER_SOURCE("346", user) + " " + channel.name() + " " + mask)
+#define RPL_ENDOFINVEXLIST(user, channel)				(SERVER_SOURCE("347", user) + " " + channel.name() + " :End of channel invite list")
+#define RPL_EXCEPTLIST(user, channel, mask)				(SERVER_SOURCE("348", user) + " " + channel.name() + " " + mask)
+#define RPL_ENDOFEXCEPTLIST(user, channel)				(SERVER_SOURCE("349", user) + " " + channel.name() + " :End of channel exception list")
 #define RPL_VERSION(user, comment)						(SERVER_SOURCE("351", user) + " " + Server::info().version() + " " + Server::info().name() + " :" + comment)
 
 // TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
@@ -110,11 +115,9 @@
 #define ERR_NONICKNAMEGIVEN(user)						(SERVER_SOURCE("431", user) + " :No nickname given")
 #define ERR_ERRONEUSNICKNAME(user, new_nick)			(SERVER_SOURCE("431", user) + " " + new_nick + " :Erroneous nickname")
 #define ERR_NICKNAMEINUSE(user, new_nick)				(SERVER_SOURCE("432", user) + " " + new_nick + " :Nickname is already in use")
-
 #define ERR_USERNOTINCHANNEL(user, nickname, channel)	(SERVER_SOURCE("441", user) + " " + nickname + " " + channel.name() + " :They aren't on that channel")
 #define ERR_NOTONCHANNEL(user, channel)					(SERVER_SOURCE("442", user) + " " + channel.name() + " :You're not on that channel")
 #define ERR_USERONCHANNEL(user, nickname, channel)		(SERVER_SOURCE("443", user) + " " + nickname + " " + channel.name() + " :is already on channel")
-
 #define ERR_NOTREGISTERED(user)							(SERVER_SOURCE("451", user) + " :You have not registered")
 #define ERR_NEEDMOREPARAMS(user, command)				(SERVER_SOURCE("461", user) + " " + command.get_command() + " :Not enough parameters")
 #define ERR_ALREADYREGISTERED(user)						(SERVER_SOURCE("462", user) + " :You may not registered")
@@ -129,7 +132,7 @@
 #define ERR_BADCHANMASK(channel)						(" " channel " :Bad Channel Mask")
 #define ERR_NOPRIVILEGES								(" :Permission Denied - You're not an IRC operator")
 
-#define ERR_CHANOPRIVSNEEDED(user, channel)				(SERVER_SOURCE("482", user) + " " + channel + " :You're not channel operator")
+#define ERR_CHANOPRIVSNEEDED(user, channel)				(SERVER_SOURCE("482", user) + " " + channel.name() + " :You're not channel operator")
 
 #define ERR_CANTKILLSERVER								(" :You cant kill a server!")
 #define ERR_NOOPERHOST									(" :No O-lines for your host")
@@ -159,4 +162,4 @@
 #define ERR_SASLALREADY									(" :You have already authenticated using SASL")
 #define RPL_SASLMECHS(mechs)							(" " mechs " :are available SASL mechanisms")
 
-#endif //IRC_H
+#endif //NUMERICS_H
