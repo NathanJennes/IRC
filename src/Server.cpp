@@ -303,6 +303,9 @@ void Server::shutdown()
 		delete &user;
 	}
 
+	for (ChannelIterator channel_it = m_channels.begin(); channel_it != m_channels.end(); channel_it++)
+		delete channel_it->second;
+
 	close(m_server_socket);
 	CORE_INFO("Server shutdown");
 }
