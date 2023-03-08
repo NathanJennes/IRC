@@ -102,28 +102,43 @@ public:
 	bool update_mode(User &user, const std::vector<ModeParam> &mode_params);
 
 	/// Entry restrictions
-	void add_to_banlist(const User& user);
-	void add_to_banlist(const std::string& user_nickname);
-	void remove_from_banlist(const User& user);
-	void remove_from_banlist(const std::string& user_nickname);
+	bool is_user_banned(User& user);
+	bool is_user_banned(const std::string& user_nickname);
+	bool is_user_invited_or_exempted(User& user);
+	bool is_user_invited_or_exempted(const std::string& user_nickname);
 
-	bool is_user_invited(User& user);
-	bool is_user_invited(const std::string& user_nickname);
+	bool is_user_in_invite_list(User& user);
+	bool is_user_in_invite_list(const std::string& user_nickname);
 	void add_to_invitelist(const User& user);
 	void add_to_invitelist(const std::string& user_nickname);
 	void remove_from_invitelist(const User& user);
 	void remove_from_invitelist(const std::string& user_nickname);
 
-	bool is_user_banned(User& user);
-	bool is_user_banned(const std::string& user_nickname);
+	bool is_user_in_banlist(User& user);
+	bool is_user_in_banlist(const std::string& user_nickname);
+	void add_to_banlist(const User& user);
+	void add_to_banlist(const std::string& user_nickname);
+	void remove_from_banlist(const User& user);
+	void remove_from_banlist(const std::string& user_nickname);
+
+	bool is_user_in_ban_exemptions(User& user);
+	bool is_user_in_ban_exemptions(const std::string& user_nickname);
 	void add_to_ban_exemptions(const User& user);
 	void add_to_ban_exemptions(const std::string& user_nickname);
 	void remove_from_ban_exemptions(const User& user);
 	void remove_from_ban_exemptions(const std::string& user_nickname);
 
+	bool is_user_in_invite_list_exemptions(User& user);
+	bool is_user_in_invite_list_exemptions(const std::string& user_nickname);
+	void add_to_invite_list_exemptions(const User& user);
+	void add_to_invite_list_exemptions(const std::string& user_nickname);
+	void remove_from_invite_list_exemptions(const User& user);
+	void remove_from_invite_list_exemptions(const std::string& user_nickname);
+
 	/// Getters
 	const	std::string&			name()								const { return m_name; }
 	const	std::time_t&			creation_date()						const { return m_creation_date; }
+			std::string				creation_date_as_str()				const { return to_string(creation_date()); }
 	const	std::string&			topic()								const { return m_topic; }
 	char							status()							const { return m_is_secret ? '@' : '='; }
 	const	std::string&			last_user_to_modify_topic()			const { return m_last_user_to_modify_topic; }

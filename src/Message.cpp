@@ -290,7 +290,7 @@ int join(User& user, const Command& command)
 		if (channel.is_invite_only()) {
 			// If the user is not invited and is not exempted from the invite-list,
 			// send error and continue to next channel
-			if (!channel.is_user_invited(user)) {
+			if (!channel.is_user_invited_or_exempted(user)) {
 				CORE_TRACE_IRC_ERR("User %s tried and failed to connect to channel [%s] because it was invite only.", user.debug_name(), channel.name().c_str());
 				Server::reply(user, ERR_INVITEONLYCHAN(user, channel.name()));
 				continue ;
@@ -425,7 +425,7 @@ int topic(User& user, const Command& command)
 		// Check if the user can modify the topic
 		if (channel.is_topic_protected()
 			&& !channel.is_user_operator(user) && !channel.is_user_halfop(user)) {
-			Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel.name()));
+			Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
 			return 0;
 		}
 
