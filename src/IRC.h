@@ -8,9 +8,10 @@
 #include "Server.h"
 
 #define SERVER_SOURCE(numeric, user) 				(":" + Server::info().name() + " " + numeric + " " + user.nickname())
-#define USER_SOURCE(command_or_numeric, user)		(":" + user.source() + " " + command_or_numeric)
+#define USER_SOURCE(command_or_numeric, user)		(":" + (user).source() + " " + command_or_numeric)
 
 #define RPL_CAP(user, command, msg) 				(SERVER_SOURCE("CAP", user) + " " + command + " :" + msg)
+#define RPL_MODE(user, msg) 						(USER_SOURCE("MODE", user) + " " + (user).nickname() + " " + msg)
 #define RPL_MESSAGE(user, command, msg) 			(SERVER_SOURCE(command, user) + " " + msg)
 
 // RPL CODES
@@ -19,8 +20,6 @@
 #define RPL_CREATED(user)							(SERVER_SOURCE("003", user) + " :This server was created " + Server::info().creation_date())
 #define RPL_MYINFO(user)							(SERVER_SOURCE("004", user) + " " + Server::info().name() + " " + Server::info().version() + " " + "<user modes>" + " " + "<cahnnel modes>" +  " " + "<channel mode param>")
 #define RPL_ISUPPORT(user)							Server::supported_tokens(user)
-
-#define RPL_BOUNCE	// Recommanded to not be used
 #define RPL_UMODEIS(user)							(SERVER_SOURCE("221", user) + " " + user.get_modes_as_str())
 
 #define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)	(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers")

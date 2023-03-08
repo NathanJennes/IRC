@@ -203,8 +203,6 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 				break ;
 		}
 
-		CORE_DEBUG("User %s updated mode %c to %d", debug_name(), mode.mode, mode.is_adding ? 1 : 0);
-
 		if (!updated)
 			continue;
 
@@ -218,6 +216,6 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 	if (plus_modes_update.size() == 1) plus_modes_update = "";
 	if (minus_modes_update.size() == 1) minus_modes_update = "";
 
-	Server::reply(*this, RPL_MESSAGE((*this), "MODE", plus_modes_update + minus_modes_update));
+	Server::reply(*this, RPL_MODE(*this, plus_modes_update + minus_modes_update));
 	return false;
 }
