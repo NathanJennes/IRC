@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include "log.h"
-#include "IRC.h"
+#include "Numerics.h"
 #include "Command.h"
 #include "Server.h"
 #include "Message.h"

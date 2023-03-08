@@ -3,7 +3,7 @@
 //
 
 #include "Server.h"
-#include "IRC.h"
+#include "Numerics.h"
 #include "Mode.h"
 #include <algorithm>
 

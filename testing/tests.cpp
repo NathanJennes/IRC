@@ -3,7 +3,7 @@
 //
 
 #include <iostream>
-#include "../src/IRC.h"
+#include "../src/Numerics.h"
 #include "../src/Server.h"
 
 #define USERNAME "cyril"

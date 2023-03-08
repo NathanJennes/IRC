@@ -2,14 +2,13 @@
 // Created by Cyril Battistolo on 17/02/2023.
 //
 
-#include <iostream>
 #include <algorithm>
 #include <string>
 #include <map>
 #include "Channel.h"
 #include "Utils.h"
 #include "Server.h"
-#include "IRC.h"
+#include "Numerics.h"
 
 Channel::UserPermissions::UserPermissions()
 : m_is_founder(false), m_is_protected(false),

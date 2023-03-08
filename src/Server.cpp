@@ -4,13 +4,12 @@
 
 #include <arpa/inet.h>
 #include <cerrno>
-#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 #include <algorithm>
 #include "Server.h"
 #include "log.h"
-#include "IRC.h"
+#include "Numerics.h"
 #include "Message.h"
 
 const int			Server::m_server_backlog = 10;

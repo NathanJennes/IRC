@@ -9,7 +9,7 @@
 #include "Server.h"
 #include "User.h"
 #include "log.h"
-#include "IRC.h"
+#include "Numerics.h"
 
 User::User(int fd, const std::string& ip, uint16_t port) :
 		m_nickname("*"), m_ip(ip), m_port(port), m_fd(fd),
