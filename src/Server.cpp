@@ -481,9 +481,9 @@ std::string Server::supported_tokens(User& user)
 	tokens += "HOSTLEN= ";
 	tokens += "INVEX ";
 	tokens += "KICKLEN= ";
-	tokens += "MAXLIST=beI: ";
+	tokens += "MAXLIST=beI ";
 
-	Server::reply(user, RPL_MESSAGE(user, "005", tokens + " :are supported by this server"));
+	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));
 
 	// =========================
 
@@ -501,7 +501,7 @@ std::string Server::supported_tokens(User& user)
 	tokens += "TOPICLEN= ";
 	tokens += "USERLEN= ";
 
-	Server::reply(user, RPL_MESSAGE(user, "005", tokens + " :are supported by this server"));
+	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));
 
 	return tokens;
 }
