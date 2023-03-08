@@ -255,7 +255,7 @@ int join(User& user, const Command& command)
 
 	// A JOIN command with "0" as its parameter should disconnect the user from all of its channels
 	if (params[0] == "0") {
-		Server::disconnect_user_from_channels(user);
+		Server::reply_part_user_from_channels(user);
 		return 0;
 	}
 
@@ -375,7 +375,7 @@ int part(User& user, const Command& command)
 	// Iterate over all the channels and disconnect the user from them
 	ParamSplitter<','> channel_splitter(command, 0);
 	while (!channel_splitter.reached_end())
-		Server::try_disconnect_user_from_channel(user, channel_splitter.next_param(), reason);
+		Server::try_reply_part_user_from_channel(user, channel_splitter.next_param(), reason);
 	return 0;
 }
 

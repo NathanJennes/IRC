@@ -49,9 +49,9 @@ public:
 	static void reply_channel_invite_exempt_list_to_user(User& user, const Channel& channel);
 
 	/// User management
-	static void				try_disconnect_user_from_channel(User& user, const std::string& channel_name, const std::string& reason = "");
-	static void				disconnect_user_from_channel(User& user, Channel& channel, const std::string& reason = "");
-	static void				disconnect_user_from_channels(User& user, const std::string& reason = "");
+	static void				try_reply_part_user_from_channel(User& user, const std::string& channel_name, const std::string& reason = "");
+	static void				reply_part_user_from_channel(User& user, Channel& channel, const std::string& reason = "");
+	static void				reply_part_user_from_channels(User& user, const std::string& reason = "");
 	static bool				user_exists(const std::string& user_nickname);
 	static bool				user_exists(const UserIterator& user);
 	static UserIterator		find_user(const std::string& user_nickname);
