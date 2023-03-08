@@ -98,7 +98,6 @@ int nick(User& user, const Command& command)
 	if (user.is_registered())
 		Server::reply(user, USER_SOURCE("NICK", user) + " :" + command.get_parameters()[0]);
 	user.set_nickname(command.get_parameters()[0]);
-	Server::reply(user, USER_SOURCE("NICK", user) + " :" + command.get_parameters()[0]);
 	return 0;
 }
 
