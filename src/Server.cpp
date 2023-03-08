@@ -120,6 +120,7 @@ bool Server::update()
 	handle_events();
 	handle_messages();
 	check_for_closed_connexions();
+	check_for_empty_channels();
 	return true;
 }
 
@@ -282,6 +283,15 @@ void Server::check_for_closed_connexions()
 			close(user.fd());
 			remove_user(user);
 		}
+	}
+}
+
+void Server::check_for_empty_channels()
+{
+	for (ChannelIterator channel_it = m_channels.begin(), next_it = channel_it; channel_it != m_channels.end(); channel_it = next_it) {
+		next_it++;
+		if (get_channel_reference(channel_it).user_count() == 0)
+			m_channels.erase(channel_it);
 	}
 }
 

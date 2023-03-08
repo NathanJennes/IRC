@@ -87,6 +87,7 @@ private:
 	static void	handle_messages();
 	static void	execute_command(User& user, const Command& command);
 	static void	check_for_closed_connexions();
+	static void	check_for_empty_channels();
 
 	/// Users
 	static User&				create_new_user(int fd, const std::string& ip, uint16_t port);
