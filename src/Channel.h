@@ -125,6 +125,7 @@ public:
 	const	std::string&			name()								const { return m_name; }
 	const	std::time_t&			creation_date()						const { return m_creation_date; }
 	const	std::string&			topic()								const { return m_topic; }
+	char							status()							const { return m_is_secret ? '@' : '='; }
 	const	std::string&			last_user_to_modify_topic()			const { return m_last_user_to_modify_topic; }
 	const	std::time_t&			topic_modification_date()			const { return m_topic_modification_date; }
 			std::string				topic_modification_date_as_str()	const { return to_string(topic_modification_date()); }

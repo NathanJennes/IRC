@@ -76,7 +76,7 @@
 #define RPL_VERSION(user, comment)						(SERVER_SOURCE("351", user) + " " + Server::info().version() + " " + Server::info().name() + " :" + comment)
 
 // TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
-#define RPL_NAMREPLY(user, channel, channel_user, channel_user_perms)	(SERVER_SOURCE("353", user) + " " + channel.type() + " " + channel.name() + " :" + channel_user_perms.get_highest_prefix() + channel_user.nickname())
+#define RPL_NAMREPLY(user, channel, channel_user, channel_user_perms)	(SERVER_SOURCE("353", user) + " " + channel.status() + " " + channel.name() + " :" + channel_user_perms.get_highest_prefix() + channel_user.nickname())
 #define RPL_ENDOFNAMES(user, channel)					(SERVER_SOURCE("366", user) + " " + channel + " :End of /NAMES list.")
 
 #define RPL_LINKS 364
