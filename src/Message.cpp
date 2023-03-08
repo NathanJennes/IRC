@@ -255,9 +255,7 @@ int join(User& user, const Command& command)
 
 	// A JOIN command with "0" as its parameter should disconnect the user from all of its channels
 	if (params[0] == "0") {
-		for (User::ChannelIterator connected_channel_it = user.channels().begin(); connected_channel_it != user.channels().end(); connected_channel_it++) {
-			Server::disconnect_user_from_channel(user, get_channel_reference(connected_channel_it));
-		}
+		Server::disconnect_user_from_channels(user);
 		return 0;
 	}
 
