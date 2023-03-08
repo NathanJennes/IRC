@@ -42,8 +42,11 @@ public:
 	static void reply_welcome_user(User& user);
 	static void try_reply_list_channel_members_to_user(User& user, const std::string& channel_name);
 	static void reply_list_channel_members_to_user(User &user, const Channel& channel);
-	static void reply_ban_list_to_user(User& user, const Channel& channel);
 	static void reply_channel_list_to_user(User& user);
+	static void reply_channel_ban_list_to_user(User& user, const Channel& channel);
+	static void reply_channel_ban_exempt_list_to_user(User& user, const Channel& channel);
+	static void reply_list_of_channel_invite_to_user(User &user);
+	static void reply_channel_invite_exempt_list_to_user(User& user, const Channel& channel);
 
 	/// User management
 	static void				try_disconnect_user_from_channel(User& user, const std::string& channel_name, const std::string& reason = "");

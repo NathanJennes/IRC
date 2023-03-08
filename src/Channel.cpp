@@ -2,14 +2,13 @@
 // Created by Cyril Battistolo on 17/02/2023.
 //
 
-#include <iostream>
 #include <algorithm>
 #include <string>
 #include <map>
 #include "Channel.h"
 #include "Utils.h"
 #include "Server.h"
-#include "IRC.h"
+#include "Numerics.h"
 
 Channel::UserPermissions::UserPermissions()
 : m_is_founder(false), m_is_protected(false),
@@ -52,6 +51,7 @@ Channel::Channel(User& user, const std::string &name) :
 		m_type = CHANNEL_TYPE_LOCAL_SYMBOL;
 
 	add_user(user);
+	user.add_channel(*this);
 	set_user_founder(user, true);
 	set_user_operator(user, true);
 }
@@ -66,7 +66,9 @@ bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 		switch (mode_param.mode) {
 			case 'b':
 				if (mode_param.arg.empty()) {
-					Server::reply_ban_list_to_user(user, *this);
+					CORE_TRACE("User %s requested ban list for channel %s", user.nickname().c_str(), m_name.c_str());
+					Server::reply_channel_ban_list_to_user(user, *this);
+					break;
 				}
 				if (mode_param.is_adding)
 					add_to_banlist(mode_param.arg);
@@ -74,16 +76,24 @@ bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 					remove_from_banlist(mode_param.arg);
 				break;
 			case 'e':
+				if (mode_param.arg.empty()) {
+					Server::reply_channel_ban_exempt_list_to_user(user, *this);
+					break;
+				}
 				if (mode_param.is_adding)
 					add_to_ban_exemptions(mode_param.arg);
 				else if (!mode_param.is_adding)
 					remove_from_ban_exemptions(mode_param.arg);
 				break;
 			case 'I':
+				if (mode_param.arg.empty()) {
+					Server::reply_channel_invite_exempt_list_to_user(user, *this);
+					break;
+				}
 				if (mode_param.is_adding)
-					add_to_invitelist(mode_param.arg);
+					add_to_invite_list_exemptions(mode_param.arg);
 				else if (!mode_param.is_adding)
-					remove_from_invitelist(mode_param.arg);
+					remove_from_invite_list_exemptions(mode_param.arg);
 				break;
 			case 'i':
 				m_is_invite_only = mode_param.is_adding;
@@ -210,56 +220,6 @@ bool Channel::has_user(const UserMap::iterator &user_it) const
 	return user_it != m_users.end();
 }
 
-void Channel::add_to_banlist(const User &user)
-{
-	add_to_banlist(user.nickname());
-}
-
-void Channel::add_to_banlist(const std::string &user_nickname)
-{
-	if (std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname) == m_ban_list.end())
-		m_ban_list.push_back(user_nickname);
-	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
-}
-
-void Channel::remove_from_banlist(const User &user)
-{
-	remove_from_banlist(user.nickname());
-}
-
-void Channel::remove_from_banlist(const std::string &user_nickname)
-{
-	NicknameIterator entry = std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname);
-	if (entry != m_ban_list.end())
-		m_ban_list.erase(entry);
-	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
-}
-
-void Channel::add_to_invitelist(const User &user)
-{
-	add_to_invitelist(user.nickname());
-}
-
-void Channel::add_to_invitelist(const std::string &user_nickname)
-{
-	if (std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname) == m_invite_list.end())
-		m_invite_list.push_back(user_nickname);
-	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the invite list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
-}
-
-void Channel::remove_from_invitelist(const User &user)
-{
-	remove_from_invitelist(user.nickname());
-}
-
-void Channel::remove_from_invitelist(const std::string &user_nickname)
-{
-	NicknameIterator entry = std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname);
-	if (entry != m_invite_list.end())
-		m_invite_list.erase(entry);
-	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
-}
-
 void Channel::set_user_founder(User& user, bool value)
 {
 	if (!has_user(user)) {
@@ -306,7 +266,6 @@ void Channel::set_user_operator(User& user, bool value)
 	}
 
 	m_users.at(&user).set_is_operator(value);
-
 }
 
 void Channel::set_user_operator(const std::string& user_nickname, bool value)
@@ -426,26 +385,6 @@ bool Channel::is_user_has_voice(const std::string &user_nickname)
 	return false;
 }
 
-void Channel::add_to_ban_exemptions(const std::string &user_nickname)
-{
-	(void)user_nickname;
-}
-
-void Channel::remove_from_ban_exemptions(const std::string &user_nickname)
-{
-	(void)user_nickname;
-}
-
-void Channel::add_to_ban_exemptions(const User &user)
-{
-	(void)user;
-}
-
-void Channel::remove_from_ban_exemptions(const User &user)
-{
-	(void)user;
-}
-
 void Channel::send_topic_to_user_if_set(User &user)
 {
 	if (!m_topic.empty())
@@ -481,22 +420,18 @@ void Channel::broadcast_topic(User &user_to_avoid)
 	}
 }
 
-bool Channel::is_user_invited(User &user)
+bool Channel::is_user_invited_or_exempted(User &user)
 {
-	return is_user_invited(user.nickname());
+	return is_user_invited_or_exempted(user.nickname());
 }
 
-bool Channel::is_user_invited(const std::string &user_nickname)
+bool Channel::is_user_invited_or_exempted(const std::string &user_nickname)
 {
-	for (ConstNicknameIterator nickname_it = m_invite_list.begin(); nickname_it != m_invite_list.end(); nickname_it++) {
-		if (user_nickname == *nickname_it)
-			return true;
-	}
+	if (is_user_in_invite_list(user_nickname))
+		return true;
 
-	for (ConstNicknameIterator nickname_it = m_invite_exemptions.begin(); nickname_it != m_invite_exemptions.end(); nickname_it++) {
-		if (user_nickname == *nickname_it)
-			return true;
-	}
+	if (is_user_in_invite_list_exemptions(user_nickname))
+		return true;
 
 	return false;
 }
@@ -508,17 +443,169 @@ bool Channel::is_user_banned(User &user)
 
 bool Channel::is_user_banned(const std::string &user_nickname)
 {
-	for (ConstNicknameIterator nickname_it = m_ban_exemptions.begin(); nickname_it != m_ban_exemptions.end(); nickname_it++) {
-		if (user_nickname == *nickname_it)
-			return false;
-	}
+	if (is_user_in_ban_exemptions(user_nickname))
+		return false;
 
+	if (is_user_in_banlist(user_nickname))
+		return true;
+
+	return false;
+}
+
+bool Channel::is_user_in_invite_list(User &user)
+{
+	return is_user_in_invite_list(user.nickname());
+}
+
+bool Channel::is_user_in_invite_list(const std::string &user_nickname)
+{
+	for (ConstNicknameIterator nickname_it = m_invite_list.begin(); nickname_it != m_invite_list.end(); nickname_it++) {
+		if (user_nickname == *nickname_it)
+			return true;
+	}
+	return false;
+}
+
+bool Channel::is_user_in_invite_list_exemptions(User &user)
+{
+	return is_user_in_invite_list_exemptions(user.nickname());
+}
+
+bool Channel::is_user_in_invite_list_exemptions(const std::string &user_nickname)
+{
+	for (ConstNicknameIterator nickname_it = m_invite_exemptions.begin(); nickname_it != m_invite_exemptions.end(); nickname_it++) {
+		if (user_nickname == *nickname_it)
+			return true;
+	}
+	return false;
+}
+
+bool Channel::is_user_in_banlist(User &user)
+{
+	return is_user_in_banlist(user.nickname());
+}
+
+bool Channel::is_user_in_banlist(const std::string &user_nickname)
+{
 	for (ConstNicknameIterator nickname_it = m_ban_list.begin(); nickname_it != m_ban_list.end(); nickname_it++) {
 		if (user_nickname == *nickname_it)
 			return true;
 	}
-
 	return false;
+}
+
+bool Channel::is_user_in_ban_exemptions(User &user)
+{
+	return is_user_in_ban_exemptions(user.nickname());
+}
+
+bool Channel::is_user_in_ban_exemptions(const std::string &user_nickname)
+{
+	for (ConstNicknameIterator nickname_it = m_ban_exemptions.begin(); nickname_it != m_ban_exemptions.end(); nickname_it++) {
+		if (user_nickname == *nickname_it)
+			return true;
+	}
+	return false;
+}
+
+void Channel::add_to_banlist(const User &user)
+{
+	add_to_banlist(user.nickname());
+}
+
+void Channel::add_to_banlist(const std::string &user_nickname)
+{
+	if (std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname) == m_ban_list.end())
+		m_ban_list.push_back(user_nickname);
+	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::remove_from_banlist(const User &user)
+{
+	remove_from_banlist(user.nickname());
+}
+
+void Channel::remove_from_banlist(const std::string &user_nickname)
+{
+	NicknameIterator entry = std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname);
+	if (entry != m_ban_list.end())
+		m_ban_list.erase(entry);
+	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::add_to_ban_exemptions(const User &user)
+{
+	add_to_ban_exemptions(user.nickname());
+}
+
+void Channel::add_to_ban_exemptions(const std::string &user_nickname)
+{
+	if (std::find(m_ban_exemptions.begin(), m_ban_exemptions.end(), user_nickname) == m_ban_exemptions.end())
+		m_ban_exemptions.push_back(user_nickname);
+	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban exemption list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::remove_from_ban_exemptions(const User &user)
+{
+	remove_from_ban_exemptions(user.nickname());
+}
+
+void Channel::remove_from_ban_exemptions(const std::string &user_nickname)
+{
+	NicknameIterator entry = std::find(m_ban_exemptions.begin(), m_ban_exemptions.end(), user_nickname);
+	if (entry != m_ban_exemptions.end())
+		m_ban_exemptions.erase(entry);
+	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban exemption list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::add_to_invitelist(const User &user)
+{
+	add_to_invitelist(user.nickname());
+}
+
+void Channel::add_to_invitelist(const std::string &user_nickname)
+{
+	if (std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname) == m_invite_list.end())
+		m_invite_list.push_back(user_nickname);
+	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the invite list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::remove_from_invitelist(const User &user)
+{
+	remove_from_invitelist(user.nickname());
+}
+
+void Channel::remove_from_invitelist(const std::string &user_nickname)
+{
+	NicknameIterator entry = std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname);
+	if (entry != m_invite_list.end())
+		m_invite_list.erase(entry);
+	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::add_to_invite_list_exemptions(const User &user)
+{
+	add_to_invite_list_exemptions(user.nickname());
+}
+
+void Channel::add_to_invite_list_exemptions(const std::string &user_nickname)
+{
+	if (std::find(m_invite_exemptions.begin(), m_invite_exemptions.end(), user_nickname) == m_invite_exemptions.end())
+		m_invite_exemptions.push_back(user_nickname);
+	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the invite list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+}
+
+void Channel::remove_from_invite_list_exemptions(const User &user)
+{
+	remove_from_invite_list_exemptions(user.nickname());
+}
+
+void Channel::remove_from_invite_list_exemptions(const std::string &user_nickname)
+{
+	NicknameIterator entry = std::find(m_invite_exemptions.begin(), m_invite_exemptions.end(), user_nickname);
+	if (entry != m_invite_exemptions.end())
+		m_invite_exemptions.erase(entry);
+	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
 bool Channel::is_name_valid(const std::string &channel_name)
