@@ -365,6 +365,15 @@ Channel::UserIterator Channel::find_user(const std::string &user_nickname)
 	return m_users.end();
 }
 
+Channel::ConstUserIterator Channel::find_user(const std::string &user_nickname) const
+{
+	for (ConstUserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
+		if (get_user_reference(user_it).nickname() == user_nickname)
+			return user_it;
+	}
+	return m_users.end();
+}
+
 bool Channel::is_user_founder(const User &user)
 {
 	return is_user_founder(user.nickname());

@@ -80,6 +80,8 @@ public:
 	void broadcast_topic(User& user_to_avoid);
 
 	/// Users
+	UserIterator		find_user(const std::string& user_nickname);
+	ConstUserIterator	find_user(const std::string& user_nickname) const;
 	void set_user_limit(size_t limit) { m_user_limit = limit; }
 	void add_user(User& user);
 	void remove_user(User& user);
@@ -162,9 +164,6 @@ public:
 	bool	no_outside_messages()	const { return m_no_outside_messages; }
 
 private:
-	/// Users
-	UserIterator	find_user(const std::string& user_nickname);
-
 	/// Channel information
 	std::string	m_name;
 	std::time_t	m_creation_date;

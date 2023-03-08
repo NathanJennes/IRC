@@ -569,6 +569,62 @@ int privmsg(User& user, const Command& command)
 	return 0;
 }
 
+int kick(User& user, const Command& command)
+{
+	//  https://modern.ircdocs.horse/#kick-message
+	//  Command: KICK
+	//  Parameters: <channel> <user> *( "," <user> ) [<comment>]
+
+	const std::vector<std::string>& params = command.get_parameters();
+
+	if (params.size() < 2) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	// Get the channel
+	Server::ChannelIterator channel_it = Server::find_channel(params[0]);
+	if (!Server::channel_exists(channel_it)) {
+		Server::reply(user, ERR_NOSUCHCHANNEL(user, params[0]));
+		return 0;
+	}
+	Channel& channel = get_channel_reference(channel_it);
+
+	// Check if the user is on the channel
+	if (!channel.has_user(user)) {
+		Server::reply(user, ERR_NOTONCHANNEL(user, channel));
+		return 0;
+	}
+
+	// Check if the user is a moderator
+	if (!channel.is_user_operator(user)) {
+		Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel.name()));
+		return 0;
+	}
+
+	// Get the kick reason
+	std::string kick_reason = "The user didn't give a reason";
+	if (params.size() == 3)
+		kick_reason = params[2];
+
+	// Get the users
+	ParamSplitter<','> splitter(command, 1);
+	while (!splitter.reached_end()) {
+		std::string user_to_kick_nickname = splitter.next_param();
+		Channel::UserIterator user_it = channel.find_user(user_to_kick_nickname);
+		if (!channel.has_user(user_it)) {
+			Server::reply(user, ERR_USERNOTINCHANNEL(user, user_to_kick_nickname, channel));
+			continue ;
+		}
+		User &user_to_kick = get_user_reference(user_it);
+		Server::broadcast_to_channel(channel,
+			USER_SOURCE("KICK", user) + " " + channel.name() + " " + user_to_kick.nickname() + " :" + kick_reason);
+		channel.remove_user(user_to_kick);
+	}
+
+	return 0;
+}
+
 int motd(User& user, const Command& command)
 {
 	// https://modern.ircdocs.horse/#motd-message
