@@ -13,11 +13,13 @@
 #include "log.h"
 #include "Utils.h"
 #include "Mode.h"
+#include "UserQueries.h"
 
 #define MAX_MESSAGE_LENGTH 512
 #define MAX_NICKNAME_LENGTH 9
 
 class Channel;
+struct Mask;
 
 class User
 {
@@ -46,19 +48,23 @@ public:
 	bool		check_password();
 
 	void		add_channel(Channel& channel);
+	void 		remove_channel(const Channel &channel);
 
-	// Mode
+	bool 		has_channel_in_common(User& other_user);
+
+	/// Mode
 	bool 		update_mode(const std::vector<ModeParam>& mode_params);
 
-	// Ping
+	/// Ping
 	void		take_ping_timestamp();
 	void		recalculate_ping();
 
-	// getters
+	/// getters
 	std::string				ping_token()		const	{ return m_ip + to_string(m_port) + m_realname; }
 	const std::string&		nickname()			const	{ return m_nickname; }
 	const std::string&		username()			const	{ return m_username; }
 	const std::string&		realname()			const	{ return m_realname; }
+	const std::string&		hostname()			const	{ return m_hostname; }
 	const std::string&		password()			const	{ return m_password; }
 	const std::string&		server()			const	{ return m_server_name; }
 	const int&				fd()				const	{ return m_fd; }
@@ -86,6 +92,9 @@ public:
 	long					ping()				const	{ return m_ping; }
 
 	std::string				get_modes_as_str()	const;
+	std::string 			get_user_flags_and_prefix(const std::string& channel_name) const;
+	bool 					has_mask(std::vector<Mask> masks) const;
+
 
 	/// setters
 	void	set_nickname(const std::string& nickname)	{ m_nickname = nickname; }
@@ -123,6 +132,7 @@ private:
 	std::string	m_nickname;
 	std::string	m_username;
 	std::string	m_realname;
+	std::string m_hostname;
 	std::string	m_password;
 	std::string	m_server_name;
 
@@ -155,7 +165,7 @@ private:
 	long		m_ping;
 };
 
-inline Channel&		get_channel_reference(const User::ChannelIterator& channel_it)			{ return *(*channel_it); }
-inline const Channel&	get_channel_reference(const User::ConstChannelIterator& channel_it)		{ return *(*channel_it); }
+inline       Channel&	get_channel_reference(const User::ChannelIterator& channel_it)		{ return *(*channel_it); }
+inline const Channel&	get_channel_reference(const User::ConstChannelIterator& channel_it)	{ return *(*channel_it); }
 
 #endif //USER_H

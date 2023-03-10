@@ -45,8 +45,8 @@
 #define RPL_UNAWAY															(":You are no longer marked as being away")
 #define RPL_NOWAWAY															(":You have been marked as being away")
 
-#define RPL_WHOREPLY(user, channel, flags, hopcount)	(SERVER_SOURCE("352", user) + " " + (channel).name() + " " + user.username() + " " + hostname + " " + Server::info.name() + " " + user.nickname() + " " + flags + " :" + hopcount + " " + user.realname())
-#define RPL_ENDOFWHO(user, mask)						(SERVER_SOURCE("352", user) + " " + mask + " :End of /WHO list.")
+#define RPL_WHOREPLY(user, target, channel, flags)		(SERVER_SOURCE("352", user) + " " + channel + " " + target.username() + " " + target.hostname() + " " + Server::info().name() + " " + target.nickname() + " " + flags + " :" + "0 " + target.realname())
+#define RPL_ENDOFWHO(user, mask)						(SERVER_SOURCE("315", user) + " " + mask + " :End of /WHO list.")
 
 #define RPL_WHOISREGNICK(nickname)								(" " + nickname + " :is a registered nick")
 #define RPL_WHOISUSER(nickname, username, hostname, realname)	(" " + nickname + " " username " " hostname " * :" realname)

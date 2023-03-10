@@ -133,6 +133,7 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("VERSION", version));
 
 	// User queries
+	m_commands.insert(std::make_pair("WHO", who));
 	m_commands.insert(std::make_pair("WHOWAS", whowas));
 }
 
@@ -444,6 +445,7 @@ void Server::reply_part_user_from_channel(User &user, Channel &channel, const st
 {
 	// Remove the user from the channel
 	channel.remove_user(user);
+	user.remove_channel(channel);
 
 	std::string separator;
 	if (!reason.empty())
