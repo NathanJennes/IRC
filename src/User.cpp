@@ -146,7 +146,16 @@ void User::add_channel(Channel &channel)
 	m_channels.push_back(&channel);
 }
 
-std::string User::get_modes_as_str()	const
+void User::remove_channel(const Channel &channel)
+{
+	ChannelIterator it = channels().begin();
+	for (; it < channels().end(); ++it) {
+		if (get_channel_reference(it).name() == channel.name())
+			channels().erase(it);
+	}
+}
+
+std::string User::get_modes_as_str() const
 {
 	std::string modes = "+";
 

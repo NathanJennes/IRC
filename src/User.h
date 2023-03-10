@@ -41,6 +41,7 @@ public:
 	bool		check_password();
 
 	void		add_channel(Channel& channel);
+	void 		remove_channel(const Channel &channel);
 
 	// Mode
 	bool 		update_mode(const std::vector<ModeParam>& mode_params);
