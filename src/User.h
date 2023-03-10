@@ -13,11 +13,13 @@
 #include "log.h"
 #include "Utils.h"
 #include "Mode.h"
+#include "UserQueries.h"
 
 #define MAX_MESSAGE_LENGTH 512
 #define MAX_NICKNAME_LENGTH 9
 
 class Channel;
+struct Mask;
 
 class User
 {
@@ -43,7 +45,9 @@ public:
 	void		add_channel(Channel& channel);
 	void 		remove_channel(const Channel &channel);
 
-	// Mode
+	bool 		has_channel_in_common(User& other_user);
+
+	/// Mode
 	bool 		update_mode(const std::vector<ModeParam>& mode_params);
 
 	/// Ping
@@ -83,6 +87,9 @@ public:
 	long					ping()				const	{ return m_ping; }
 
 	std::string				get_modes_as_str()	const;
+	std::string 			get_user_flags_and_prefix(const std::string& channel_name) const;
+	bool 					has_mask(std::vector<Mask> masks) const;
+
 
 	/// setters
 	void	set_nickname(const std::string& nickname)	{ m_nickname = nickname; }

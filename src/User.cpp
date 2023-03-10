@@ -233,3 +233,115 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 	Server::reply(*this, RPL_MODE(*this, plus_modes_update + minus_modes_update));
 	return false;
 }
+
+bool User::has_channel_in_common(User& other_user)
+{
+	if (channels().size() > other_user.channels().size())
+		return other_user.has_channel_in_common(*this);
+
+	ChannelIterator chan_u1 = channels().begin();
+	ChannelIterator chan_u2 = other_user.channels().begin();
+
+	for (; chan_u1 != channels().end(); ++chan_u1) {
+		for (; chan_u2 < other_user.channels().end(); ++chan_u2) {
+			if (get_channel_reference(chan_u1).name() == get_channel_reference(chan_u2).name()) {
+				CORE_DEBUG("common channel found %s", (*chan_u1)->name().c_str());
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+std::string User::get_user_flags_and_prefix(const std::string& channel_name) const
+{
+	std::string flags = "H";
+
+	if (is_away())
+		flags = "G";
+	if (is_operator())
+		flags += "*";
+
+	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
+	if (!Server::channel_exists(channel_it))
+		return flags;
+
+	Channel& channel = get_channel_reference(channel_it);
+	if (channel.is_user_operator(*this))
+		flags += "@";
+	if (channel.is_user_halfop(*this))
+		flags += "%";
+	if (channel.is_user_has_voice(*this))
+		flags += "+";
+
+	return flags;
+}
+
+bool User::has_mask(std::vector<Mask> masks) const
+{
+	std::vector<Mask>::iterator it = masks.begin();
+	size_t pos = 0;
+	for (; it != masks.end();)
+	{
+		pos = nickname().find(it->str, pos);
+		if (pos == std::string::npos)
+			break;
+		if (!it->before && pos != 0)
+			break ;
+		pos += it->str.size();
+		if (!it->after && pos < nickname().size())
+			break ;
+		++it;
+		if (it == masks.end())
+			return true;
+	}
+
+	it = masks.begin();
+	pos = 0;
+	for (size_t i = 0; i < masks.size(); ++i) {
+		pos = username().find(it->str, pos);
+		if (pos == std::string::npos)
+			break;
+		if (!it->before && pos != 0)
+			break ;
+		pos += it->str.size();
+		if (!it->after && pos < username().size())
+			break ;
+		i++;
+		if (i == masks.size())
+			return true;
+	}
+
+	it = masks.begin();
+	pos = 0;
+	for (size_t i = 0; i < masks.size(); ++i) {
+		pos = hostname().find(it->str, pos);
+		if (pos == std::string::npos)
+			break;
+		if (!it->before && pos != 0)
+			break ;
+		pos += it->str.size();
+		if (!it->after && pos < hostname().size())
+			break ;
+		i++;
+		if (i == masks.size())
+			return true;
+	}
+
+	it = masks.begin();
+	pos = 0;
+	for (size_t i = 0; i < masks.size(); ++i) {
+		pos = realname().find(it->str, pos);
+		if (pos == std::string::npos)
+			break;
+		if (!it->before && pos != 0)
+			break ;
+		pos += it->str.size();
+		if (!it->after && pos < realname().size())
+			break ;
+		i++;
+		if (i == masks.size())
+			return true;
+	}
+	return false;
+}

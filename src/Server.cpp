@@ -108,6 +108,9 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("MOTD", motd));
 	m_commands.insert(std::make_pair("VERSION", version));
+
+	// user commands
+	m_commands.insert(std::make_pair("WHO", who));
 }
 
 bool Server::update()
