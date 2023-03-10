@@ -7,20 +7,20 @@
 
 #include "Server.h"
 
-#define SERVER_SOURCE(numeric, user) 				(":" + Server::info().name() + " " + numeric + " " + user.nickname())
-#define USER_SOURCE(command_or_numeric, user)		(":" + (user).source() + " " + command_or_numeric)
+#define SERVER_SOURCE(numeric, user) 					(":" + Server::info().name() + " " + numeric + " " + user.nickname())
+#define USER_SOURCE(command_or_numeric, user)			(":" + (user).source() + " " + command_or_numeric)
 
-#define RPL_CAP(user, command, msg) 				(SERVER_SOURCE("CAP", user) + " " + command + " :" + msg)
-#define RPL_MODE(user, msg) 						(USER_SOURCE("MODE", user) + " " + (user).nickname() + " " + msg)
-#define RPL_MESSAGE(user, command, msg) 			(SERVER_SOURCE(command, user) + " " + msg)
+#define RPL_CAP(user, command, msg) 					(SERVER_SOURCE("CAP", user) + " " + command + " :" + msg)
+#define RPL_MODE(user, msg) 							(USER_SOURCE("MODE", user) + " " + (user).nickname() + " " + msg)
+#define RPL_MESSAGE(user, command, msg) 				(SERVER_SOURCE(command, user) + " " + msg)
 
 // RPL CODES
-#define RPL_WELCOME(user)							(SERVER_SOURCE("001", user) + " :Welcome to the " + Server::info().network_name() + " Network, " + user.nickname())
-#define RPL_YOURHOST(user)							(SERVER_SOURCE("002", user) + " :Your host is " + Server::info().name() + ", running version " + Server::info().version())
-#define RPL_CREATED(user)							(SERVER_SOURCE("003", user) + " :This server was created " + Server::info().creation_date())
-#define RPL_MYINFO(user)							(SERVER_SOURCE("004", user) + " " + Server::info().name() + " " + Server::info().version() + " " + "<user modes>" + " " + "<cahnnel modes>" +  " " + "<channel mode param>")
-#define RPL_ISUPPORT(user)							Server::supported_tokens(user)
-#define RPL_UMODEIS(user)							(SERVER_SOURCE("221", user) + " " + user.get_modes_as_str())
+#define RPL_WELCOME(user)								(SERVER_SOURCE("001", user) + " :Welcome to the " + Server::info().network_name() + " Network, " + user.nickname())
+#define RPL_YOURHOST(user)								(SERVER_SOURCE("002", user) + " :Your host is " + Server::info().name() + ", running version " + Server::info().version())
+#define RPL_CREATED(user)								(SERVER_SOURCE("003", user) + " :This server was created " + Server::info().creation_date())
+#define RPL_MYINFO(user)								(SERVER_SOURCE("004", user) + " " + Server::info().name() + " " + Server::info().version() + " " + "<user modes>" + " " + "<channel modes>" +  " " + "<channel mode param>") //TODO : add user and channel modes
+#define RPL_ISUPPORT(user)								Server::supported_tokens(user)
+#define RPL_UMODEIS(user)								(SERVER_SOURCE("221", user) + " " + user.get_modes_as_str())
 
 #define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)	(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers")
 #define RPL_LUSEROP(nbr_opers)									(" " nbr_opers " :operator(s) online")
@@ -28,53 +28,45 @@
 #define RPL_LUSERCHANNELS(nbr_channels)							(" " nbr_channels " :channels formed")
 #define RPL_LUSERME(nbr_users, nbr_servers)						(" :I have " nbr_users " clients and " nbr_servers " servers")
 
-#define RPL_ADMINME(user, server_name)				(SERVER_SOURCE("256", user) + " " + server_name + " :Administrative info")
-#define RPL_ADMINLOC1(user, server_location)		(SERVER_SOURCE("257", user) + " :Server location - " + server_location)
-#define RPL_ADMINLOC2(user, hosting_info)			(SERVER_SOURCE("258", user) + " :Hosting location - " + hosting_info)
-#define RPL_ADMINEMAIL(user, admin_info)			(SERVER_SOURCE("259", user) + " :" + admin_info)
+#define RPL_ADMINME(user, server_name)					(SERVER_SOURCE("256", user) + " " + server_name + " :Administrative info")
+#define RPL_ADMINLOC1(user, server_location)			(SERVER_SOURCE("257", user) + " :Server location - " + server_location)
+#define RPL_ADMINLOC2(user, hosting_info)				(SERVER_SOURCE("258", user) + " :Hosting location - " + hosting_info)
+#define RPL_ADMINEMAIL(user, admin_info)				(SERVER_SOURCE("259", user) + " :" + admin_info)
+#define RPL_TRYAGAIN(user, command)						(SERVER_SOURCE("263", user) + " " + command + " :Please wait a while and try again.")
 
-#define RPL_TRYAGAIN(command)									(" " command " :Please wait a while and try again.")
-#define RPL_LOCALUSERS(current_users, max_users)				(" :Current local users " current_users " max " max_users)
-#define RPL_GLOBALUSERS(current_users, max_users)				(" :Current global users " current_users " max " max_users)
-#define RPL_WHOISCERTFP(nickname, certfp)						(" " + nickname + " :has client certificate fingerprint " certfp)
-#define RPL_NONE												(" :Unknown format")
+#define RPL_LOCALUSERS(current_users, max_users)		(" :Current local users " current_users " max " max_users)
+#define RPL_GLOBALUSERS(current_users, max_users)		(" :Current global users " current_users " max " max_users)
+#define RPL_WHOISCERTFP(user, target)					//NO SSL connection for now
 
-#define RPL_AWAY(user, target)						(SERVER_SOURCE("301", user), " " + target.nickname() + " :" + target.away_message())
-
-#define RPL_USERHOST														// TODO : Implement function to return a list of userhost
-#define RPL_UNAWAY															(":You are no longer marked as being away")
-#define RPL_NOWAWAY															(":You have been marked as being away")
-
+#define RPL_NONE										(" :Unknown format")
+#define RPL_AWAY(user, target)							(SERVER_SOURCE("301", user), " " + target.nickname() + " :" + target.away_message())
+#define RPL_USERHOST									// TODO : Implement function to return a list of userhost
+#define RPL_UNAWAY(user)								(SERVER_SOURCE("305", user) + " :You are no longer marked as being away")
+#define RPL_NOWAWAY(user)								(SERVER_SOURCE("306", user) + " :You have been marked as being away")
 #define RPL_WHOREPLY(user, target, channel, flags)		(SERVER_SOURCE("352", user) + " " + channel + " " + target.username() + " " + target.hostname() + " " + Server::info().name() + " " + target.nickname() + " " + flags + " :" + "0 " + target.realname())
 #define RPL_ENDOFWHO(user, mask)						(SERVER_SOURCE("315", user) + " " + mask + " :End of /WHO list.")
-
-#define RPL_WHOISREGNICK(nickname)								(" " + nickname + " :is a registered nick")
-#define RPL_WHOISUSER(nickname, username, hostname, realname)	(" " + nickname + " " username " " hostname " * :" realname)
-#define RPL_WHOISSERVER(nickname, servername, serverinfo)		(" " + nickname + " " + servername + " :" serverinfo)
-#define RPL_WHOISOPERATOR(nickname)								(" " + nickname + " :is an IRC operator")
-#define RPL_WHOWASUSER(user, old_user)							(SERVER_SOURCE("314", user) + " " + (old_user).nickname() + " " + (old_user).username() + " " + (old_user).host() + " * :" + (old_user).realname())
-#define RPL_WHOISIDLE(nickname, idle_time, signon)				(" " + nickname + " " idle_time " :seconds idle, " signon)
-#define RPL_ENDOFWHOIS(nickname)								(" " + nickname + " :End of /WHOIS list.")
-#define RPL_WHOISCHANNELS() 									""// TODO : Implement function to return a list of channels
-#define RPL_WHOISSPECIAL(nickname, msg)							(" " + nickname + " :" msg)
-
+#define RPL_WHOISREGNICK(nickname)						// no account for now
+#define RPL_WHOISUSER(user, target)						(SERVER_SOURCE("311", user) + " " + target.nickname() + " " + target.username() + " " + target.host() + " * :" + target.realname())
+#define RPL_WHOISSERVER(user, target, serverinfo)		(SERVER_SOURCE("312", user) + " " + target.nickname() + " " + serverinfo.name() + " :" + serverinfo.description())
+#define RPL_WHOISOPERATOR(user, target)					(SERVER_SOURCE("313", user) + " " + target.nickname() + " :is an IRC operator")
+#define RPL_WHOWASUSER(user, old_user)					(SERVER_SOURCE("314", user) + " " + (old_user).nickname() + " " + (old_user).username() + " " + (old_user).host() + " * :" + (old_user).realname())
+#define RPL_WHOISIDLE(user, target)						(SERVER_SOURCE("317", user) + " " + target.nickname() + " " + target.idle_time_as_str() + " :seconds idle")
+#define RPL_ENDOFWHOIS(user, nicks)						(SERVER_SOURCE("318", user) + " " + nicks + " :End of /WHOIS list.")
+#define RPL_WHOISCHANNELS(user, target) 				// TODO : Implement function to return a list of channels with user status
+#define RPL_WHOISSPECIAL(user, target, msg)				(SERVER_SOURCE("321", user) + " " + target.nickname() + " :" msg)
 #define RPL_LISTSTART(user)								(SERVER_SOURCE("321", user) + " Channel :Users Name")
 #define RPL_LIST(user, channel)							(SERVER_SOURCE("322", user) + " " + (channel).name() + " " + (channel).user_count_as_str() + " :" + (channel).topic())
 #define RPL_LISTEND(user)								(SERVER_SOURCE("323", user) + " :End of /LIST")
 #define RPL_CHANNELMODEIS(user, channel)				(SERVER_SOURCE("324", user) + " " + channel.name() + " " + channel.get_modes_as_str(user))
 #define RPL_CREATIONTIME(user, channel)					(SERVER_SOURCE("329", user) + " " + channel.name() + " " + channel.creation_date_as_str())
-#define RPL_WHOISACCOUNT 330
+#define RPL_WHOISACCOUNT(user, target)					(SERVER_SOURCE("330", user) + " " + target.nickname() + " " + "target.account()" + " :is logged in as")
 #define RPL_NOTOPIC(user_that_modified, channel)		(":" + user_that_modified + " TOPIC " + (channel).name() + " :")
 #define RPL_TOPIC(user_that_modified, channel)			(":" + user_that_modified + " TOPIC " + (channel).name() + " :" + (channel).topic())
 #define RPL_TOPICWHOTIME(user,channel)					(SERVER_SOURCE("333", user) + " " + (channel).name() + " " + (channel).last_user_to_modify_topic() + " " + (channel).topic_modification_date_as_str())
-
 #define RPL_INVITELIST(user, channel)					(SERVER_SOURCE("336", user) + " " + channel)
 #define RPL_ENDOFINVITELIST(user, channel)				(SERVER_SOURCE("337", user) + " " + channel + " :End of channel invite list")
-
-#define RPL_WHOISACTUALLY 338
-
+#define RPL_WHOISACTUALLY(user, target)					(SERVER_SOURCE("338", user) + " " + target.nickname() + " " + target.ip() + " :Is actually using host")
 #define RPL_INVITING(user, nick, channel_name)			(SERVER_SOURCE("341", user) + " " + nick + " " + channel_name)
-
 #define RPL_INVEXLIST(user, channel, mask)				(SERVER_SOURCE("346", user) + " " + channel.name() + " " + mask)
 #define RPL_ENDOFINVEXLIST(user, channel)				(SERVER_SOURCE("347", user) + " " + channel.name() + " :End of channel invite list")
 #define RPL_EXCEPTLIST(user, channel, mask)				(SERVER_SOURCE("348", user) + " " + channel.name() + " " + mask)
@@ -91,16 +83,12 @@
 #define RPL_BANLIST(user, channel, ban_user)			(SERVER_SOURCE("367", user) + " " + channel.name() + " " + ban_user)
 #define RPL_ENDOFBANLIST(user, channel)					(SERVER_SOURCE("368", user) + " " + channel.name() + " :End of channel ban list")
 #define RPL_ENDOFWHOWAS(user)							(SERVER_SOURCE("369", user) + " :End of WHOWAS")
-
-#define RPL_INFO 371
-
+#define RPL_INFO(user, info)							(SERVER_SOURCE("371", user) + " :- " + info)
 #define RPL_MOTD(user, motd)							(SERVER_SOURCE("372", user) + " :- " + motd)
 #define RPL_ENDOFINFO(user)								(SERVER_SOURCE("374", user) + " :End of /INFO list.")
 #define RPL_MOTDSTART(user)								(SERVER_SOURCE("375", user) + " :- " + Server::info().name() + " Message of the day - ")
 #define RPL_ENDOFMOTD(user)								(SERVER_SOURCE("376", user) + " :End of /MOTD command.")
-
-#define ERR_UNKNOWNERROR(ERRCODE)						(" " ERRCODE " :Unknown error")
-
+#define ERR_UNKNOWNERROR(ERRCODE)						(" " + ERRCODE + " :Unknown error")
 #define ERR_NOSUCHNICK(user, nickname)					(SERVER_SOURCE("401", user) + " " + nickname + " :No such nick")
 #define ERR_NOSUCHSERVER(user, servername)				(SERVER_SOURCE("402", user) + " " + servername + " :No such server")
 #define ERR_NOSUCHCHANNEL(user, chan_name)				(SERVER_SOURCE("403", user) + " " + chan_name + " :No such channel")
@@ -128,10 +116,8 @@
 #define ERR_INVITEONLYCHAN(user, channel)				(SERVER_SOURCE("473", user) + " " + channel + " :Cannot join channel (invite-only)")
 #define ERR_BANNEDFROMCHAN(user, channel)				(SERVER_SOURCE("474", user) + " " + channel + " :Cannot join channel (you're banned)")
 #define ERR_BADCHANNELKEY(user, channel)				(SERVER_SOURCE("475", user) + " " + channel + " :Cannot join channel (Wrong key)")
-
-#define ERR_BADCHANMASK(channel)						(" " channel " :Bad Channel Mask")
-#define ERR_NOPRIVILEGES								(" :Permission Denied - You're not an IRC operator")
-
+#define ERR_BADCHANMASK(user, mask)						(SERVER_SOURCE("476", user) + " " + mask + " :Bad Channel Mask")
+#define ERR_NOPRIVILEGES(user)							(SERVER_SOURCE("481", user) + " :Permission Denied- You're not an IRC operator")
 #define ERR_CHANOPRIVSNEEDED(user, channel)				(SERVER_SOURCE("482", user) + " " + channel.name() + " :You're not channel operator")
 
 #define ERR_CANTKILLSERVER								(" :You cant kill a server!")
@@ -139,16 +125,18 @@
 
 #define ERR_UMODEUNKNOWNFLAG(user, mode)				(SERVER_SOURCE("501", user), + " :Unknown MODE flag " + mode)
 #define ERR_USERSDONTMATCH(user)						(SERVER_SOURCE("502", user), + " :Can't change mode for other users")
+#define ERR_HELPNOTFOUND(user, topic)					(SERVER_SOURCE("524", user) + " " + topic + " :No help for " + topic)
 
-#define ERR_HELPNOTFOUND(topic)							(" " topic " :No help available on this topic")
+// TSL/SSL replies
 #define ERR_INVALIDKEY(target_chan)						(" " target_chan " :Key is not well-formed")
 #define RPL_STARTTLS									(" :STARTTLS successful, proceed with TLS handshake")
 #define RPL_WHOISSECURE(nickname)						(" " + nickname + " :is using a secure connection")
 #define ERR_STARTTLS(msg)								(" :STARTTLS failed, (" msg ")")
-#define ERR_INVALIDMODEPARAM
-#define RPL_HELPSTART 704
-#define RPL_HELPTXT 705
-#define RPL_ENDOFHELP 706
+
+#define ERR_INVALIDMODEPARAM(user, mode, param)			(SERVER_SOURCE("717", user) + " " + mode + " " + param + " :is unknown mode parameter")
+#define RPL_HELPSTART(user, subject, first_line)		(SERVER_SOURCE("704", user) + " " + subject + " :" + first_line)
+#define RPL_HELPTXT(user, subject, line)				(SERVER_SOURCE("705", user) + " " + subject + " :" + line)
+#define RPL_ENDOFHELP(user, subject, last_line)			(SERVER_SOURCE("706", user) + " " + subject + " :" + last_line)
 
 // SASL replies
 #define ERR_NOPRIVS(priv)								(" " priv " :Insufficient oper privileges.")
