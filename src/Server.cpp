@@ -403,6 +403,7 @@ void Server::disconnect_user_from_channel(User &user, Channel &channel, const st
 {
 	// Remove the user from the channel
 	channel.remove_user(user);
+	user.remove_channel(channel);
 	reply(user, USER_SOURCE("PART", user) + " " + channel.name() + " " + reason);
 
 	// Notify other channel users
