@@ -12,7 +12,7 @@
 #include "Numerics.h"
 
 User::User(int fd, const std::string& ip, uint16_t port) :
-		m_nickname("*"), m_ip(ip), m_port(port), m_fd(fd),
+		m_nickname("*"), m_hostname("localhost"), m_ip(ip), m_port(port), m_fd(fd),
 		m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false), m_need_password(true),
@@ -33,7 +33,7 @@ ssize_t User::receive_message()
 			CORE_ERROR(std::strerror(errno));
 		}
 		if (bytes_read <= 0)
-			break ;
+			break;
 
 		total_bytes_read += bytes_read;
 	}
@@ -54,7 +54,7 @@ ssize_t User::send_message()
 			CORE_ERROR(std::strerror(errno));
 		}
 		if (bytes_write <= 0)
-			break ;
+			break;
 
 		total_bytes_write += bytes_write;
 	}
@@ -86,8 +86,7 @@ std::string User::get_next_command_str()
 
 std::string User::source() const
 {
-	// TODO: break PRIVMSG if realname as space. hardcoded to localhost for now
-	std::string source = nickname() + "!~" + username() + "@localhost";
+	std::string source = nickname() + "!~" + username() + "@" + ip();
 	return source;
 }
 
@@ -147,18 +146,30 @@ void User::add_channel(Channel &channel)
 	m_channels.push_back(&channel);
 }
 
-std::string User::get_modes_as_str()	const
+void User::remove_channel(const Channel &channel)
+{
+	ChannelIterator it = channels().begin();
+	for (; it < channels().end(); ++it) {
+		if (get_channel_reference(it).name() == channel.name())
+			channels().erase(it);
+	}
+}
+
+std::string User::get_modes_as_str() const
 {
 	std::string modes = "+";
 
+	if (is_away())
+		modes += "a";
 	if (is_operator())
 		modes += "o";
 	if (is_invisible())
 		modes += "i";
 	if (can_get_wallop())
 		modes += "w";
-	if (can_get_notice())
+	if (can_get_notice()) // obsolete
 		modes += "s";
+	// TODO: add r mode (restricted user connection)
 	return modes;
 }
 
@@ -179,28 +190,28 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 					minus_modes_update += mode.mode;
 					updated = true;
 				}
-				break ;
+				break;
 			case 'i':
 				if (is_invisible() != mode.is_adding) {
 					m_is_invisible = mode.is_adding;
 					updated = true;
 				}
-				break ;
+				break;
 			case 'w':
 				if (can_get_wallop() != mode.is_adding) {
 					m_can_receive_wallop = mode.is_adding;
 					updated = true;
 				}
-				break ;
+				break;
 			case 's':
 				if (can_get_notice() != mode.is_adding) {
 					m_can_receive_notice = mode.is_adding;
 					updated = true;
 				}
-				break ;
+				break;
 			default:
 				Server::reply(*this, ERR_UMODEUNKNOWNFLAG((*this), mode.mode));
-				break ;
+				break;
 		}
 
 		if (!updated)
@@ -220,5 +231,117 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 		return false;
 
 	Server::reply(*this, RPL_MODE(*this, plus_modes_update + minus_modes_update));
+	return false;
+}
+
+bool User::has_channel_in_common(User& other_user)
+{
+	if (channels().size() > other_user.channels().size())
+		return other_user.has_channel_in_common(*this);
+
+	ChannelIterator chan_u1 = channels().begin();
+	ChannelIterator chan_u2 = other_user.channels().begin();
+
+	for (; chan_u1 != channels().end(); ++chan_u1) {
+		for (; chan_u2 < other_user.channels().end(); ++chan_u2) {
+			if (get_channel_reference(chan_u1).name() == get_channel_reference(chan_u2).name()) {
+				CORE_DEBUG("common channel found %s", (*chan_u1)->name().c_str());
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+std::string User::get_user_flags_and_prefix(const std::string& channel_name) const
+{
+	std::string flags = "H";
+
+	if (is_away())
+		flags = "G";
+	if (is_operator())
+		flags += "*";
+
+	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
+	if (!Server::channel_exists(channel_it))
+		return flags;
+
+	Channel& channel = get_channel_reference(channel_it);
+	if (channel.is_user_operator(*this))
+		flags += "@";
+	if (channel.is_user_halfop(*this))
+		flags += "%";
+	if (channel.is_user_has_voice(*this))
+		flags += "+";
+
+	return flags;
+}
+
+bool User::has_mask(std::vector<Mask> masks) const
+{
+	std::vector<Mask>::iterator it = masks.begin();
+	size_t pos = 0;
+	for (; it != masks.end();)
+	{
+		pos = nickname().find(it->str, pos);
+		if (pos == std::string::npos)
+			break;
+		if (!it->before && pos != 0)
+			break ;
+		pos += it->str.size();
+		if (!it->after && pos < nickname().size())
+			break ;
+		++it;
+		if (it == masks.end())
+			return true;
+	}
+
+	it = masks.begin();
+	pos = 0;
+	for (size_t i = 0; i < masks.size(); ++i) {
+		pos = username().find(it->str, pos);
+		if (pos == std::string::npos)
+			break;
+		if (!it->before && pos != 0)
+			break ;
+		pos += it->str.size();
+		if (!it->after && pos < username().size())
+			break ;
+		i++;
+		if (i == masks.size())
+			return true;
+	}
+
+	it = masks.begin();
+	pos = 0;
+	for (size_t i = 0; i < masks.size(); ++i) {
+		pos = hostname().find(it->str, pos);
+		if (pos == std::string::npos)
+			break;
+		if (!it->before && pos != 0)
+			break ;
+		pos += it->str.size();
+		if (!it->after && pos < hostname().size())
+			break ;
+		i++;
+		if (i == masks.size())
+			return true;
+	}
+
+	it = masks.begin();
+	pos = 0;
+	for (size_t i = 0; i < masks.size(); ++i) {
+		pos = realname().find(it->str, pos);
+		if (pos == std::string::npos)
+			break;
+		if (!it->before && pos != 0)
+			break ;
+		pos += it->str.size();
+		if (!it->after && pos < realname().size())
+			break ;
+		i++;
+		if (i == masks.size())
+			return true;
+	}
 	return false;
 }

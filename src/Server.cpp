@@ -111,6 +111,9 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("MOTD", motd));
 	m_commands.insert(std::make_pair("VERSION", version));
+
+	// user commands
+	m_commands.insert(std::make_pair("WHO", who));
 }
 
 bool Server::update()
@@ -419,6 +422,7 @@ void Server::reply_part_user_from_channel(User &user, Channel &channel, const st
 {
 	// Remove the user from the channel
 	channel.remove_user(user);
+	user.remove_channel(channel);
 
 	std::string separator;
 	if (!reason.empty())
