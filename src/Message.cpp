@@ -774,7 +774,7 @@ int whowas(User& user, const Command& command)
 	if (params.size() == 2) {
 		// If the <count> parameter is negative or empty, ignore it
 		if (!params[1].empty() && is_number(params[1])) {
-			max_entries = std::atoi(params[1].c_str());
+			max_entries = static_cast<size_t>(std::atol(params[1].c_str()));
 
 			// If <count> was 0
 			if (max_entries == 0) {
