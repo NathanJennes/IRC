@@ -12,7 +12,7 @@
 #include "Numerics.h"
 
 User::User(int fd, const std::string& ip, uint16_t port) :
-		m_nickname("*"), m_ip(ip), m_port(port), m_fd(fd),
+		m_nickname("*"), m_hostname("localhost"), m_ip(ip), m_port(port), m_fd(fd),
 		m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false), m_need_password(true),
@@ -33,7 +33,7 @@ ssize_t User::receive_message()
 			CORE_ERROR(std::strerror(errno));
 		}
 		if (bytes_read <= 0)
-			break ;
+			break;
 
 		total_bytes_read += bytes_read;
 	}
@@ -54,7 +54,7 @@ ssize_t User::send_message()
 			CORE_ERROR(std::strerror(errno));
 		}
 		if (bytes_write <= 0)
-			break ;
+			break;
 
 		total_bytes_write += bytes_write;
 	}
@@ -86,8 +86,7 @@ std::string User::get_next_command_str()
 
 std::string User::source() const
 {
-	// TODO: break PRIVMSG if realname as space. hardcoded to localhost for now
-	std::string source = nickname() + "!~" + username() + "@localhost";
+	std::string source = nickname() + "!~" + username() + "@" + ip();
 	return source;
 }
 
@@ -179,28 +178,28 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 					minus_modes_update += mode.mode;
 					updated = true;
 				}
-				break ;
+				break;
 			case 'i':
 				if (is_invisible() != mode.is_adding) {
 					m_is_invisible = mode.is_adding;
 					updated = true;
 				}
-				break ;
+				break;
 			case 'w':
 				if (can_get_wallop() != mode.is_adding) {
 					m_can_receive_wallop = mode.is_adding;
 					updated = true;
 				}
-				break ;
+				break;
 			case 's':
 				if (can_get_notice() != mode.is_adding) {
 					m_can_receive_notice = mode.is_adding;
 					updated = true;
 				}
-				break ;
+				break;
 			default:
 				Server::reply(*this, ERR_UMODEUNKNOWNFLAG((*this), mode.mode));
-				break ;
+				break;
 		}
 
 		if (!updated)
