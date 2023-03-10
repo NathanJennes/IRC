@@ -159,14 +159,17 @@ std::string User::get_modes_as_str() const
 {
 	std::string modes = "+";
 
+	if (is_away())
+		modes += "a";
 	if (is_operator())
 		modes += "o";
 	if (is_invisible())
 		modes += "i";
 	if (can_get_wallop())
 		modes += "w";
-	if (can_get_notice())
+	if (can_get_notice()) // obsolete
 		modes += "s";
+	// TODO: add r mode (restricted user connection)
 	return modes;
 }
 
