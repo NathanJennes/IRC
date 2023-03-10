@@ -8,10 +8,12 @@
 #include <unistd.h>
 #include <algorithm>
 #include <cstring>
+#include <fstream>
 #include "Server.h"
 #include "log.h"
 #include "Numerics.h"
 #include "Message.h"
+#include "ParamSplitter.h"
 
 const int			Server::m_server_backlog = 10;
 const int			Server::m_timeout = 20;
@@ -24,9 +26,26 @@ std::string			Server::m_password;
 std::vector<pollfd>	Server::m_pollfds;
 
 Server::UserVector								Server::m_users;
+Server::OldUserVector						Server::m_old_users;
 Server::ChannelMap								Server::m_channels;
 std::map<std::string, Server::command_function>	Server::m_commands;
 std::map<std::string, Server::command_function>	Server::m_connection_commands;
+
+OldUserInfo::OldUserInfo(std::time_t time, const User &user)
+	: m_last_time_seen(time), m_nickname(user.nickname()),
+	m_username(user.username()), m_realname(user.realname()), m_host(user.ip())
+{
+}
+
+bool OldUserInfo::operator==(const User &user) const
+{
+	return m_nickname == user.nickname() && m_username == user.username() && m_realname == user.realname() && m_host == user.ip();
+}
+
+bool OldUserInfo::operator==(const OldUserInfo &user) const
+{
+	return m_nickname == user.nickname() && m_username == user.username() && m_realname == user.realname() && m_host == user.host();
+}
 
 void Server::signal_handler(int signal)
 {
@@ -72,6 +91,7 @@ bool Server::initialize(uint16_t port)
 	m_pollfds.push_back(m_server_pollfd);
 
 	initialize_command_functions();
+	load_old_user_list_from_file();
 	m_server_info.initialize();
 
 	m_is_running = true;
@@ -297,16 +317,18 @@ void Server::check_for_empty_channels()
 
 void Server::shutdown()
 {
+	store_user_list_to_file();
+
 	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
 		User& user = get_user_reference(user_it);
 		close(user.fd());
 		delete &user;
 	}
+	close(m_server_socket);
 
 	for (ChannelIterator channel_it = m_channels.begin(); channel_it != m_channels.end(); channel_it++)
 		delete channel_it->second;
 
-	close(m_server_socket);
 	CORE_INFO("Server shutdown");
 }
 
@@ -452,6 +474,8 @@ void Server::remove_user(User &user)
 		return ;
 	}
 
+	add_to_old_users_list(user);
+
 	m_users.erase(user_it);
 	delete &user;
 }
@@ -564,4 +588,94 @@ void Server::reply_list_of_channel_invite_to_user(User &user)
 		}
 	}
 	Server::reply(user, RPL_ENDOFINVITELIST(user, channel_it->first));
+}
+
+void Server::add_to_old_users_list(User &user)
+{
+	m_old_users.push_back(OldUserInfo(time(NULL), user));
+	if (m_old_users.size() > 5000)
+		m_old_users.erase(m_old_users.begin());
+}
+
+Server::OldUserIterator Server::find_old_user(const std::string &user_nickname, OldUserIterator start)
+{
+	if (m_old_users.empty())
+		return m_old_users.end();
+
+	if (start == m_old_users.begin())
+		return m_old_users.end();
+
+	for (OldUserIterator user_it = start - 1; user_it != m_old_users.begin(); user_it--) {
+		if (user_it->nickname() == user_nickname)
+			return user_it;
+	}
+
+	if (m_old_users.begin()->nickname() == user_nickname)
+		return m_old_users.begin();
+
+	return m_old_users.end();
+}
+
+void Server::store_user_list_to_file()
+{
+	std::ofstream file("config/user_list.csv", std::ios::trunc);
+
+	for (OldUserIterator user_it = m_old_users.begin(); file.good() && user_it != m_old_users.end(); user_it++) {
+		file << user_it->nickname() << ";" << user_it->username() << ";" << user_it->realname();
+		file << ";" << user_it->host() << ";" << user_it->time_last_seen() << std::endl;
+	}
+
+	std::time_t now = time(NULL);
+	for (UserIterator user_it = m_users.begin(); file.good() && user_it != m_users.end(); user_it++) {
+		User& user = get_user_reference(user_it);
+		file << user.nickname() << ";" << user.username() << ";" << user.realname();
+		file << ";" << user.ip() << ";" << now << std::endl;
+	}
+}
+
+void Server::load_old_user_list_from_file()
+{
+	std::ifstream file("config/user_list.csv", std::ios::in);
+
+	if (file.bad())
+		return ;
+
+	std::string line;
+	std::size_t line_number = 0;
+	while (std::getline(file, line)) {
+		ParamSplitter<';'> splitter(line);
+		if (splitter.reached_end() || splitter.peek_next_param().empty())
+			continue;
+
+		OldUserInfo new_user;
+		new_user.set_nickname(splitter.next_param());
+		new_user.set_username(splitter.next_param());
+		new_user.set_realname(splitter.next_param());
+		new_user.set_host(splitter.next_param());
+		new_user.set_time_last_seen(std::atol(splitter.next_param().c_str()));
+
+		if (!User::is_nickname_valid(new_user.nickname()) ||
+			!User::is_username_valid(new_user.username()) ||
+			!User::is_host_valid(new_user.host()) ||
+			new_user.time_last_seen() <= 0 ||
+			std::find(m_old_users.begin(), m_old_users.end(), new_user) != m_old_users.end()) {
+			CORE_WARN("Ignoring line %llu in config/user_list.svg: line corrupted", line_number);
+		} else
+			m_old_users.push_back(new_user);
+
+		line_number++;
+	}
+
+	CORE_INFO("Loaded %llu users from config file", m_old_users.size());
+}
+
+void Server::register_user(User &user)
+{
+	reply_welcome_user(user);
+
+	// If the user connecting was already known by the server,
+	//  delete its old entry (i.e. just update it)
+	OldUserIterator entry = std::find(m_old_users.begin(), m_old_users.end(), user);
+	if (entry != m_old_users.end())
+		m_old_users.erase(entry);
 }

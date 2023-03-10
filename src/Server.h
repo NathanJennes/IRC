@@ -14,6 +14,33 @@
 #include "Command.h"
 #include "ServerInfo.h"
 
+struct OldUserInfo
+{
+	OldUserInfo() : m_last_time_seen(0) {}
+	OldUserInfo(std::time_t time, const User& user);
+
+	bool operator==(const User& user) const;
+	bool operator==(const OldUserInfo& user) const;
+
+	      std::time_t	time_last_seen()	const { return m_last_time_seen; }
+	const std::string&	nickname()			const { return m_nickname; }
+	const std::string&	username()			const { return m_username; }
+	const std::string&	realname()			const { return m_realname; }
+	const std::string&	host()				const { return m_host; }
+
+	void set_time_last_seen(std::time_t value)	{ m_last_time_seen = value; }
+	void set_nickname(const std::string& value)	{ m_nickname = value; }
+	void set_username(const std::string& value)	{ m_username = value; }
+	void set_realname(const std::string& value)	{ m_realname = value; }
+	void set_host(const std::string& value)		{ m_host = value; }
+
+	std::time_t m_last_time_seen;
+	std::string m_nickname;
+	std::string m_username;
+	std::string m_realname;
+	std::string m_host;
+};
+
 class Server
 {
 public:
@@ -21,6 +48,8 @@ public:
 	typedef int (*command_function)(User&, const Command&);
 	typedef std::map<std::string, command_function>::iterator	CommandIterator;
 
+	typedef std::vector<OldUserInfo>		OldUserVector;
+	typedef OldUserVector::iterator			OldUserIterator;
 	typedef std::vector<User*>				UserVector;
 	typedef UserVector::iterator			UserIterator;
 	typedef std::map<std::string, Channel*>	ChannelMap;
@@ -49,12 +78,15 @@ public:
 	static void reply_channel_invite_exempt_list_to_user(User& user, const Channel& channel);
 
 	/// User management
+	static void				register_user(User& user);
 	static void				try_reply_part_user_from_channel(User& user, const std::string& channel_name, const std::string& reason = "");
 	static void				reply_part_user_from_channel(User& user, Channel& channel, const std::string& reason = "");
 	static void				reply_part_user_from_channels(User& user, const std::string& reason = "");
 	static bool				user_exists(const std::string& user_nickname);
 	static bool				user_exists(const UserIterator& user);
+	static bool				old_user_exists(const OldUserIterator& old_user) { return old_user != m_old_users.end(); };
 	static UserIterator		find_user(const std::string& user_nickname);
+	static OldUserIterator	find_old_user(const std::string& user_nickname, OldUserIterator start = m_old_users.end());
 	static bool				is_nickname_taken(const std::string& user_nickname);
 
 	/// Channel management
@@ -73,6 +105,7 @@ public:
 	/// User & Channels
 	static       ChannelMap&	channels()				{ return m_channels; }
 	static       UserVector&	users()					{ return m_users; }
+	static       std::size_t	old_users_count()		{ return m_old_users.size(); }
 
 	/// Setters
 	static void	set_is_running(bool new_state)				{ m_is_running = new_state; }
@@ -92,6 +125,9 @@ private:
 	/// Users
 	static User&				create_new_user(int fd, const std::string& ip, uint16_t port);
 	static void					remove_user(User& user);
+	static void					add_to_old_users_list(User& user);
+	static void					store_user_list_to_file();
+	static void					load_old_user_list_from_file();
 
 	// Member variables
 	static ServerInfo			m_server_info;
@@ -100,6 +136,7 @@ private:
 
 	static std::vector<pollfd>	m_pollfds;
 	static UserVector			m_users;
+	static OldUserVector	m_old_users;
 	static ChannelMap			m_channels;
 
 	static bool					m_is_running;
