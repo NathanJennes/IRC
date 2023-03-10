@@ -13,8 +13,13 @@
 
 int auth(User& user, const Command& command)
 {
+	// https://modern.ircdocs.horse/#auth-message
+	// Command: AUTH
+	// Parameters: <mechanism> [<initial-response>]n
+
 	(void)command;
-	user.update_write_buffer("AUTH");
+	(void)user;
+	//TODO: to implement.
 	return 0;
 }
 
@@ -364,9 +369,8 @@ int part(User& user, const Command& command)
 
 	// Retrieve the reason if there is one
 	std::string reason;
-	if (params.size() == 2) {
+	if (params.size() == 2)
 		reason = params[1];
-	}
 
 	// Iterate over all the channels and disconnect the user from them
 	ParamSplitter<','> channel_splitter(command, 0);
