@@ -2,6 +2,7 @@ bin/
 obj/
 .idea/
 .vscode/
+config/user_list.csv
 *.txt
 
 # Compilation modes
