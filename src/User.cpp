@@ -86,8 +86,7 @@ std::string User::get_next_command_str()
 
 std::string User::source() const
 {
-	// TODO: break PRIVMSG if realname as space. hardcoded to localhost for now
-	std::string source = nickname() + "!~" + username() + "@localhost";
+	std::string source = nickname() + "!~" + username() + "@" + ip();
 	return source;
 }
 
