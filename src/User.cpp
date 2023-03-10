@@ -221,3 +221,54 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 	Server::reply(*this, RPL_MODE(*this, plus_modes_update + minus_modes_update));
 	return false;
 }
+
+bool User::is_nickname_valid(const std::string &nickname)
+{
+	if (nickname.empty())
+		return false;
+
+	if (nickname.find(' ') != std::string::npos ||
+		nickname.find(',') != std::string::npos ||
+		nickname.find('*') != std::string::npos ||
+		nickname.find('?') != std::string::npos ||
+		nickname.find('!') != std::string::npos ||
+		nickname.find('@') != std::string::npos ||
+		nickname.find('.') != std::string::npos)
+		return false;
+
+	if (nickname[0] == '$' || nickname[0] == ':')
+		return false;
+
+	if (nickname[0] == '#' || nickname[0] == '&')
+		return false;
+
+	return true;
+}
+
+bool User::is_username_valid(const std::string &username)
+{
+	if (username.empty())
+		return false;
+
+	if (username[0] == ':')
+		return false;
+
+	if (username.find(' ') != std::string::npos)
+		return false;
+
+	return true;
+}
+
+bool User::is_host_valid(const std::string &username)
+{
+	if (username.empty())
+		return false;
+
+	if (username[0] == ':')
+		return false;
+
+	if (username.find(' ') != std::string::npos)
+		return false;
+
+	return true;
+}

@@ -22,6 +22,11 @@ class Channel;
 class User
 {
 public:
+	/// Static tests
+	static bool is_nickname_valid(const std::string& nickname);
+	static bool is_username_valid(const std::string& username);
+	static bool is_host_valid(const std::string& username);
+
 	/// I/O typedefs
 private:
 	typedef std::vector<Channel*>			ChannelVector;
