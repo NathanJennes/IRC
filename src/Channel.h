@@ -137,6 +137,8 @@ public:
 	void remove_from_invite_list_exemptions(const User& user);
 	void remove_from_invite_list_exemptions(const std::string& user_nickname);
 
+	bool is_user_allowed_to_send_messages(const User& user);
+
 	/// Getters
 	const	std::string&			name()								const { return m_name; }
 	const	std::time_t&			creation_date()						const { return m_creation_date; }

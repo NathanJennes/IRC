@@ -628,3 +628,22 @@ bool Channel::is_channel_type_char(char c)
 {
 	return c == CHANNEL_TYPE_SHARED_SYMBOL || c == CHANNEL_TYPE_LOCAL_SYMBOL;
 }
+
+bool Channel::is_user_allowed_to_send_messages(const User &user)
+{
+	if (is_user_banned(user.nickname()))
+		return false;
+
+	UserIterator user_it = find_user(user.nickname());
+	if (!has_user(user_it) && (m_no_outside_messages || m_is_moderated))
+		return false;
+
+	if (m_is_moderated) {
+		UserPermissions &user_perms = get_user_perms_reference(user_it);
+		if (!user_perms.has_voice() && !user_perms.is_protected() && !user_perms.is_halfop() && !user_perms.is_operator() &&
+			!user_perms.is_founder())
+			return false;
+	}
+
+	return true;
+}
