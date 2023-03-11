@@ -811,7 +811,7 @@ int notice(User& user, const Command& command)
 	const std::vector<std::string>& params = command.get_parameters();
 
 	// NOTICE should not return errors
-	if (params.size() < 2)
+	if (params.size() < 2 || params[0].empty())
 		return 0;
 
 	ParamSplitter<','> target_splitter(command, 0);
