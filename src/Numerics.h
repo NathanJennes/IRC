@@ -97,6 +97,7 @@
 #define ERR_WASNOSUCHNICK(user, nickname)				(SERVER_SOURCE("406", user) + " " + nickname + " :There was no such nickname")
 #define ERR_NOORIGIN(user)								(SERVER_SOURCE("409", user) + " :No origin specified")
 #define ERR_INVALIDCAPCMD(user, command)				(SERVER_SOURCE("410", user) + " " + command + " :Invalid CAP command")
+#define ERR_NOTEXTTOSEND(user)							(SERVER_SOURCE("412", user) + " :No text to send")
 #define ERR_INPUTTOOLONG(user)							(SERVER_SOURCE("414", user) + " :Input too long")
 #define ERR_UNKNOWNCOMMAND(user, command)				(SERVER_SOURCE("421", user) + " " + command + " :Unknown command")
 #define ERR_NOMOTD(user)								(SERVER_SOURCE(user, "422") + " :MOTD File is missing")

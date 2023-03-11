@@ -529,49 +529,56 @@ int privmsg(User& user, const Command& command)
 	// Command: PRIVMSG
 	// Parameters: <target>{,<target>} <text to be sent>
 
-	// TODO: Handle when target is empty
-	if (command.get_parameters().size() < 2)
+	const std::vector<std::string>& params = command.get_parameters();
+
+	if (params.size() < 2 || params[0].empty())
 	{
 		CORE_TRACE_IRC_ERR("User %s sent a PRIVMSG command with less than 2 parameters.", user.debug_name());
 		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
 		return 0;
 	}
 
-	if (Channel::is_name_valid(command.get_parameters()[0]))
-	{
-		Server::ChannelIterator target_channel_it = Server::find_channel(command.get_parameters()[0]);
-		if (!Server::channel_exists(target_channel_it)) {
-			CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
-			Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
-			return 1;
-		}
-
-		Channel& target_channel = get_channel_reference(target_channel_it);
-		if (target_channel.has_user(user)) {
-			std::string message = USER_SOURCE("PRIVMSG", user) + " " + target_channel.name() + " :" + command.get_parameters()[1];
-			Server::broadcast_to_channel(user, target_channel, message);
-		} else {
-			CORE_TRACE_IRC_ERR("User %s tried to send a message to a channel [%s] he is not in.", user.debug_name(), command.get_parameters()[0].c_str());
-			Server::reply(user, ERR_CANNOTSENDTOCHAN(user, target_channel));
-		}
+	const std::string& message = params[1];
+	if (message.empty()) {
+		Server::reply(user, ERR_NOTEXTTOSEND(user));
+		return 0;
 	}
-	else
-	{
-		Server::UserIterator target_user_it = Server::find_user(command.get_parameters()[0]);
-		if (!Server::user_exists(target_user_it)) {
-			CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing user [%s].", user.debug_name(), command.get_parameters()[0].c_str());
-			Server::reply(user, ERR_NOSUCHNICK(user, command.get_parameters()[0]));
-			return 1;
-		}
 
-		User& target_user = get_user_reference(target_user_it);
-		if (target_user.is_away()) {
-			CORE_TRACE_IRC_ERR("User %s is away.", target_user.debug_name());
-			Server::reply(user, RPL_AWAY(user, target_user));
-		}
+	ParamSplitter<','> target_splitter(command, 0);
+	while (!target_splitter.reached_end()) {
+		std::string target = target_splitter.next_param();
 
-		std::string message = USER_SOURCE("PRIVMSG", user) + " " + target_user.nickname() + " :" + command.get_parameters()[1];
-		Server::reply(target_user, message);
+		if (Channel::is_name_valid(target)) {
+			Server::ChannelIterator target_channel_it = Server::find_channel(target);
+			if (!Server::channel_exists(target_channel_it)) {
+				CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing channel [%s].", user.debug_name(),
+					target.c_str());
+				Server::reply(user, ERR_NOSUCHCHANNEL(user, target));
+				continue ;
+			}
+
+			Channel& channel = get_channel_reference(target_channel_it);
+			if (!channel.is_user_allowed_to_send_messages(user)) {
+				Server::reply(user, ERR_CANNOTSENDTOCHAN(user, channel));
+				continue;
+			}
+
+			Server::broadcast_to_channel(channel, USER_SOURCE("PRIVMSG", user) + " " + channel.name() + " :" + message);
+		} else {
+			Server::UserIterator target_user_it = Server::find_user(target);
+			if (!Server::user_exists(target_user_it)) {
+				CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing user [%s].", user.debug_name(),
+					target.c_str());
+				Server::reply(user, ERR_NOSUCHNICK(user, target));
+				return 1;
+			}
+
+			User &target_user = get_user_reference(target_user_it);
+			if (target_user.is_away())
+				Server::reply(user, RPL_AWAY(user, target_user));
+
+			Server::reply(target_user, USER_SOURCE("PRIVMSG", user) + " " + target_user.nickname() + " :" + message);
+		}
 	}
 	return 0;
 }
