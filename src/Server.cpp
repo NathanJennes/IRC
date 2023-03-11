@@ -124,6 +124,7 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("KICK", kick));
 	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("PRIVMSG", privmsg));
+	m_commands.insert(std::make_pair("NOTICE", notice));
 	m_commands.insert(std::make_pair("INVITE", invite));
 
 	// server commands

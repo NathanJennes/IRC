@@ -801,3 +801,49 @@ int whowas(User& user, const Command& command)
 	Server::reply(user, RPL_ENDOFWHOWAS(user));
 	return 0;
 }
+
+int notice(User& user, const Command& command)
+{
+	//  https://modern.ircdocs.horse/#notice-message
+	//  Command: NOTICE
+	//  Parameters: <target>{,<target>} <text to be sent>
+
+	const std::vector<std::string>& params = command.get_parameters();
+
+	// NOTICE should not return errors
+	if (params.size() < 2)
+		return 0;
+
+	ParamSplitter<','> target_splitter(command, 0);
+	const std::string& message = params[1];
+
+	while (!target_splitter.reached_end()) {
+		std::string target = target_splitter.next_param();
+
+		// Check if the target is a channel
+		if (Channel::is_name_valid(target)) {
+			Server::ChannelIterator channel_it = Server::find_channel(target);
+			if (!Server::channel_exists(channel_it))
+				continue ;
+
+			Channel& channel = get_channel_reference(channel_it);
+			if (!channel.is_user_allowed_to_send_messages(user))
+				continue ;
+
+			Server::broadcast_to_channel(channel, USER_SOURCE("NOTICE", user) + " " + channel.name() + " :" + message);
+		} else {
+			Server::UserIterator user_it = Server::find_user(target);
+			if (!Server::user_exists(user_it))
+				continue ;
+
+			User& target_user = get_user_reference(user_it);
+
+			if (!target_user.can_get_notice())
+				continue ;
+
+			Server::reply(target_user, USER_SOURCE("NOTICE", user) + " " + target_user.nickname() + " :" + message);
+		}
+	}
+
+	return 0;
+}
