@@ -46,13 +46,13 @@
 #define RPL_WHOREPLY(user, target, channel, flags)		(SERVER_SOURCE("352", user) + " " + channel + " " + target.username() + " " + target.hostname() + " " + Server::info().name() + " " + target.nickname() + " " + flags + " :" + "0 " + target.realname())
 #define RPL_ENDOFWHO(user, mask)						(SERVER_SOURCE("315", user) + " " + mask + " :End of /WHO list.")
 #define RPL_WHOISREGNICK(nickname)						// no account for now
-#define RPL_WHOISUSER(user, target)						(SERVER_SOURCE("311", user) + " " + target.nickname() + " " + target.username() + " " + target.host() + " * :" + target.realname())
+#define RPL_WHOISUSER(user, target)						(SERVER_SOURCE("311", user) + " " + target.nickname() + " " + target.username() + " " + target.hostname() + " * :" + target.realname())
 #define RPL_WHOISSERVER(user, target, serverinfo)		(SERVER_SOURCE("312", user) + " " + target.nickname() + " " + serverinfo.name() + " :" + serverinfo.description())
 #define RPL_WHOISOPERATOR(user, target)					(SERVER_SOURCE("313", user) + " " + target.nickname() + " :is an IRC operator")
 #define RPL_WHOWASUSER(user, old_user)					(SERVER_SOURCE("314", user) + " " + (old_user).nickname() + " " + (old_user).username() + " " + (old_user).host() + " * :" + (old_user).realname())
-#define RPL_WHOISIDLE(user, target)						(SERVER_SOURCE("317", user) + " " + target.nickname() + " " + target.idle_time_as_str() + " :seconds idle")
-#define RPL_ENDOFWHOIS(user, nicks)						(SERVER_SOURCE("318", user) + " " + nicks + " :End of /WHOIS list.")
-#define RPL_WHOISCHANNELS(user, target) 				// TODO : Implement function to return a list of channels with user status
+#define RPL_WHOISIDLE(user, target)						(SERVER_SOURCE("317", user) + " " + target.nickname() + " " + target.seconde_idle() + " " + target.signon() + " :seconds seconde_idle")
+#define RPL_ENDOFWHOIS(user, target)					(SERVER_SOURCE("318", user) + " " + target.nickname() + " :End of /WHOIS list.")
+#define RPL_WHOISCHANNELS(user, target) 				target.reply_list_of_channel_to_user(user)
 #define RPL_WHOISSPECIAL(user, target, msg)				(SERVER_SOURCE("321", user) + " " + target.nickname() + " :" msg)
 #define RPL_LISTSTART(user)								(SERVER_SOURCE("321", user) + " Channel :Users Name")
 #define RPL_LIST(user, channel)							(SERVER_SOURCE("322", user) + " " + (channel).name() + " " + (channel).user_count_as_str() + " :" + (channel).topic())
