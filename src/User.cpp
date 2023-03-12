@@ -310,13 +310,13 @@ bool User::is_host_valid(const std::string &username)
 	return true;
 }
 
-bool User::has_channel_in_common(User& other_user)
+bool User::has_channel_in_common(const User& other_user) const
 {
 	if (channels().size() > other_user.channels().size())
 		return other_user.has_channel_in_common(*this);
 
-	ChannelIterator chan_u1 = channels().begin();
-	ChannelIterator chan_u2 = other_user.channels().begin();
+	ConstChannelIterator chan_u1 = channels().begin();
+	ConstChannelIterator chan_u2 = other_user.channels().begin();
 
 	for (; chan_u1 != channels().end(); ++chan_u1) {
 		for (; chan_u2 < other_user.channels().end(); ++chan_u2) {
@@ -417,4 +417,22 @@ bool User::is_visible_to_user(User &user) const
 	if (is_invisible() && has_channel_in_common(user))
 		return true;
 	return false;
+}
+
+void User::reply_list_of_channel_to_user(User &user)
+{
+	std::string str;
+	ChannelIterator it = channels().begin();
+	for(size_t i = 0; it != channels().end(); ++it, ++i) {
+		Channel channel = get_channel_reference(it);
+		str += channel.get_user_prefix(*this);
+		str += channel.name() + " ";
+		if (i == 10) {
+			Server::reply(user, SERVER_SOURCE("319", (user)) + " " + nickname() + " " + str);
+			str.clear();
+			i = 0;
+		}
+	}
+	if (!str.empty())
+		Server::reply(user, SERVER_SOURCE("319", (user)) + " " + nickname() + " " + str);
 }

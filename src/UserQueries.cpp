@@ -113,6 +113,58 @@ int who(User& user, const Command& command)
 	return 0;
 }
 
+int whois(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#whois-message
+	// Command: WHOIS
+	// Parameters: [target] <nickname> ( "," <nickname> )
+
+	if (command.get_parameters().empty()) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	size_t index = 0;
+
+	if (command.get_parameters().size() == 2) {
+		if (command.get_parameters()[0] != Server::info().name()) {
+			CORE_TRACE_IRC_ERR("User %s sent a WHO command to a non-existing server [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+			Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
+			return 1;
+		}
+		index++;
+	}
+
+	ParamSplitter<','> splitter(command, index);
+
+	while (!splitter.reached_end()) {
+		std::string target = splitter.next_param();
+
+		Server::UserIterator user_it = Server::find_user(target);
+		if (!Server::user_exists(user_it)) {
+			CORE_TRACE_IRC_ERR("User %s sent a WHOIS command to a non-existing user [%s].",
+							   user.debug_name(), target.c_str());
+			Server::reply(user, ERR_NOSUCHNICK(user, target));
+			return 1;
+		}
+
+		User &target_user = get_user_reference(user_it);
+
+		Server::reply(user, RPL_WHOISUSER(user, target_user));
+		if (target_user.is_operator())
+			Server::reply(user, RPL_WHOISOPERATOR(user, target_user));
+		RPL_WHOISCHANNELS(user, target_user);
+		Server::reply(user, RPL_WHOISSERVER(user, target_user, Server::info()));
+		Server::reply(user, RPL_WHOISACTUALLY(user, target_user));
+		if (user.is_operator() || target_user.nickname() == user.nickname()) {
+			target_user.recalculate_idle();
+			Server::reply(user, RPL_WHOISIDLE(user, target_user));
+		}
+		Server::reply(user, RPL_ENDOFWHOIS(user, target_user));
+	}
+	return 0;
+}
+
 int whowas(User& user, const Command& command)
 {
 	//  https://modern.ircdocs.horse/#whowas-message
