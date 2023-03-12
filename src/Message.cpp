@@ -580,6 +580,7 @@ int privmsg(User& user, const Command& command)
 			Server::reply(target_user, USER_SOURCE("PRIVMSG", user) + " " + target_user.nickname() + " :" + message);
 		}
 	}
+	user.take_idle_timestamp();
 	return 0;
 }
 
@@ -803,6 +804,6 @@ int notice(User& user, const Command& command)
 			Server::reply(target_user, USER_SOURCE("NOTICE", user) + " " + target_user.nickname() + " :" + message);
 		}
 	}
-
+	user.take_idle_timestamp();
 	return 0;
 }

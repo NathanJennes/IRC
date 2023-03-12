@@ -50,14 +50,18 @@ public:
 	void		add_channel(Channel& channel);
 	void 		remove_channel(const Channel &channel);
 
-	bool 		has_channel_in_common(User& other_user);
+	bool		has_channel_in_common(const User& other_user) const;
+	bool		is_visible_to_user(User& user) const;
+	void		reply_list_of_channel_to_user(User& user);
 
 	/// Mode
 	bool 		update_mode(const std::vector<ModeParam>& mode_params);
 
-	/// Ping
-	void		take_ping_timestamp();
+	/// Time
+	void 		take_ping_timestamp();
+	void 		take_idle_timestamp();
 	void		recalculate_ping();
+	void		recalculate_idle();
 
 	/// getters
 	std::string				ping_token()		const	{ return m_ip + to_string(m_port) + m_realname; }
@@ -89,6 +93,8 @@ public:
 	bool					can_get_wallop()	const	{ return m_can_receive_wallop; }
 	bool					can_get_notice()	const	{ return m_can_receive_notice; }
 
+	const std::string&		signon()			const	{ return m_signon_timestamp; }
+	const std::string		seconde_idle()		const	{ return to_string<long>(m_idle); }
 	long					ping()				const	{ return m_ping; }
 
 	std::string				get_modes_as_str()	const;
@@ -129,6 +135,8 @@ public:
 	const char *debug_name();
 
 private:
+	void		take_signon_timestamp();
+
 	std::string	m_nickname;
 	std::string	m_username;
 	std::string	m_realname;
@@ -161,6 +169,9 @@ private:
 	bool		m_can_receive_wallop;	// +w
 	bool		m_can_receive_notice;	// +s
 
+	std::string	m_signon_timestamp;
+	timeval		m_last_idle_timestamp;
+	long		m_idle;
 	timeval		m_last_ping_timestamp;
 	long		m_ping;
 };

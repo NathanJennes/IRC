@@ -17,7 +17,7 @@ User::User(int fd, const std::string& ip, uint16_t port) :
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false), m_need_password(true),
 		m_is_afk(false), m_is_operator(false), m_is_invisible(false), m_can_receive_wallop(false), m_can_receive_notice(false),
-		m_last_ping_timestamp(), m_ping(0)
+		m_signon_timestamp(), m_last_idle_timestamp(), m_idle(0), m_last_ping_timestamp(), m_ping(0)
 {
 }
 
@@ -114,7 +114,17 @@ void User::try_finish_registration()
 		m_is_registered = true;
 		CORE_TRACE("User %s registered", nickname().c_str());
 		Server::register_user(*this);
+		take_signon_timestamp();
+		take_idle_timestamp();
 	}
+}
+
+void User::take_signon_timestamp()
+{
+	struct timeval tv = {};
+	gettimeofday(&tv, NULL);
+	long time = tv.tv_sec;
+	m_signon_timestamp = to_string(time);
 }
 
 void User::take_ping_timestamp()
@@ -122,11 +132,24 @@ void User::take_ping_timestamp()
 	gettimeofday(&m_last_ping_timestamp, NULL);
 }
 
+void User::take_idle_timestamp()
+{
+	gettimeofday(&m_last_idle_timestamp, NULL);
+}
+
 void User::recalculate_ping()
 {
 	struct timeval tv = {};
 	gettimeofday(&tv, NULL);
 	m_ping = (tv.tv_sec * 1000 + tv.tv_usec / 1000) - (m_last_ping_timestamp.tv_sec * 1000 + m_last_ping_timestamp.tv_usec / 1000);
+}
+
+void User::recalculate_idle()
+{
+	struct timeval tv = {};
+	gettimeofday(&tv, NULL);
+	m_idle = tv.tv_sec - m_last_idle_timestamp.tv_sec;
+	CORE_TRACE("SEC: %l", m_idle);
 }
 
 const char *User::debug_name()
