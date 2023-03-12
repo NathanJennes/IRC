@@ -59,6 +59,9 @@ Channel::Channel(User& user, const std::string &name) :
 bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 {
 	int value;
+	std::string plus_modes_update = "+";
+	std::string minus_modes_update = "-";
+	bool updated = false;
 
 	for (size_t i = 0; i < mode_params.size(); i++)
 	{
@@ -96,47 +99,86 @@ bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 					remove_from_invite_list_exemptions(mode_param.arg);
 				break;
 			case 'i':
-				m_is_invite_only = mode_param.is_adding;
+				if (is_invite_only() && !mode_param.is_adding) {
+					m_is_invite_only = mode_param.is_adding;
+					updated = true;
+				}
+				else if (!is_invite_only() && mode_param.is_adding) {
+					m_is_invite_only = mode_param.is_adding;
+					updated = true;
+				}
 				break;
 			case 'k':
-				if (mode_param.is_adding) {
+				if (!is_key_protected() && mode_param.is_adding) {
 					m_key = mode_param.arg;
 					m_is_key_protected = mode_param.is_adding;
+					updated = true;
 				}
-				else if (!mode_param.is_adding) {
+				else if (is_key_protected() && !mode_param.is_adding) {
 					m_is_key_protected = mode_param.is_adding;
 					m_key = "";
+					updated = true;
 				}
 				break;
 			case 'l':
 				value = std::atoi(mode_param.arg.c_str());
-				if (mode_param.is_adding && is_number(mode_param.arg) && value > 0) {
+				if (!is_user_limited() && mode_param.is_adding && is_number(mode_param.arg) && value > 0) {
 					m_is_user_limited = mode_param.is_adding;
 					m_user_limit = static_cast<size_t>(value);
+					updated = true;
 				}
-				else if (!mode_param.is_adding) {
+				else if (is_user_limited() && !mode_param.is_adding) {
 					m_is_user_limited = false;
 					m_user_limit = 0;
+					updated = true;
 				}
 				break;
 			case 'n':
-				m_no_outside_messages = mode_param.is_adding;
+				if (no_outside_messages() && !mode_param.is_adding) {
+					m_no_outside_messages = mode_param.is_adding;
+					updated = true;
+				}
 				break;
 			case 'm':
-				m_is_moderated = mode_param.is_adding;
+				if (is_moderated() && !mode_param.is_adding) {
+					m_is_moderated = mode_param.is_adding;
+					updated = true;
+				}
 				break;
 			case 's':
-				m_is_secret = mode_param.is_adding;
+				if (is_secret() && !mode_param.is_adding) {
+					m_is_secret = mode_param.is_adding;
+					updated = true;
+				}
 				break;
 			case 't':
-				m_is_topic_protected = mode_param.is_adding;
+				if (is_topic_protected() && !mode_param.is_adding) {
+					m_is_topic_protected = mode_param.is_adding;
+					updated = true;
+				}
 				break;
 			default:
 				Server::reply(user, ERR_UNKNOWNMODE(user, mode_param.mode));
 				break;
 		}
+
+		if (!updated)
+			continue;
+
+		if (mode_param.is_adding)
+			plus_modes_update += mode_param.mode;
+		else
+			minus_modes_update += mode_param.mode;
+		updated = false;
 	}
-	//TODO: send changes to all users.
+
+	if (plus_modes_update.size() == 1) plus_modes_update = "";
+	if (minus_modes_update.size() == 1) minus_modes_update = "";
+
+	if (plus_modes_update.empty() && minus_modes_update.empty())
+		return false;
+
+	Server::broadcast_to_channel(*this, USER_SOURCE("MODE", user) + " " + name() + " " + plus_modes_update + minus_modes_update);
 	return true;
 }
 
