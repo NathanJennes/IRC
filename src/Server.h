@@ -111,6 +111,9 @@ public:
 	static void	set_is_running(bool new_state)				{ m_is_running = new_state; }
 	static void set_password(const std::string& password)	{ m_password = password; }
 
+	/// Config
+	static std::size_t	awaylen()	{ return m_awaylen; }
+
 private:
 	// Member functions
 	static void		initialize_command_functions();
@@ -143,6 +146,9 @@ private:
 
 	static const int			m_server_backlog;
 	static const int			m_timeout;
+
+	// Config
+	static const std::size_t	m_awaylen;
 
 	// Message function prototype
 	static std::map<std::string, command_function>	m_commands;

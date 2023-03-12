@@ -26,9 +26,13 @@ std::string			Server::m_password;
 std::vector<pollfd>	Server::m_pollfds;
 
 Server::UserVector								Server::m_users;
-Server::OldUserVector						Server::m_old_users;
+Server::OldUserVector							Server::m_old_users;
 Server::ChannelMap								Server::m_channels;
 std::map<std::string, Server::command_function>	Server::m_commands;
+
+const std::size_t	Server::m_awaylen = 50;
+
+
 std::map<std::string, Server::command_function>	Server::m_connection_commands;
 
 OldUserInfo::OldUserInfo(std::time_t time, const User &user)
@@ -521,8 +525,8 @@ std::string Server::supported_tokens(User& user)
 {
 	std::string tokens;
 
-	tokens += "AWAYLEN= ";
 	tokens += "CASEMAPPING=ascii ";
+	tokens += "AWAYLEN=" + to_string(m_awaylen) + " "; //TODO: check for awaylen when receiving AWAY command
 	tokens += "CHANLIMIT= ";
 	tokens += "CHANMODES=beI,,kl,mnst ";
 	tokens += "CHANNELLEN= ";
