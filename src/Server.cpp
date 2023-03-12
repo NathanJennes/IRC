@@ -521,7 +521,7 @@ std::string Server::supported_tokens(User& user)
 	std::string tokens;
 
 	tokens += "AWAYLEN= ";
-	tokens += "CASEMAPPING= ";
+	tokens += "CASEMAPPING=ascii ";
 	tokens += "CHANLIMIT= ";
 	tokens += "CHANMODES=beI,,kl,mnst ";
 	tokens += "CHANNELLEN= ";
