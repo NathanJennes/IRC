@@ -54,15 +54,17 @@ int who(User& user, const Command& command)
 		Server::ChannelIterator chan_it = Server::find_channel(mask);
 		if (!Server::channel_exists(chan_it)) {
 			CORE_TRACE_IRC_ERR("User %s sent a WHO command to a non-existing channel [%s].", user.debug_name(), mask.c_str());
-			Server::reply(user, ERR_NOSUCHSERVER(user, mask));
+			Server::reply(user, ERR_NOSUCHCHANNEL(user, mask));
 			return 1;
 		}
 
 		Channel& channel = get_channel_reference(chan_it);
 		Channel::UserIterator user_it = channel.users().begin();
 		for (; user_it != channel.users().end(); ++user_it) {
-			std::string flags = user_it->first->get_user_flags_and_prefix(channel.name());
-			Server::reply(user, RPL_WHOREPLY(user, get_user_reference(user_it), channel.name(), flags));
+			const User& uref = get_user_reference(user_it);
+			std::string flags = uref.get_user_flags();
+			flags += channel.get_user_prefix(uref);
+			Server::reply(user, RPL_WHOREPLY(user, uref, channel.name(), flags));
 		}
 		Server::reply(user, RPL_ENDOFWHO(user, mask));
 		return 0;
@@ -82,8 +84,8 @@ int who(User& user, const Command& command)
 			User& target_user = get_user_reference(user_it);
 			if (!target_user.has_mask(masks))
 				continue ;
-			if (!target_user.is_invisible() || (target_user.is_invisible() && target_user.has_channel_in_common(user))) {
-				std::string flags = target_user.get_user_flags_and_prefix("*");
+			if (target_user.is_visible_to_user(user)) {
+				std::string flags = target_user.get_user_flags();
 				Server::reply(user, RPL_WHOREPLY(user, get_user_reference(user_it), "*", flags));
 			}
 		}
@@ -96,12 +98,14 @@ int who(User& user, const Command& command)
 	{
 		User& target_user = get_user_reference(user_it);
 
+		std::string flags = target_user.get_user_flags();
+
 		// Get last channel name if there is one.
 		std::string channel_name = "*";
-		if (!target_user.channels().empty())
+		if (!target_user.channels().empty()) {
 			channel_name = target_user.channels().back()->name();
-
-		std::string flags = target_user.get_user_flags_and_prefix(channel_name);
+			flags += target_user.channels().back()->get_user_prefix(target_user);
+		}
 
 		Server::reply(user, RPL_WHOREPLY(user, target_user, channel_name, flags));
 		Server::reply(user, RPL_ENDOFWHO(user, mask));

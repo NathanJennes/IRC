@@ -329,7 +329,7 @@ bool User::has_channel_in_common(User& other_user)
 	return false;
 }
 
-std::string User::get_user_flags_and_prefix(const std::string& channel_name) const
+std::string User::get_user_flags() const
 {
 	std::string flags = "H";
 
@@ -337,22 +337,10 @@ std::string User::get_user_flags_and_prefix(const std::string& channel_name) con
 		flags = "G";
 	if (is_operator())
 		flags += "*";
-
-	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
-	if (!Server::channel_exists(channel_it))
-		return flags;
-
-	Channel& channel = get_channel_reference(channel_it);
-	if (channel.is_user_operator(*this))
-		flags += "@";
-	if (channel.is_user_halfop(*this))
-		flags += "%";
-	if (channel.is_user_has_voice(*this))
-		flags += "+";
-
 	return flags;
 }
 
+// TODO: to fix
 bool User::has_mask(std::vector<Mask> masks) const
 {
 	std::vector<Mask>::iterator it = masks.begin();
@@ -419,5 +407,14 @@ bool User::has_mask(std::vector<Mask> masks) const
 		if (i == masks.size())
 			return true;
 	}
+	return false;
+}
+
+bool User::is_visible_to_user(User &user) const
+{
+	if (!is_invisible())
+		return true;
+	if (is_invisible() && has_channel_in_common(user))
+		return true;
 	return false;
 }

@@ -98,9 +98,8 @@ public:
 	long					ping()				const	{ return m_ping; }
 
 	std::string				get_modes_as_str()	const;
-	std::string 			get_user_flags_and_prefix(const std::string& channel_name) const;
-	bool 					has_mask(std::vector<Mask> masks) const;
-
+	std::string 			get_user_flags()	const;
+	bool					has_mask(std::vector<Mask> masks) const;
 
 	/// setters
 	void	set_nickname(const std::string& nickname)	{ m_nickname = nickname; }
