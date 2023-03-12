@@ -151,15 +151,21 @@ int whois(User& user, const Command& command)
 		User &target_user = get_user_reference(user_it);
 
 		Server::reply(user, RPL_WHOISUSER(user, target_user));
+
 		if (target_user.is_operator())
 			Server::reply(user, RPL_WHOISOPERATOR(user, target_user));
+
 		RPL_WHOISCHANNELS(user, target_user);
 		Server::reply(user, RPL_WHOISSERVER(user, target_user, Server::info()));
+
+		if (target_user.is_away())
+			Server::reply(user, RPL_AWAY(user, target_user));
+
 		Server::reply(user, RPL_WHOISACTUALLY(user, target_user));
-		if (user.is_operator() || target_user.nickname() == user.nickname()) {
-			target_user.recalculate_idle();
-			Server::reply(user, RPL_WHOISIDLE(user, target_user));
-		}
+
+		target_user.recalculate_idle();
+		Server::reply(user, RPL_WHOISIDLE(user, target_user));
+
 		Server::reply(user, RPL_ENDOFWHOIS(user, target_user));
 	}
 	return 0;

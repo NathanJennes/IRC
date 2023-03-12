@@ -149,7 +149,6 @@ void User::recalculate_idle()
 	struct timeval tv = {};
 	gettimeofday(&tv, NULL);
 	m_idle = tv.tv_sec - m_last_idle_timestamp.tv_sec;
-	CORE_TRACE("SEC: %l", m_idle);
 }
 
 const char *User::debug_name()
