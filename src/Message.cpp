@@ -791,7 +791,7 @@ int notice(User& user, const Command& command)
 			if (!channel.is_user_allowed_to_send_messages(user))
 				continue ;
 
-			Server::broadcast_to_channel(channel, USER_SOURCE("NOTICE", user) + " " + channel.name() + " :" + message);
+			Server::broadcast_to_channel(user, channel, USER_SOURCE("NOTICE", user) + " " + channel.name() + " :" + message);
 		} else {
 			Server::UserIterator user_it = Server::find_user(target);
 			if (!Server::user_exists(user_it))
