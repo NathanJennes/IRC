@@ -82,6 +82,7 @@ public:
 	/// Users
 	UserIterator		find_user(const std::string& user_nickname);
 	ConstUserIterator	find_user(const std::string& user_nickname) const;
+
 	void set_user_limit(size_t limit) { m_user_limit = limit; }
 	void add_user(User& user);
 	void remove_user(User& user);
@@ -163,14 +164,14 @@ public:
 	const std::vector<std::string>&	ban_exemptions()				const { return m_ban_exemptions; }
 	std::string						get_modes_as_str(User& user)	const;
 
-	bool	is_user_founder(const User& user);
-	bool	is_user_founder(const std::string &user_nickname);
-	bool	is_user_operator(const User& user);
-	bool	is_user_operator(const std::string &user_nickname);
-	bool	is_user_halfop(const User& user);
-	bool	is_user_halfop(const std::string &user_nickname);
-	bool	is_user_has_voice(const User& user);
-	bool	is_user_has_voice(const std::string &user_nickname);
+	bool	is_user_founder(const User& user) const;
+	bool	is_user_founder(const std::string &user_nickname) const;
+	bool	is_user_operator(const User& user) const;
+	bool	is_user_operator(const std::string &user_nickname) const;
+	bool	is_user_halfop(const User& user) const;
+	bool	is_user_halfop(const std::string &user_nickname) const;
+	bool	is_user_has_voice(const User& user) const;
+	bool	is_user_has_voice(const std::string &user_nickname) const;
 
 	bool	is_user_limited()		const { return m_is_user_limited; }
 	bool	is_invite_only()		const { return m_is_invite_only; }
@@ -179,6 +180,9 @@ public:
 	bool	is_secret()				const { return m_is_secret; }
 	bool	is_topic_protected()	const { return m_is_topic_protected; }
 	bool	no_outside_messages()	const { return m_no_outside_messages; }
+
+	std::string	get_user_prefix(const std::string& channel_name, const User& user) const;
+	std::string	get_user_prefix(const User& user) const;
 
 private:
 	/// Channel information

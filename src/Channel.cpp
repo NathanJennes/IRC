@@ -136,6 +136,7 @@ bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 				break;
 		}
 	}
+	//TODO: send changes to all users.
 	return true;
 }
 
@@ -333,53 +334,53 @@ Channel::ConstUserIterator Channel::find_user(const std::string &user_nickname) 
 	return m_users.end();
 }
 
-bool Channel::is_user_founder(const User &user)
+bool Channel::is_user_founder(const User &user) const
 {
 	return is_user_founder(user.nickname());
 }
 
-bool Channel::is_user_founder(const std::string &user_nickname)
+bool Channel::is_user_founder(const std::string &user_nickname) const
 {
-	UserIterator it = find_user(user_nickname);
+	ConstUserIterator it = find_user(user_nickname);
 	if (it != m_users.end())
 		return get_user_perms_reference(it).is_founder();
 	return false;
 }
 
-bool Channel::is_user_operator(const User &user)
+bool Channel::is_user_operator(const User &user) const
 {
 	return is_user_operator(user.nickname());
 }
 
-bool Channel::is_user_operator(const std::string &user_nickname)
+bool Channel::is_user_operator(const std::string &user_nickname) const
 {
-	UserIterator it = find_user(user_nickname);
+	ConstUserIterator it = find_user(user_nickname);
 	if (it != m_users.end())
 		return get_user_perms_reference(it).is_operator();
 	return false;
 }
 
-bool Channel::is_user_halfop(const User &user)
+bool Channel::is_user_halfop(const User &user) const
 {
 	return is_user_halfop(user.nickname());
 }
 
-bool Channel::is_user_halfop(const std::string &user_nickname)
+bool Channel::is_user_halfop(const std::string &user_nickname) const
 {
-	UserIterator it = find_user(user_nickname);
+	ConstUserIterator it = find_user(user_nickname);
 	if (it != m_users.end())
 		return get_user_perms_reference(it).is_halfop();
 	return false;
 }
 
-bool Channel::is_user_has_voice(const User &user)
+bool Channel::is_user_has_voice(const User &user) const
 {
 	return is_user_has_voice(user.nickname());
 }
 
-bool Channel::is_user_has_voice(const std::string &user_nickname)
+bool Channel::is_user_has_voice(const std::string &user_nickname) const
 {
-	UserIterator it = find_user(user_nickname);
+	ConstUserIterator it = find_user(user_nickname);
 	if (it != m_users.end())
 		return get_user_perms_reference(it).has_voice();
 	return false;
@@ -646,4 +647,26 @@ bool Channel::is_user_allowed_to_send_messages(const User &user)
 	}
 
 	return true;
+}
+
+std::string Channel::get_user_prefix(const std::string& channel_name, const User& user) const
+{
+	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
+	if (!Server::channel_exists(channel_it))
+		return get_user_prefix(user);
+	return "";
+}
+
+std::string Channel::get_user_prefix(const User& user) const
+{
+	std::string flags;
+
+	if (is_user_operator(user))
+		flags += "@";
+	if (is_user_halfop(user))
+		flags += "%";
+	if (is_user_has_voice(user))
+		flags += "+";
+
+	return flags;
 }
