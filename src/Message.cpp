@@ -563,8 +563,9 @@ int privmsg(User& user, const Command& command)
 				continue;
 			}
 
-			Server::broadcast_to_channel(channel, USER_SOURCE("PRIVMSG", user) + " " + channel.name() + " :" + message);
-		} else {
+			Server::broadcast_to_channel(user, channel, USER_SOURCE("PRIVMSG", user) + " " + channel.name() + " :" + message);
+		}
+		else {
 			Server::UserIterator target_user_it = Server::find_user(target);
 			if (!Server::user_exists(target_user_it)) {
 				CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing user [%s].", user.debug_name(),
