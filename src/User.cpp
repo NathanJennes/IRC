@@ -255,7 +255,7 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 		return false;
 
 	Server::reply(*this, RPL_MODE(*this, plus_modes_update + minus_modes_update));
-	return false;
+	return true;
 }
 
 bool User::is_nickname_valid(const std::string &nickname)
