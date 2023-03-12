@@ -563,8 +563,9 @@ int privmsg(User& user, const Command& command)
 				continue;
 			}
 
-			Server::broadcast_to_channel(channel, USER_SOURCE("PRIVMSG", user) + " " + channel.name() + " :" + message);
-		} else {
+			Server::broadcast_to_channel(user, channel, USER_SOURCE("PRIVMSG", user) + " " + channel.name() + " :" + message);
+		}
+		else {
 			Server::UserIterator target_user_it = Server::find_user(target);
 			if (!Server::user_exists(target_user_it)) {
 				CORE_TRACE_IRC_ERR("User %s tried to send a message to a non-existing user [%s].", user.debug_name(),
@@ -580,6 +581,7 @@ int privmsg(User& user, const Command& command)
 			Server::reply(target_user, USER_SOURCE("PRIVMSG", user) + " " + target_user.nickname() + " :" + message);
 		}
 	}
+	user.take_idle_timestamp();
 	return 0;
 }
 
@@ -761,54 +763,6 @@ int invite(User& user, const Command& command)
 	return 0;
 }
 
-int whowas(User& user, const Command& command)
-{
-	//  https://modern.ircdocs.horse/#whowas-message
-	//  Command: WHOWAS
-	//  Parameters: <nick> [<count>]
-
-	const std::vector<std::string>& params = command.get_parameters();
-
-	if (params.empty() || params[0].empty()) {
-		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
-		return 0;
-	}
-
-	const std::string& nickname = params[0];
-	std::size_t max_entries = Server::old_users_count();
-
-	// If a <count> parameter is given
-	if (params.size() == 2) {
-		// If the <count> parameter is negative or empty, ignore it
-		if (!params[1].empty() && is_number(params[1])) {
-			max_entries = static_cast<size_t>(std::atol(params[1].c_str()));
-
-			// If <count> was 0
-			if (max_entries == 0) {
-				Server::reply(user, RPL_ENDOFWHOWAS(user));
-				return 0;
-			}
-		}
-	}
-
-	Server::OldUserIterator user_it = Server::find_old_user(nickname);
-	if (!Server::old_user_exists(user_it)) {
-		Server::reply(user, ERR_WASNOSUCHNICK(user, nickname));
-		Server::reply(user, RPL_ENDOFWHOWAS(user));
-		return 0;
-	}
-
-	for (std::size_t i = 0; i < max_entries; i++) {
-		if (Server::old_user_exists(user_it))
-			Server::reply(user, RPL_WHOWASUSER(user, *user_it));
-		else
-			break ;
-		user_it = Server::find_old_user(nickname, user_it);
-	}
-	Server::reply(user, RPL_ENDOFWHOWAS(user));
-	return 0;
-}
-
 int notice(User& user, const Command& command)
 {
 	//  https://modern.ircdocs.horse/#notice-message
@@ -851,6 +805,6 @@ int notice(User& user, const Command& command)
 			Server::reply(target_user, USER_SOURCE("NOTICE", user) + " " + target_user.nickname() + " :" + message);
 		}
 	}
-
+	user.take_idle_timestamp();
 	return 0;
 }

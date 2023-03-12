@@ -3,9 +3,9 @@
 //
 
 #include "UserQueries.h"
-
 #include "Numerics.h"
 #include "log.h"
+#include "ParamSplitter.h"
 
 std::vector<Mask> parse_masks(const std::string& mask)
 {
@@ -54,15 +54,17 @@ int who(User& user, const Command& command)
 		Server::ChannelIterator chan_it = Server::find_channel(mask);
 		if (!Server::channel_exists(chan_it)) {
 			CORE_TRACE_IRC_ERR("User %s sent a WHO command to a non-existing channel [%s].", user.debug_name(), mask.c_str());
-			Server::reply(user, ERR_NOSUCHSERVER(user, mask));
+			Server::reply(user, ERR_NOSUCHCHANNEL(user, mask));
 			return 1;
 		}
 
 		Channel& channel = get_channel_reference(chan_it);
 		Channel::UserIterator user_it = channel.users().begin();
 		for (; user_it != channel.users().end(); ++user_it) {
-			std::string flags = user_it->first->get_user_flags_and_prefix(channel.name());
-			Server::reply(user, RPL_WHOREPLY(user, get_user_reference(user_it), channel.name(), flags));
+			const User& uref = get_user_reference(user_it);
+			std::string flags = uref.get_user_flags();
+			flags += channel.get_user_prefix(uref);
+			Server::reply(user, RPL_WHOREPLY(user, uref, channel.name(), flags));
 		}
 		Server::reply(user, RPL_ENDOFWHO(user, mask));
 		return 0;
@@ -82,8 +84,8 @@ int who(User& user, const Command& command)
 			User& target_user = get_user_reference(user_it);
 			if (!target_user.has_mask(masks))
 				continue ;
-			if (!target_user.is_invisible() || (target_user.is_invisible() && target_user.has_channel_in_common(user))) {
-				std::string flags = target_user.get_user_flags_and_prefix("*");
+			if (target_user.is_visible_to_user(user)) {
+				std::string flags = target_user.get_user_flags();
 				Server::reply(user, RPL_WHOREPLY(user, get_user_reference(user_it), "*", flags));
 			}
 		}
@@ -96,15 +98,123 @@ int who(User& user, const Command& command)
 	{
 		User& target_user = get_user_reference(user_it);
 
+		std::string flags = target_user.get_user_flags();
+
 		// Get last channel name if there is one.
 		std::string channel_name = "*";
-		if (!target_user.channels().empty())
+		if (!target_user.channels().empty()) {
 			channel_name = target_user.channels().back()->name();
-
-		std::string flags = target_user.get_user_flags_and_prefix(channel_name);
+			flags += target_user.channels().back()->get_user_prefix(target_user);
+		}
 
 		Server::reply(user, RPL_WHOREPLY(user, target_user, channel_name, flags));
 		Server::reply(user, RPL_ENDOFWHO(user, mask));
 	}
+	return 0;
+}
+
+int whois(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#whois-message
+	// Command: WHOIS
+	// Parameters: [target] <nickname> ( "," <nickname> )
+
+	if (command.get_parameters().empty()) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	size_t index = 0;
+
+	if (command.get_parameters().size() == 2) {
+		if (command.get_parameters()[0] != Server::info().name()) {
+			CORE_TRACE_IRC_ERR("User %s sent a WHO command to a non-existing server [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+			Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
+			return 1;
+		}
+		index++;
+	}
+
+	ParamSplitter<','> splitter(command, index);
+
+	while (!splitter.reached_end()) {
+		std::string target = splitter.next_param();
+
+		Server::UserIterator user_it = Server::find_user(target);
+		if (!Server::user_exists(user_it)) {
+			CORE_TRACE_IRC_ERR("User %s sent a WHOIS command to a non-existing user [%s].",
+							   user.debug_name(), target.c_str());
+			Server::reply(user, ERR_NOSUCHNICK(user, target));
+			return 1;
+		}
+
+		User &target_user = get_user_reference(user_it);
+
+		Server::reply(user, RPL_WHOISUSER(user, target_user));
+
+		if (target_user.is_operator())
+			Server::reply(user, RPL_WHOISOPERATOR(user, target_user));
+
+		RPL_WHOISCHANNELS(user, target_user);
+		Server::reply(user, RPL_WHOISSERVER(user, target_user, Server::info()));
+
+		if (target_user.is_away())
+			Server::reply(user, RPL_AWAY(user, target_user));
+
+		Server::reply(user, RPL_WHOISACTUALLY(user, target_user));
+
+		target_user.recalculate_idle();
+		Server::reply(user, RPL_WHOISIDLE(user, target_user));
+
+		Server::reply(user, RPL_ENDOFWHOIS(user, target_user));
+	}
+	return 0;
+}
+
+int whowas(User& user, const Command& command)
+{
+	//  https://modern.ircdocs.horse/#whowas-message
+	//  Command: WHOWAS
+	//  Parameters: <nick> [<count>]
+
+	const std::vector<std::string>& params = command.get_parameters();
+
+	if (params.empty() || params[0].empty()) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	const std::string& nickname = params[0];
+	std::size_t max_entries = Server::old_users_count();
+
+	// If a <count> parameter is given
+	if (params.size() == 2) {
+		// If the <count> parameter is negative or empty, ignore it
+		if (!params[1].empty() && is_number(params[1])) {
+			max_entries = static_cast<size_t>(std::atol(params[1].c_str()));
+
+			// If <count> was 0
+			if (max_entries == 0) {
+				Server::reply(user, RPL_ENDOFWHOWAS(user));
+				return 0;
+			}
+		}
+	}
+
+	Server::OldUserIterator user_it = Server::find_old_user(nickname);
+	if (!Server::old_user_exists(user_it)) {
+		Server::reply(user, ERR_WASNOSUCHNICK(user, nickname));
+		Server::reply(user, RPL_ENDOFWHOWAS(user));
+		return 0;
+	}
+
+	for (std::size_t i = 0; i < max_entries; i++) {
+		if (Server::old_user_exists(user_it))
+			Server::reply(user, RPL_WHOWASUSER(user, *user_it));
+		else
+			break ;
+		user_it = Server::find_old_user(nickname, user_it);
+	}
+	Server::reply(user, RPL_ENDOFWHOWAS(user));
 	return 0;
 }

@@ -17,7 +17,7 @@ User::User(int fd, const std::string& ip, uint16_t port) :
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false), m_need_password(true),
 		m_is_afk(false), m_is_operator(false), m_is_invisible(false), m_can_receive_wallop(false), m_can_receive_notice(false),
-		m_last_ping_timestamp(), m_ping(0)
+		m_signon_timestamp(), m_last_idle_timestamp(), m_idle(0), m_last_ping_timestamp(), m_ping(0)
 {
 }
 
@@ -114,7 +114,17 @@ void User::try_finish_registration()
 		m_is_registered = true;
 		CORE_TRACE("User %s registered", nickname().c_str());
 		Server::register_user(*this);
+		take_signon_timestamp();
+		take_idle_timestamp();
 	}
+}
+
+void User::take_signon_timestamp()
+{
+	struct timeval tv = {};
+	gettimeofday(&tv, NULL);
+	long time = tv.tv_sec;
+	m_signon_timestamp = to_string(time);
 }
 
 void User::take_ping_timestamp()
@@ -122,11 +132,23 @@ void User::take_ping_timestamp()
 	gettimeofday(&m_last_ping_timestamp, NULL);
 }
 
+void User::take_idle_timestamp()
+{
+	gettimeofday(&m_last_idle_timestamp, NULL);
+}
+
 void User::recalculate_ping()
 {
 	struct timeval tv = {};
 	gettimeofday(&tv, NULL);
 	m_ping = (tv.tv_sec * 1000 + tv.tv_usec / 1000) - (m_last_ping_timestamp.tv_sec * 1000 + m_last_ping_timestamp.tv_usec / 1000);
+}
+
+void User::recalculate_idle()
+{
+	struct timeval tv = {};
+	gettimeofday(&tv, NULL);
+	m_idle = tv.tv_sec - m_last_idle_timestamp.tv_sec;
 }
 
 const char *User::debug_name()
@@ -287,13 +309,13 @@ bool User::is_host_valid(const std::string &username)
 	return true;
 }
 
-bool User::has_channel_in_common(User& other_user)
+bool User::has_channel_in_common(const User& other_user) const
 {
 	if (channels().size() > other_user.channels().size())
 		return other_user.has_channel_in_common(*this);
 
-	ChannelIterator chan_u1 = channels().begin();
-	ChannelIterator chan_u2 = other_user.channels().begin();
+	ConstChannelIterator chan_u1 = channels().begin();
+	ConstChannelIterator chan_u2 = other_user.channels().begin();
 
 	for (; chan_u1 != channels().end(); ++chan_u1) {
 		for (; chan_u2 < other_user.channels().end(); ++chan_u2) {
@@ -306,7 +328,7 @@ bool User::has_channel_in_common(User& other_user)
 	return false;
 }
 
-std::string User::get_user_flags_and_prefix(const std::string& channel_name) const
+std::string User::get_user_flags() const
 {
 	std::string flags = "H";
 
@@ -314,22 +336,10 @@ std::string User::get_user_flags_and_prefix(const std::string& channel_name) con
 		flags = "G";
 	if (is_operator())
 		flags += "*";
-
-	Server::ChannelIterator channel_it = Server::find_channel(channel_name);
-	if (!Server::channel_exists(channel_it))
-		return flags;
-
-	Channel& channel = get_channel_reference(channel_it);
-	if (channel.is_user_operator(*this))
-		flags += "@";
-	if (channel.is_user_halfop(*this))
-		flags += "%";
-	if (channel.is_user_has_voice(*this))
-		flags += "+";
-
 	return flags;
 }
 
+// TODO: to fix
 bool User::has_mask(std::vector<Mask> masks) const
 {
 	std::vector<Mask>::iterator it = masks.begin();
@@ -397,4 +407,31 @@ bool User::has_mask(std::vector<Mask> masks) const
 			return true;
 	}
 	return false;
+}
+
+bool User::is_visible_to_user(User &user) const
+{
+	if (!is_invisible())
+		return true;
+	if (is_invisible() && has_channel_in_common(user))
+		return true;
+	return false;
+}
+
+void User::reply_list_of_channel_to_user(User &user)
+{
+	std::string str;
+	ChannelIterator it = channels().begin();
+	for(size_t i = 0; it != channels().end(); ++it, ++i) {
+		Channel channel = get_channel_reference(it);
+		str += channel.get_user_prefix(*this);
+		str += channel.name() + " ";
+		if (i == 10) {
+			Server::reply(user, SERVER_SOURCE("319", (user)) + " " + nickname() + " " + str);
+			str.clear();
+			i = 0;
+		}
+	}
+	if (!str.empty())
+		Server::reply(user, SERVER_SOURCE("319", (user)) + " " + nickname() + " " + str);
 }

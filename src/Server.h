@@ -113,21 +113,21 @@ public:
 
 private:
 	// Member functions
-	static void	initialize_command_functions();
-	static void	accept_new_connections();
-	static void	poll_events();
-	static void	handle_events();
-	static void	handle_messages();
-	static void	execute_command(User& user, const Command& command);
-	static void	check_for_closed_connexions();
-	static void	check_for_empty_channels();
+	static void		initialize_command_functions();
+	static void		accept_new_connections();
+	static void		poll_events();
+	static void		handle_events();
+	static void		handle_messages();
+	static void		execute_command(User& user, const Command& command);
+	static void		check_for_closed_connexions();
+	static void		check_for_empty_channels();
 
 	/// Users
-	static User&				create_new_user(int fd, const std::string& ip, uint16_t port);
-	static void					remove_user(User& user);
-	static void					add_to_old_users_list(User& user);
-	static void					store_user_list_to_file();
-	static void					load_old_user_list_from_file();
+	static User&	create_new_user(int fd, const std::string& ip, uint16_t port);
+	static void		remove_user(User& user);
+	static void		add_to_old_users_list(User& user);
+	static void		store_user_list_to_file();
+	static void		load_old_user_list_from_file();
 
 	// Member variables
 	static ServerInfo			m_server_info;
@@ -136,7 +136,7 @@ private:
 
 	static std::vector<pollfd>	m_pollfds;
 	static UserVector			m_users;
-	static OldUserVector	m_old_users;
+	static OldUserVector		m_old_users;
 	static ChannelMap			m_channels;
 
 	static bool					m_is_running;
