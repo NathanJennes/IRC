@@ -89,6 +89,7 @@
 #define RPL_MOTDSTART(user)								(SERVER_SOURCE("375", user) + " :- " + Server::info().name() + " Message of the day - ")
 #define RPL_ENDOFMOTD(user)								(SERVER_SOURCE("376", user) + " :End of /MOTD command.")
 #define ERR_UNKNOWNERROR(ERRCODE)						(" " + ERRCODE + " :Unknown error")
+#define RPL_TIME(user, Server_name, time)				(SERVER_SOURCE("391", user) + " " + Server_name + " " + time + " :")
 #define ERR_NOSUCHNICK(user, nickname)					(SERVER_SOURCE("401", user) + " " + nickname + " :No such nick")
 #define ERR_NOSUCHSERVER(user, servername)				(SERVER_SOURCE("402", user) + " " + servername + " :No such server")
 #define ERR_NOSUCHCHANNEL(user, chan_name)				(SERVER_SOURCE("403", user) + " " + chan_name + " :No such channel")

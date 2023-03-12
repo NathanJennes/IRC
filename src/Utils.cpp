@@ -50,3 +50,15 @@ std::string get_current_date()
 
 	return buffer;
 }
+
+std::string format_date()
+{
+	std::time_t now = time(0);
+	std::tm tstruct = *localtime(&now);
+
+	char buffer[80];
+	std::memset(buffer, 0, sizeof(buffer));
+	std::strftime(buffer, sizeof(buffer), "%A %d %B %Y -- %X %z", &tstruct);
+
+	return buffer;
+}

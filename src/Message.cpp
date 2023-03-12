@@ -808,3 +808,19 @@ int notice(User& user, const Command& command)
 	user.take_idle_timestamp();
 	return 0;
 }
+
+int time_cmd(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#time-message
+	// Command: TIME
+	// Parameters: [<server>]
+
+	if (command.get_parameters().size() > 0 && command.get_parameters()[0] != Server::info().name()) {
+		CORE_TRACE_IRC_ERR("User %s sent a TIME command to a non-existing server [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+		Server::reply(user, ERR_NOSUCHSERVER(user, command.get_parameters()[0]));
+		return 1;
+	}
+
+	Server::reply(user, RPL_TIME(user, Server::info().name(), format_date()));
+	return 0;
+}
