@@ -8,6 +8,7 @@
 #include "User.h"
 #include "Command.h"
 #include "Mode.h"
+#include "UserQueries.h"
 
 // Connection messages
 int auth(User& user, const Command& command);
@@ -44,11 +45,6 @@ int info(User& user, const Command& command);
 // sending messages
 int privmsg(User& user, const Command& command);
 int notice(User& user, const Command& command);
-
-// user based queries
-int who(User& user, const Command& command);
-int whois(User& user, const Command& command);
-int whowas(User& user, const Command& command);
 
 // operator messages
 int kill(User& user, const Command& command);

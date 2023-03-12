@@ -19,6 +19,7 @@ struct Mask
 std::vector<Mask> parse_masks(const std::string& mask);
 
 int who(User& user, const Command& command);
-
+int whois(User& user, const Command& command);
+int whowas(User& user, const Command& command);
 
 #endif //USERQUERIES_H
