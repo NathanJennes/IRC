@@ -440,12 +440,13 @@ void User::reply_list_of_channel_to_user(User &user)
 	for(size_t i = 0; it != channels().end(); ++it, ++i) {
 		Channel channel = get_channel_reference(it);
 		str += channel.get_user_prefix(*this);
-		str += channel.name() + " ";
+		str += channel.name();
 		if (i == 10) {
 			Server::reply(user, SERVER_SOURCE("319", (user)) + " " + nickname() + " " + str);
 			str.clear();
 			i = 0;
-		}
+		} else
+			str += ' ';
 	}
 	if (!str.empty())
 		Server::reply(user, SERVER_SOURCE("319", (user)) + " " + nickname() + " " + str);

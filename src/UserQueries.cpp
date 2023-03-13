@@ -2,6 +2,7 @@
 // Created by Cyril Battistolo on 10/03/2023.
 //
 
+#include <cstdlib>
 #include "UserQueries.h"
 #include "Numerics.h"
 #include "log.h"
