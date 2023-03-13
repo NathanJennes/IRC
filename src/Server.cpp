@@ -172,6 +172,8 @@ void Server::accept_new_connections()
 		return ;
 	}
 
+	m_unknown_connections++;
+
 	pollfd pollfds = {};
 	pollfds.fd = new_client_socket_fd;
 	pollfds.events = POLLIN | POLLOUT;
@@ -688,4 +690,7 @@ void Server::register_user(User &user)
 	OldUserIterator entry = std::find(m_old_users.begin(), m_old_users.end(), user);
 	if (entry != m_old_users.end())
 		m_old_users.erase(entry);
+
+	if (users().size() > info().max_users())
+		info().set_max_users(users().size());
 }
