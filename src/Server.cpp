@@ -212,11 +212,11 @@ void Server::handle_events()
 	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
 		User& user = get_user_reference(user_it);
 		if (user.is_readable()) {
-			if (user.receive_message() <= 0)
+			if (!user.receive_message())
 				user.disconnect();
 		}
 		if (user.is_writable()) {
-			if (!user.write_buffer().empty() && user.send_message() <= 0)
+			if (!user.write_buffer().empty() && !user.send_message())
 				user.disconnect();
 		}
 	}

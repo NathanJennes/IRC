@@ -12,7 +12,9 @@
 #include "Numerics.h"
 
 User::User(int fd, const std::string& ip, uint16_t port) :
-		m_nickname("*"), m_nickname_upper("*"), m_hostname("localhost"), m_ip(ip), m_port(port), m_fd(fd),
+		m_nickname("*"), m_nickname_upper("*"), m_hostname("localhost"),
+		m_data_sent_size(0), m_data_received_size(0),
+		m_ip(ip), m_port(port), m_fd(fd),
 		m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false), m_need_password(true),
@@ -21,46 +23,52 @@ User::User(int fd, const std::string& ip, uint16_t port) :
 {
 }
 
-ssize_t User::receive_message()
+bool User::receive_message()
 {
 	char buffer[MAX_MESSAGE_LENGTH + 1];
-	ssize_t total_bytes_read = 0;
+	size_t total_bytes_read = 0;
 
 	while (total_bytes_read < MAX_MESSAGE_LENGTH) {
-		ssize_t bytes_read = read(m_fd, buffer + total_bytes_read, static_cast<size_t>(MAX_MESSAGE_LENGTH - total_bytes_read));
+		ssize_t bytes_read = read(m_fd, buffer + total_bytes_read, MAX_MESSAGE_LENGTH - total_bytes_read);
 
 		if (bytes_read < 0 && errno != EAGAIN) {
 			CORE_ERROR(std::strerror(errno));
+			return false;
 		}
+
 		if (bytes_read <= 0)
 			break;
 
-		total_bytes_read += bytes_read;
+		total_bytes_read += static_cast<size_t>(bytes_read);
 	}
 	buffer[total_bytes_read] = 0;
 	m_readbuf.append(buffer);
+	m_data_received_size += static_cast<size_t>(total_bytes_read);
 
-	return total_bytes_read;
+	return true;
 }
 
-ssize_t User::send_message()
+bool User::send_message()
 {
-	ssize_t total_bytes_write = 0;
+	size_t total_bytes_write = 0;
 
-	while (total_bytes_write < MAX_MESSAGE_LENGTH) {
-		ssize_t bytes_write = write(fd(), m_writebuf.c_str() + total_bytes_write, m_writebuf.size() - (size_t)total_bytes_write);
+	while (total_bytes_write < m_writebuf.size()) {
+		ssize_t bytes_write = write(fd(), m_writebuf.c_str() + total_bytes_write, m_writebuf.size() - total_bytes_write);
 
 		if (bytes_write < 0 && errno != EAGAIN) {
 			CORE_ERROR(std::strerror(errno));
+			return false;
 		}
+
 		if (bytes_write <= 0)
 			break;
 
-		total_bytes_write += bytes_write;
+		total_bytes_write += static_cast<size_t>(bytes_write);
 	}
 	m_writebuf.clear();
+	m_data_sent_size += total_bytes_write;
 
-	return total_bytes_write;
+	return true;
 }
 
 std::string User::get_next_command_str()

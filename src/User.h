@@ -39,8 +39,8 @@ public:
 
 	explicit User(int fd, const std::string& ip, uint16_t port);
 
-	ssize_t		receive_message();
-	ssize_t		send_message();
+	bool		receive_message();
+	bool		send_message();
 	std::string	get_next_command_str();
 	bool		has_pending_command();
 	std::string	source() const;
@@ -85,9 +85,11 @@ public:
 	      ChannelVector&	channels()					{ return m_channels; }
 	const ChannelVector&	channels()			const	{ return m_channels; }
 
-	const std::string&		read_buffer()		const	{ return m_readbuf; }
-	const std::string&		write_buffer()		const	{ return m_writebuf; }
-	const std::string&		away_message()		const	{ return m_away_message; }
+	const std::string&		read_buffer()			const	{ return m_readbuf; }
+	const std::string&		write_buffer()			const	{ return m_writebuf; }
+	std::size_t				data_sent_size()		const	{ return m_data_sent_size; }
+	std::size_t				data_received_size()	const	{ return m_data_received_size; }
+	const std::string&		away_message()			const	{ return m_away_message; }
 
 	bool					is_away()			const	{ return m_is_afk; }
 	bool					is_invisible()		const	{ return m_is_invisible; }
@@ -150,6 +152,8 @@ private:
 
 	std::string	m_readbuf;
 	std::string	m_writebuf;
+	std::size_t	m_data_sent_size;
+	std::size_t	m_data_received_size;
 
 	std::string	m_ip;
 	uint16_t	m_port;
