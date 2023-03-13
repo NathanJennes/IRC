@@ -86,7 +86,7 @@ bool initialize_client()
 	struct sockaddr_in serv_addr = {};
 	serv_addr.sin_port = htons(6667);
 	serv_addr.sin_family = AF_INET;
-	inet_pton(AF_INET, "130.239.18.120", &serv_addr.sin_addr);
+	inet_pton(AF_INET, "94.125.182.253", &serv_addr.sin_addr);
 
 	if (connect(server_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
 		CORE_ERROR("Can't connect(). output socket: %s", strerror(errno));
