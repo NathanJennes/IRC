@@ -12,7 +12,7 @@
 #include "Numerics.h"
 
 User::User(int fd, const std::string& ip, uint16_t port) :
-		m_nickname("*"), m_hostname("localhost"), m_ip(ip), m_port(port), m_fd(fd),
+		m_nickname("*"), m_nickname_upper("*"), m_hostname("localhost"), m_ip(ip), m_port(port), m_fd(fd),
 		m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false), m_need_password(true),
@@ -260,23 +260,38 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 
 bool User::is_nickname_valid(const std::string &nickname)
 {
-	if (nickname.empty())
+	if (nickname.empty() || nickname.size() > 9)
 		return false;
 
-	if (nickname.find(' ') != std::string::npos ||
-		nickname.find(',') != std::string::npos ||
-		nickname.find('*') != std::string::npos ||
-		nickname.find('?') != std::string::npos ||
-		nickname.find('!') != std::string::npos ||
-		nickname.find('@') != std::string::npos ||
-		nickname.find('.') != std::string::npos)
+	bool first_char_valid = false;
+	if (nickname[0] >= 'a' && nickname[0] <= 'z')
+		first_char_valid = true;
+	if (nickname[0] >= 'A' && nickname[0] <= 'Z')
+		first_char_valid = true;
+	if (nickname[0] == '[' || nickname[0] == ']' || nickname[0] == '\\' || nickname[0] == '`' ||
+		nickname[0] == '_' || nickname[0] == '^' || nickname[0] == '{' || nickname[0] == '}' ||
+		nickname[0] == '|')
+		first_char_valid = true;
+
+	if (!first_char_valid)
 		return false;
 
-	if (nickname[0] == '$' || nickname[0] == ':')
-		return false;
+	for (size_t i = 0; i < nickname.size(); i++) {
+		if (nickname[i] >= 'a' && nickname[i] <= 'z')
+			continue;
+		if (nickname[i] >= 'A' && nickname[i] <= 'Z')
+			continue;
+		if (nickname[i] >= '0' && nickname[i] <= '9')
+			continue;
+		if (nickname[i] == '-')
+			continue;
+		if (nickname[i] == '[' || nickname[i] == ']' || nickname[i] == '\\' || nickname[i] == '`' ||
+			nickname[i] == '_' || nickname[i] == '^' || nickname[i] == '{' || nickname[i] == '}' ||
+			nickname[i] == '|')
+			continue;
 
-	if (nickname[0] == '#' || nickname[0] == '&')
 		return false;
+	}
 
 	return true;
 }

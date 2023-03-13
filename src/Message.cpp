@@ -80,29 +80,37 @@ int nick(User& user, const Command& command)
 		return 1;
 	}
 
-	if (command.get_parameters()[0] == user.nickname())
+	const std::string& requested_nickname = command.get_parameters()[0];
+
+	if (requested_nickname == user.nickname())
 		return 0;
 
-	// TODO: check if nickname is valid
-	if (command.get_parameters()[0].size() > MAX_NICKNAME_LENGTH) {
-		Server::reply(user, ERR_ERRONEUSNICKNAME(user, command.get_parameters()[0]));
+	if (!User::is_nickname_valid(requested_nickname)) {
+		Server::reply(user, ERR_ERRONEUSNICKNAME(user, requested_nickname));
 		return 1;
 	}
 
-	if (Server::user_exists(command.get_parameters()[0])) {
+	if (Server::user_exists(requested_nickname)) {
 		if (!user.is_registered())
 		{
-			user.set_nickname("Guest" + to_string(Server::users().size()));
-			Server::reply(user, USER_SOURCE("NICK", user) + " :" + user.nickname());
-			return 0;
+			std::size_t suffix = 1;
+			std::string new_nickname = requested_nickname + to_string(suffix);
+			while (User::is_nickname_valid(new_nickname) && Server::user_exists(new_nickname))
+				new_nickname = requested_nickname + to_string(++suffix);
+
+			if (User::is_nickname_valid(new_nickname) && !Server::user_exists(new_nickname)) {
+				user.set_nickname(new_nickname);
+				Server::reply(user, USER_SOURCE("NICK", user) + " :" + user.nickname());
+				return 0;
+			}
 		}
-		Server::reply(user, ERR_NICKNAMEINUSE(user, command.get_parameters()[0]));
+		Server::reply(user, ERR_NICKNAMEINUSE(user, requested_nickname));
 		return 1;
 	}
 
 	if (user.is_registered())
-		Server::reply(user, USER_SOURCE("NICK", user) + " :" + command.get_parameters()[0]);
-	user.set_nickname(command.get_parameters()[0]);
+		Server::reply(user, USER_SOURCE("NICK", user) + " :" + requested_nickname);
+	user.set_nickname(requested_nickname);
 	return 0;
 }
 

@@ -66,6 +66,7 @@ public:
 	/// getters
 	std::string				ping_token()		const	{ return m_ip + to_string(m_port) + m_realname; }
 	const std::string&		nickname()			const	{ return m_nickname; }
+	const std::string&		nickname_upper()	const	{ return m_nickname_upper; }
 	const std::string&		username()			const	{ return m_username; }
 	const std::string&		realname()			const	{ return m_realname; }
 	const std::string&		hostname()			const	{ return m_hostname; }
@@ -102,7 +103,7 @@ public:
 	bool					has_mask(std::vector<Mask> masks) const;
 
 	/// setters
-	void	set_nickname(const std::string& nickname)	{ m_nickname = nickname; }
+	void	set_nickname(const std::string& nickname)	{ m_nickname = nickname; m_nickname_upper = to_upper(nickname); }
 	void	set_username(const std::string& username)	{ m_username = username; }
 	void	set_realname(const std::string& realname)	{ m_realname = realname; }
 	void	set_server_name(const std::string& name)	{ m_server_name = name; }
@@ -137,6 +138,7 @@ private:
 	void		take_signon_timestamp();
 
 	std::string	m_nickname;
+	std::string m_nickname_upper;
 	std::string	m_username;
 	std::string	m_realname;
 	std::string m_hostname;

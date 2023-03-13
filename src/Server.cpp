@@ -43,12 +43,12 @@ OldUserInfo::OldUserInfo(std::time_t time, const User &user)
 
 bool OldUserInfo::operator==(const User &user) const
 {
-	return m_nickname == user.nickname() && m_username == user.username() && m_realname == user.realname() && m_host == user.ip();
+	return to_upper(m_nickname) == user.nickname_upper() && m_username == user.username() && m_realname == user.realname() && m_host == user.ip();
 }
 
 bool OldUserInfo::operator==(const OldUserInfo &user) const
 {
-	return m_nickname == user.nickname() && m_username == user.username() && m_realname == user.realname() && m_host == user.host();
+	return to_upper(m_nickname) == to_upper(user.nickname()) && m_username == user.username() && m_realname == user.realname() && m_host == user.host();
 }
 
 void Server::signal_handler(int signal)
@@ -394,9 +394,10 @@ bool Server::user_exists(const Server::UserIterator &user)
 
 bool Server::user_exists(const std::string &user_nickname)
 {
+	std::string user_nickname_to_upper = to_upper(user_nickname);
 	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
 		User& user = get_user_reference(user_it);
-		if (user.nickname() == user_nickname)
+		if (user.nickname_upper() == user_nickname_to_upper)
 			return true;
 	}
 	return false;
@@ -404,9 +405,10 @@ bool Server::user_exists(const std::string &user_nickname)
 
 Server::UserIterator Server::find_user(const std::string &user_nickname)
 {
+	std::string user_nickname_to_upper = to_upper(user_nickname);
 	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
 		User& user = get_user_reference(user_it);
-		if (user.nickname() == user_nickname)
+		if (user.nickname_upper() == user_nickname_to_upper)
 			return user_it;
 	}
 	return m_users.end();
@@ -616,12 +618,14 @@ Server::OldUserIterator Server::find_old_user(const std::string &user_nickname, 
 	if (start == m_old_users.begin())
 		return m_old_users.end();
 
+	std::string user_nickname_to_upper = to_upper(user_nickname);
+
 	for (OldUserIterator user_it = start - 1; user_it != m_old_users.begin(); user_it--) {
-		if (user_it->nickname() == user_nickname)
+		if (to_upper(user_it->nickname()) == user_nickname_to_upper)
 			return user_it;
 	}
 
-	if (m_old_users.begin()->nickname() == user_nickname)
+	if (to_upper(m_old_users.begin()->nickname()) == user_nickname_to_upper)
 		return m_old_users.begin();
 
 	return m_old_users.end();
