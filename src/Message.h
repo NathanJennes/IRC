@@ -35,7 +35,7 @@ int kick(User& user, const Command& command);
 int motd(User& user, const Command& command);
 int version(User& user, const Command& command);
 int admin(User& user, const Command& command);
-int connect(User& user, const Command& command);
+//int connect(User& user, const Command& command);
 int lusers(User& user, const Command& command);
 int time_cmd(User& user, const Command& command);
 int stats(User& user, const Command& command);
@@ -54,8 +54,8 @@ int quit(User& user, const Command& command);
 
 // service messages
 int away(User& user, const Command& command);
-int links(User& user, const Command& command);
-int userhost(User& user, const Command& command);
-int wallops(User& user, const Command& command);
+//int links(User& user, const Command& command);
+//int userhost(User& user, const Command& command);
+//int wallops(User& user, const Command& command);
 
 #endif //MESSAGE_H

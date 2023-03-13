@@ -916,5 +916,26 @@ int lusers(User& user, const Command& command)
 	Server::reply(user, RPL_LOCALUSERS(user, current_users, max_users));
 	Server::reply(user, RPL_GLOBALUSERS(user, current_users, max_users));
 	return 0;
+}
 
+int help(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#help-message
+	// Command: HELP
+	// Parameters: [<topic>]
+
+	if (command.get_parameters().size() == 0) {
+		Server::reply(user, ERR_HELPNOTFOUND(user, command.get_parameters()[0]));
+		return 1;
+	}
+
+	// testing
+	if (command.get_parameters()[0] == "who") {
+		Server::reply(user, RPL_HELPSTART(user, "WHO", ""));
+		Server::reply(user, RPL_HELPTXT(user, "WHO", "[<mask>]"));
+		Server::reply(user, RPL_HELPTXT(user, "WHO", "Returns a list of users who match the mask."));
+		Server::reply(user, RPL_ENDOFHELP(user, "WHO", ""));
+	}
+
+	return 0;
 }
