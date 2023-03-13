@@ -116,7 +116,7 @@ public:
 	void	set_password(const std::string& password)	{ m_password = password; }
 
 	void	set_away_msg(const std::string& message)	{ m_away_message = message; }
-	void	set_is_afk(bool is_afk)						{ m_is_afk = is_afk; }
+	void	set_is_away(bool is_afk)					{ m_is_afk = is_afk; }
 	void	set_is_invisible(bool is_invisible)			{ m_is_invisible = is_invisible; }
 	void	set_is_operator(bool is_operator)			{ m_is_operator = is_operator; }
 	void	set_can_receive_wallop(bool can_receive)	{ m_can_receive_wallop = can_receive; }
