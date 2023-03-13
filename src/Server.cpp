@@ -135,6 +135,8 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("MOTD", motd));
 	m_commands.insert(std::make_pair("VERSION", version));
 	m_commands.insert(std::make_pair("TIME", time_cmd));
+	m_commands.insert(std::make_pair("INFO", info_cmd));
+	m_commands.insert(std::make_pair("LUSERS", lusers));
 
 	// User queries
 	m_commands.insert(std::make_pair("WHO", who));
