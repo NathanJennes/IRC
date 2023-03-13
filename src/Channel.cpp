@@ -30,7 +30,7 @@ std::string Channel::UserPermissions::get_highest_prefix() const
 }
 
 Channel::Channel(User& user, const std::string &name) :
-	m_name(name),
+	m_name(name), m_name_to_upper(to_upper(name)),
 	m_creation_date(time(NULL)),
 	m_topic_modification_date(m_creation_date),
 	m_user_limit(0),

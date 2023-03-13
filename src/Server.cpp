@@ -419,7 +419,7 @@ bool Server::channel_exists(const Server::ChannelIterator &channel)
 
 bool Server::channel_exists(const std::string &channel_name)
 {
-	ChannelIterator channel_it = m_channels.find(channel_name);
+	ChannelIterator channel_it = m_channels.find(to_upper(channel_name));
 	if (channel_exists(channel_it))
 		return true;
 	return false;
@@ -427,7 +427,7 @@ bool Server::channel_exists(const std::string &channel_name)
 
 Server::ChannelIterator Server::find_channel(const std::string &channel_name)
 {
-	return m_channels.find(channel_name);
+	return m_channels.find(to_upper(channel_name));
 }
 
 void Server::try_reply_part_user_from_channel(User &user, const std::string &channel_name, const std::string& reason)
@@ -494,13 +494,13 @@ void Server::remove_user(User &user)
 Channel& Server::create_new_channel(User &first_user, const std::string &channel_name)
 {
 	Channel *new_channel = new Channel(first_user, channel_name);
-	m_channels[channel_name] = new_channel;
+	m_channels[to_upper(channel_name)] = new_channel;
 	return *new_channel;
 }
 
 void Server::remove_channel(Channel &channel)
 {
-	ChannelIterator channel_it = m_channels.find(channel.name());
+	ChannelIterator channel_it = m_channels.find(channel.name_to_upper());
 	if (channel_it == m_channels.end()) {
 		CORE_WARN("Trying to remove a channel that doesn't belong to the server's channel list");
 		return ;

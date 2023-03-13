@@ -172,7 +172,7 @@ void User::remove_channel(const Channel &channel)
 {
 	ChannelIterator it = channels().begin();
 	for (; it < channels().end(); ++it) {
-		if (get_channel_reference(it).name() == channel.name()) {
+		if (get_channel_reference(it).name_to_upper() == channel.name_to_upper()) {
 			channels().erase(it);
 			return;
 		}

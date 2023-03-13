@@ -142,6 +142,7 @@ public:
 
 	/// Getters
 	const	std::string&			name()								const { return m_name; }
+	const	std::string&			name_to_upper()						const { return m_name_to_upper; }
 	const	std::time_t&			creation_date()						const { return m_creation_date; }
 			std::string				creation_date_as_str()				const { return to_string(creation_date()); }
 	const	std::string&			topic()								const { return m_topic; }
@@ -187,6 +188,7 @@ public:
 private:
 	/// Channel information
 	std::string	m_name;
+	std::string	m_name_to_upper;
 	std::time_t	m_creation_date;
 	char		m_type;
 	std::string	m_topic;

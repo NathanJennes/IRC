@@ -8,10 +8,16 @@
 #include <cstring>
 #include "Utils.h"
 
-std::string to_upper(std::string str)
+std::string to_upper(const std::string& str)
 {
-	std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-	return str;
+	std::string str_to_upper(str);
+	for (std::size_t i = 0; i < str.size(); i++) {
+		if (str[i] >= 'a' && str[i] <= 'z')
+			str_to_upper[i] = str[i] - (char)32;
+		else
+			str_to_upper[i] = str[i];
+	}
+	return str_to_upper;
 }
 
 bool is_number(const std::string& str)
