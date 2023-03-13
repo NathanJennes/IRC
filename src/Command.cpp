@@ -421,57 +421,6 @@ std::string Command::try_parse_trailing()
 	return trailing;
 }
 
-
-// Wildcard
-std::string Command::try_parse_mask()
-{
-	if (characters_left() == 0)
-		return "";
-	return "";
-}
-
-std::string Command::try_parse_wildone()
-{
-	if (characters_left() == 0)
-		return "";
-	return "";
-}
-
-std::string Command::try_parse_wildmany()
-{
-	if (characters_left() == 0)
-		return "";
-	return "";
-}
-
-std::string Command::try_parse_nowild()
-{
-	if (characters_left() == 0)
-		return "";
-	return "";
-}
-
-std::string Command::try_parse_noesc()
-{
-	if (characters_left() == 0)
-		return "";
-	return "";
-}
-
-std::string Command::try_parse_matchone()
-{
-	if (characters_left() == 0)
-		return "";
-	return "";
-}
-
-std::string Command::try_parse_matchmany()
-{
-	if (characters_left() == 0)
-		return "";
-	return "";
-}
-
 // Hostname
 std::string	Command::try_parse_host()
 {
