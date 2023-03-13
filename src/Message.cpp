@@ -35,7 +35,7 @@ int cap(User& user, const Command& command)
 	}
 
 	if (command.get_parameters()[0] == "LS") {
-		Server::reply(user, RPL_CAP(user, "LS", ""));
+		Server::reply(user, RPL_CAP(user, "LS", "multi-prefix"));
 		if (!user.is_registered())
 			user.set_is_negociating_capabilities(true);
 	}
