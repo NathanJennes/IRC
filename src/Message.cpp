@@ -816,3 +816,113 @@ int notice(User& user, const Command& command)
 	user.take_idle_timestamp();
 	return 0;
 }
+
+int time_cmd(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#time-message
+	// Command: TIME
+	// Parameters: [<server>]
+
+	if (command.get_parameters().size() > 0 && command.get_parameters()[0] != Server::info().name()) {
+		CORE_TRACE_IRC_ERR("User %s sent a TIME command to a non-existing server [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+		Server::reply(user, ERR_NOSUCHSERVER(user, command.get_parameters()[0]));
+		return 1;
+	}
+
+	Server::reply(user, RPL_TIME(user, Server::info().name(), format_date()));
+	return 0;
+}
+
+int away(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#away-message
+	// Command: AWAY
+	// Parameters: [<away message>]
+
+	// TODO check away message length
+//	if (command.get_parameters()[0].size() > Server::away_message_max_length()) {
+//		Server::reply(user, ERR_INPUTTOOLONG(user));
+//		return 1;
+//	}
+
+	if (command.get_parameters().empty() && user.is_away()) {
+		user.set_away_msg("");
+		user.set_is_away(false);
+		Server::reply(user, RPL_UNAWAY(user));
+		return 0;
+	}
+
+	if (!command.get_parameters().empty() && !user.is_away()) {
+		user.set_away_msg(command.get_parameters()[0]);
+		user.set_is_away(true);
+		Server::reply(user, RPL_NOWAWAY(user));
+	}
+	return 0;
+}
+
+int info_cmd(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#info-message
+	// Command: INFO
+	// Parameters: [<server>]
+
+	if (command.get_parameters().size() > 0 && command.get_parameters()[0] != Server::info().name()) {
+		CORE_TRACE_IRC_ERR("User %s sent an INFO command to a non-existing server [%s].", user.debug_name(), command.get_parameters()[0].c_str());
+		Server::reply(user, ERR_NOSUCHSERVER(user, command.get_parameters()[0]));
+		return 1;
+	}
+
+	Server::reply(user, RPL_INFO(user, "ft_irc --"));
+	Server::reply(user, RPL_INFO(user, "Copyright(c) 2023 ft_irc Development Team"));
+	Server::reply(user, RPL_INFO(user, ""));
+	Server::reply(user, RPL_INFO(user, "Licence: ??"));
+	Server::reply(user, RPL_INFO(user, ""));
+	Server::reply(user, RPL_INFO(user, "This server:" + Server::info().name() + " is running on version " + Server::info().version() + "."));
+	Server::reply(user, RPL_INFO(user, ""));
+	Server::reply(user, RPL_INFO(user, "This software was created by:"));
+	Server::reply(user, RPL_INFO(user, "Natahan Jennes (njennes): njennes@student.42lyon.fr"));
+	Server::reply(user, RPL_INFO(user, "Cyril Battistolo (cybattis): cybattis@student.42lyon.fr"));
+	Server::reply(user, RPL_INFO(user, ""));
+	Server::reply(user, RPL_INFO(user, "Birth Date: ??."));
+	Server::reply(user, RPL_INFO(user, "On-line since " + Server::info().creation_date() + "."));
+	Server::reply(user, RPL_ENDOFINFO(user));
+	return 0;
+}
+
+int lusers(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#luser-message
+	// Command: LUSERS
+	// Parameters: none
+
+	(void)command;
+
+	size_t invisible_users = 0;
+	size_t operator_users = 0;
+
+	Server::UserIterator it = Server::users().begin();
+	for (; it != Server::users().end(); it++) {
+		User& user_ref = get_user_reference(it);
+		if (user_ref.is_invisible())
+			invisible_users++;
+		if (user_ref.is_operator())
+			operator_users++;
+	}
+
+	std::string current_users = std::to_string(Server::users().size());
+	std::string max_users = std::to_string(Server::info().max_users());
+	std::string operator_users_str = std::to_string(operator_users);
+	std::string invisible_users_str = std::to_string(invisible_users);
+	std::string nbr_channels = std::to_string(Server::channels().size());
+	std::string unknown_connections = std::to_string(Server::unknown_connections());
+
+	Server::reply(user, RPL_LUSERCLIENT(user, current_users, invisible_users_str));
+	Server::reply(user, RPL_LUSEROP(user, operator_users_str));
+	Server::reply(user, RPL_LUSERUNKNOWN(user, unknown_connections));
+	Server::reply(user, RPL_LUSERCHANNELS(user, nbr_channels));
+	Server::reply(user, RPL_LUSERME(user, current_users));
+	Server::reply(user, RPL_LOCALUSERS(user, current_users, max_users));
+	Server::reply(user, RPL_GLOBALUSERS(user, current_users, max_users));
+	return 0;
+
+}

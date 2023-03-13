@@ -25,6 +25,8 @@ std::string			Server::m_password;
 
 std::vector<pollfd>	Server::m_pollfds;
 
+size_t				Server::m_unknown_connections = 0;
+
 Server::UserVector								Server::m_users;
 Server::OldUserVector							Server::m_old_users;
 Server::ChannelMap								Server::m_channels;
@@ -136,11 +138,17 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("MODE", mode));
 	m_commands.insert(std::make_pair("MOTD", motd));
 	m_commands.insert(std::make_pair("VERSION", version));
+	m_commands.insert(std::make_pair("TIME", time_cmd));
+	m_commands.insert(std::make_pair("INFO", info_cmd));
+	m_commands.insert(std::make_pair("LUSERS", lusers));
 
 	// User queries
 	m_commands.insert(std::make_pair("WHO", who));
 	m_commands.insert(std::make_pair("WHOWAS", whowas));
 	m_commands.insert(std::make_pair("WHOIS", whois));
+
+	// Optional commands
+	m_commands.insert(std::make_pair("AWAY", away));
 }
 
 bool Server::update()
@@ -172,6 +180,8 @@ void Server::accept_new_connections()
 		close(new_client_socket_fd);
 		return ;
 	}
+
+	m_unknown_connections++;
 
 	pollfd pollfds = {};
 	pollfds.fd = new_client_socket_fd;
@@ -699,4 +709,7 @@ void Server::register_user(User &user)
 	OldUserIterator entry = std::find(m_old_users.begin(), m_old_users.end(), user);
 	if (entry != m_old_users.end())
 		m_old_users.erase(entry);
+
+	if (users().size() > info().max_users())
+		info().set_max_users(users().size());
 }

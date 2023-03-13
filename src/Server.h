@@ -98,6 +98,7 @@ public:
 
 	/// Server information
 	static       ServerInfo& 	info() 					{ return m_server_info; }
+	static       size_t&		unknown_connections()	{ return m_unknown_connections; }
 	static       bool			is_running()			{ return m_is_running; }
 	static const std::string&	password()				{ return m_password; }
 	static       std::string	supported_tokens(User& user);
@@ -146,6 +147,8 @@ private:
 
 	static const int			m_server_backlog;
 	static const int			m_timeout;
+
+	static size_t				m_unknown_connections;
 
 	// Config
 	static const std::size_t	m_awaylen;

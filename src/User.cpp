@@ -116,6 +116,7 @@ void User::try_finish_registration()
 		Server::register_user(*this);
 		take_signon_timestamp();
 		take_idle_timestamp();
+		Server::unknown_connections()--;
 	}
 }
 
