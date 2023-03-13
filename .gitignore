@@ -4,6 +4,7 @@ obj/
 .vscode/
 config/user_list.csv
 *.txt
+*.log
 
 # Compilation modes
 .release_mode
