@@ -119,6 +119,7 @@
 #define ERR_BANNEDFROMCHAN(user, channel)				(SERVER_SOURCE("474", user) + " " + channel + " :Cannot join channel (you're banned)")
 #define ERR_BADCHANNELKEY(user, channel)				(SERVER_SOURCE("475", user) + " " + channel + " :Cannot join channel (Wrong key)")
 #define ERR_BADCHANMASK(user, mask)						(SERVER_SOURCE("476", user) + " " + mask + " :Bad Channel Mask")
+#define ERR_ILLCHANNAME(user, channel)					(SERVER_SOURCE("479", user) + " " + channel + " :Illegal channel name")
 #define ERR_NOPRIVILEGES(user)							(SERVER_SOURCE("481", user) + " :Permission Denied- You're not an IRC operator")
 #define ERR_CHANOPRIVSNEEDED(user, channel)				(SERVER_SOURCE("482", user) + " " + channel.name() + " :You're not channel operator")
 

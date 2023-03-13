@@ -82,7 +82,7 @@ int nick(User& user, const Command& command)
 
 	const std::string& requested_nickname = command.get_parameters()[0];
 
-	if (requested_nickname == user.nickname())
+	if (to_upper(requested_nickname) == user.nickname_upper())
 		return 0;
 
 	if (!User::is_nickname_valid(requested_nickname)) {
@@ -844,11 +844,10 @@ int away(User& user, const Command& command)
 	// Command: AWAY
 	// Parameters: [<away message>]
 
-	// TODO check away message length
-//	if (command.get_parameters()[0].size() > Server::away_message_max_length()) {
-//		Server::reply(user, ERR_INPUTTOOLONG(user));
-//		return 1;
-//	}
+	if (!command.get_parameters().empty() && command.get_parameters()[0].size() > Server::awaylen()) {
+		Server::reply(user, ERR_INPUTTOOLONG(user));
+		return 1;
+	}
 
 	if (command.get_parameters().empty() && user.is_away()) {
 		user.set_away_msg("");
