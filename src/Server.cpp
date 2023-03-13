@@ -25,8 +25,10 @@ std::string			Server::m_password;
 
 std::vector<pollfd>	Server::m_pollfds;
 
+size_t				Server::m_unknown_connections = 0;
+
 Server::UserVector								Server::m_users;
-Server::OldUserVector						Server::m_old_users;
+Server::OldUserVector							Server::m_old_users;
 Server::ChannelMap								Server::m_channels;
 std::map<std::string, Server::command_function>	Server::m_commands;
 std::map<std::string, Server::command_function>	Server::m_connection_commands;
