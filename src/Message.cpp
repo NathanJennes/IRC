@@ -825,6 +825,33 @@ int time_cmd(User& user, const Command& command)
 	return 0;
 }
 
+int away(User& user, const Command& command)
+{
+	// https://modern.ircdocs.horse/#away-message
+	// Command: AWAY
+	// Parameters: [<away message>]
+
+	// TODO check away message length
+//	if (command.get_parameters()[0].size() > Server::away_message_max_length()) {
+//		Server::reply(user, ERR_INPUTTOOLONG(user));
+//		return 1;
+//	}
+
+	if (command.get_parameters().empty() && user.is_away()) {
+		user.set_away_msg("");
+		user.set_is_away(false);
+		Server::reply(user, RPL_UNAWAY(user));
+		return 0;
+	}
+
+	if (!command.get_parameters().empty() && !user.is_away()) {
+		user.set_away_msg(command.get_parameters()[0]);
+		user.set_is_away(true);
+		Server::reply(user, RPL_NOWAWAY(user));
+	}
+	return 0;
+}
+
 int info_cmd(User& user, const Command& command)
 {
 	// https://modern.ircdocs.horse/#info-message

@@ -142,6 +142,9 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("WHO", who));
 	m_commands.insert(std::make_pair("WHOWAS", whowas));
 	m_commands.insert(std::make_pair("WHOIS", whois));
+
+	// Optional commands
+	m_commands.insert(std::make_pair("AWAY", away));
 }
 
 bool Server::update()
