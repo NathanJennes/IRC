@@ -113,7 +113,8 @@ public:
 	static void set_password(const std::string& password)	{ m_password = password; }
 
 	/// Config
-	static std::size_t	awaylen()	{ return m_awaylen; }
+	static const std::size_t&	awaylen()				{ return m_awaylen; }
+	static const std::size_t&	chan_name_len()			{ return m_chan_name_len; }
 
 private:
 	// Member functions
