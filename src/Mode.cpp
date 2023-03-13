@@ -95,7 +95,7 @@ int mode(User& user, const Command& command)
 		Server::ChannelIterator channel_it = Server::find_channel(command.get_parameters()[0]);
 
 		// check if channel exists
-		if (channel_it == Server::channels().end()) {
+		if (!Server::channel_exists(channel_it)) {
 			CORE_TRACE_IRC_ERR("User %s tried to set mode on a non-existing channel [%s].", user.debug_name(), command.get_parameters()[0].c_str());
 			Server::reply(user, ERR_NOSUCHCHANNEL(user, command.get_parameters()[0]));
 			return 1;
@@ -135,7 +135,7 @@ int mode(User& user, const Command& command)
 		Server::UserIterator user_it = Server::find_user(command.get_parameters()[0]);
 
 		// check if user exists
-		if (user_it == Server::users().end()) {
+		if (!Server::user_exists(user_it)) {
 			CORE_TRACE_IRC_ERR("User %s tried to set mode on a non-existing user [%s].", user.debug_name(), command.get_parameters()[0].c_str());
 			Server::reply(user, ERR_NOSUCHNICK(user, command.get_parameters()[0]));
 			return 1;
