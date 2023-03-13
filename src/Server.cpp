@@ -31,7 +31,7 @@ Server::ChannelMap								Server::m_channels;
 std::map<std::string, Server::command_function>	Server::m_commands;
 
 const std::size_t	Server::m_awaylen = 50;
-
+const std::size_t	Server::m_chan_name_len = 24;
 
 std::map<std::string, Server::command_function>	Server::m_connection_commands;
 
@@ -527,18 +527,18 @@ std::string Server::supported_tokens(User& user)
 {
 	std::string tokens;
 
-	tokens += "CASEMAPPING=ascii ";
 	tokens += "AWAYLEN=" + to_string(m_awaylen) + " "; //TODO: check for awaylen when receiving AWAY command
-	tokens += "CHANLIMIT= ";
+	tokens += "CASEMAPPING=ascii ";
+	tokens += "CHANLIMIT=&#:80";
 	tokens += "CHANMODES=beI,,kl,mnst ";
-	tokens += "CHANNELLEN= ";
+	tokens += "CHANNELLEN=" + to_string(m_chan_name_len) + " ";
 	tokens += "CHANTYPES=#& ";
-	tokens += "ELIST=MNUCT ";
-	tokens += "EXCEPTS ";
+	tokens += "ELIST=UCT ";
+	tokens += "EXCEPTS=e ";
 	tokens += "EXTBAN=,";
-	tokens += "HOSTLEN= ";
-	tokens += "INVEX ";
-	tokens += "KICKLEN= ";
+	tokens += "HOSTLEN=50 "; //TODO: check for hostnames bigger than 50 characters
+	tokens += "INVEX=I ";
+	tokens += "KICKLEN=100 "; //TODO: truncate kick reasons if it is bigger than 100 characters
 	tokens += "MAXLIST=beI ";
 
 	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));

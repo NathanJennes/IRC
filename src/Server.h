@@ -149,6 +149,7 @@ private:
 
 	// Config
 	static const std::size_t	m_awaylen;
+	static const std::size_t	m_chan_name_len;
 
 	// Message function prototype
 	static std::map<std::string, command_function>	m_commands;
