@@ -22,11 +22,11 @@
 #define RPL_ISUPPORT(user)								Server::supported_tokens(user)
 #define RPL_UMODEIS(user)								(SERVER_SOURCE("221", user) + " " + user.get_modes_as_str())
 
-#define RPL_LUSERCLIENT(nbr_users, nbr_invisible, nbr_servers)	(" :There are " nbr_users " users and " nbr_invisible " invisible on " nbr_servers " servers")
-#define RPL_LUSEROP(nbr_opers)									(" " nbr_opers " :operator(s) online")
-#define RPL_LUSERUNKNOWN(nbr_unknown)							(" " nbr_unknown " :unknown connection(s)")
-#define RPL_LUSERCHANNELS(nbr_channels)							(" " nbr_channels " :channels formed")
-#define RPL_LUSERME(nbr_users, nbr_servers)						(" :I have " nbr_users " clients and " nbr_servers " servers")
+#define RPL_LUSERCLIENT(user, current, nbr_invisible)	(SERVER_SOURCE("251", user) + " :There are " + current + " users and " + nbr_invisible + " invisible on 1 server")
+#define RPL_LUSEROP(user, nbr_operator)					(SERVER_SOURCE("252", user) + " " + nbr_operator + " :IRC operator(s) online")
+#define RPL_LUSERUNKNOWN(user, unknown)					(SERVER_SOURCE("253", user) + " " + unknown + " :unknown connection(s)")
+#define RPL_LUSERCHANNELS(user, nbr_channel)			(SERVER_SOURCE("254", user) + " " + nbr_channel + " :channels formed")
+#define RPL_LUSERME(user, current)						(SERVER_SOURCE("255", user) + " :I have " + current + " clients and " + "1" + " servers")
 
 #define RPL_ADMINME(user, server_name)					(SERVER_SOURCE("256", user) + " " + server_name + " :Administrative info")
 #define RPL_ADMINLOC1(user, server_location)			(SERVER_SOURCE("257", user) + " :Server location - " + server_location)
@@ -34,12 +34,12 @@
 #define RPL_ADMINEMAIL(user, admin_info)				(SERVER_SOURCE("259", user) + " :" + admin_info)
 #define RPL_TRYAGAIN(user, command)						(SERVER_SOURCE("263", user) + " " + command + " :Please wait a while and try again.")
 
-#define RPL_LOCALUSERS(current_users, max_users)		(" :Current local users " current_users " max " max_users)
-#define RPL_GLOBALUSERS(current_users, max_users)		(" :Current global users " current_users " max " max_users)
+#define RPL_LOCALUSERS(user, current, max)				(SERVER_SOURCE("265", user) + " " + current + " " + max + " :Current local users " + current + ", max " + max)
+#define RPL_GLOBALUSERS(user, current, max)				(SERVER_SOURCE("266", user) + " " + current + " " + max + " :Current global users " + current + ", max " + max)
 #define RPL_WHOISCERTFP(user, target)					//NO SSL connection for now
 
 #define RPL_NONE										(" :Unknown format")
-#define RPL_AWAY(user, target)							(SERVER_SOURCE("301", user), " " + target.nickname() + " :" + target.away_message())
+#define RPL_AWAY(user, target)							(SERVER_SOURCE("301", user) + " " + target.nickname() + " :" + target.away_message())
 #define RPL_USERHOST									// TODO : Implement function to return a list of userhost
 #define RPL_UNAWAY(user)								(SERVER_SOURCE("305", user) + " :You are no longer marked as being away")
 #define RPL_NOWAWAY(user)								(SERVER_SOURCE("306", user) + " :You have been marked as being away")
@@ -83,7 +83,7 @@
 #define RPL_BANLIST(user, channel, ban_user)			(SERVER_SOURCE("367", user) + " " + channel.name() + " " + ban_user)
 #define RPL_ENDOFBANLIST(user, channel)					(SERVER_SOURCE("368", user) + " " + channel.name() + " :End of channel ban list")
 #define RPL_ENDOFWHOWAS(user)							(SERVER_SOURCE("369", user) + " :End of WHOWAS")
-#define RPL_INFO(user, info)							(SERVER_SOURCE("371", user) + " :- " + info)
+#define RPL_INFO(user, info)							(SERVER_SOURCE("371", user) + " :" + info)
 #define RPL_MOTD(user, motd)							(SERVER_SOURCE("372", user) + " :- " + motd)
 #define RPL_ENDOFINFO(user)								(SERVER_SOURCE("374", user) + " :End of /INFO list.")
 #define RPL_MOTDSTART(user)								(SERVER_SOURCE("375", user) + " :- " + Server::info().name() + " Message of the day - ")
