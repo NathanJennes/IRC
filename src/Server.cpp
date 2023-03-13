@@ -713,3 +713,9 @@ void Server::register_user(User &user)
 	if (users().size() > info().max_users())
 		info().set_max_users(users().size());
 }
+
+void Server::change_user_nickname(User &user, const std::string &new_nickname)
+{
+	add_to_old_users_list(user);
+	user.set_nickname(new_nickname);
+}

@@ -79,6 +79,7 @@ public:
 
 	/// User management
 	static void				register_user(User& user);
+	static void				change_user_nickname(User& user, const std::string& new_nickname);
 	static void				try_reply_part_user_from_channel(User& user, const std::string& channel_name, const std::string& reason = "");
 	static void				reply_part_user_from_channel(User& user, Channel& channel, const std::string& reason = "");
 	static void				reply_part_user_from_channels(User& user, const std::string& reason = "");

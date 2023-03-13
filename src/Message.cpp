@@ -91,26 +91,27 @@ int nick(User& user, const Command& command)
 	}
 
 	if (Server::user_exists(requested_nickname)) {
-		if (!user.is_registered())
-		{
-			std::size_t suffix = 1;
-			std::string new_nickname = requested_nickname + to_string(suffix);
-			while (User::is_nickname_valid(new_nickname) && Server::user_exists(new_nickname))
-				new_nickname = requested_nickname + to_string(++suffix);
-
-			if (User::is_nickname_valid(new_nickname) && !Server::user_exists(new_nickname)) {
-				user.set_nickname(new_nickname);
-				Server::reply(user, USER_SOURCE("NICK", user) + " :" + user.nickname());
-				return 0;
-			}
+		if (user.is_registered()) {
+			Server::reply(user, ERR_NICKNAMEINUSE(user, requested_nickname));
+			return 1;
 		}
-		Server::reply(user, ERR_NICKNAMEINUSE(user, requested_nickname));
-		return 1;
+
+		std::size_t suffix = 1;
+		std::string new_nickname = requested_nickname + to_string(suffix);
+		while (User::is_nickname_valid(new_nickname) && Server::user_exists(new_nickname))
+			new_nickname = requested_nickname + to_string(++suffix);
+
+		if (User::is_nickname_valid(new_nickname) && !Server::user_exists(new_nickname)) {
+			Server::change_user_nickname(user, new_nickname);
+			Server::reply(user, USER_SOURCE("NICK", user) + " :" + new_nickname);
+		} else
+			Server::reply(user, ERR_NICKNAMEINUSE(user, requested_nickname));
+		return 0;
 	}
 
 	if (user.is_registered())
 		Server::reply(user, USER_SOURCE("NICK", user) + " :" + requested_nickname);
-	user.set_nickname(requested_nickname);
+	Server::change_user_nickname(user, requested_nickname);
 	return 0;
 }
 
