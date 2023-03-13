@@ -909,12 +909,12 @@ int lusers(User& user, const Command& command)
 			operator_users++;
 	}
 
-	std::string current_users = std::to_string(Server::users().size());
-	std::string max_users = std::to_string(Server::info().max_users());
-	std::string operator_users_str = std::to_string(operator_users);
-	std::string invisible_users_str = std::to_string(invisible_users);
-	std::string nbr_channels = std::to_string(Server::channels().size());
-	std::string unknown_connections = std::to_string(Server::unknown_connections());
+	std::string current_users = to_string(Server::users().size());
+	std::string max_users = to_string(Server::info().max_users());
+	std::string operator_users_str = to_string(operator_users);
+	std::string invisible_users_str = to_string(invisible_users);
+	std::string nbr_channels = to_string(Server::channels().size());
+	std::string unknown_connections = to_string(Server::unknown_connections());
 
 	Server::reply(user, RPL_LUSERCLIENT(user, current_users, invisible_users_str));
 	Server::reply(user, RPL_LUSEROP(user, operator_users_str));
