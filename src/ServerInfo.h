@@ -23,6 +23,10 @@ struct ServerInfo
 	const std::string& motd()				const { return m_motd; }
 	const std::string& admin_name()			const { return m_admin_name; }
 	const std::string& email()				const { return m_admin_email; }
+	      size_t       max_users()			const { return m_max_connected_users; }
+
+	//setter
+	void set_max_users(size_t max_users) { m_max_connected_users = max_users; }
 
 private:
 	bool get_server_motd(const std::string& path);
@@ -37,6 +41,7 @@ private:
 	std::string m_motd;
 	std::string m_admin_name;
 	std::string m_admin_email;
+	size_t		m_max_connected_users;
 };
 
 #endif //SERVERINFO_H

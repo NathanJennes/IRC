@@ -14,7 +14,7 @@ void ServerInfo::initialize()
 {
 	m_name = "localhost";
 	m_description = ">> The GigaChat IRC server !!! <<";
-	m_version = "ft_irc v0.5";
+	m_version = "ft_irc-v0.5";
 	m_network_name = "GigaChat";
 	m_server_location = "Lyon, France";
 	m_hosting_location = "Lyon, France";
@@ -22,6 +22,7 @@ void ServerInfo::initialize()
 	get_server_motd("config/motd.txt");
 	m_admin_name = "cybattis njennes";
 	m_admin_email = "support@gigachat.net";
+	m_max_connected_users = 0;
 }
 
 bool ServerInfo::get_server_motd(const std::string& path)
