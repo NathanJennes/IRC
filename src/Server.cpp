@@ -33,7 +33,7 @@ Server::ChannelMap								Server::m_channels;
 std::map<std::string, Server::command_function>	Server::m_commands;
 
 const std::size_t	Server::m_awaylen = 50;
-const std::size_t	Server::m_chan_name_len = 24;
+const std::size_t	Server::m_chan_name_len = 50;
 
 std::map<std::string, Server::command_function>	Server::m_connection_commands;
 
