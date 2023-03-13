@@ -17,7 +17,7 @@ User::User(int fd, const std::string& ip, uint16_t port) :
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false), m_need_password(true),
 		m_is_afk(false), m_is_operator(false), m_is_invisible(false), m_can_receive_wallop(false), m_can_receive_notice(false),
-		m_signon_timestamp(), m_last_idle_timestamp(), m_idle(0), m_last_ping_timestamp(), m_ping(0)
+		m_signon_timestamp(), m_last_idle_timestamp(), m_idle(0), m_last_ping_timestamp(), m_ping(0), m_connexion_creation_timestamp(time(NULL))
 {
 }
 

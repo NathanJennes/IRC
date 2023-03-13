@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <sys/poll.h>
 #include <unistd.h>
+#include <ctime>
 #include "log.h"
 #include "Utils.h"
 #include "Mode.h"
@@ -94,9 +95,11 @@ public:
 	bool					can_get_wallop()	const	{ return m_can_receive_wallop; }
 	bool					can_get_notice()	const	{ return m_can_receive_notice; }
 
-	const std::string&		signon()			const	{ return m_signon_timestamp; }
-	const std::string		seconde_idle()		const	{ return to_string<long>(m_idle); }
-	long					ping()				const	{ return m_ping; }
+	const std::string&		signon()						const	{ return m_signon_timestamp; }
+	const std::string		seconde_idle()					const	{ return to_string<long>(m_idle); }
+	long					ping()							const	{ return m_ping; }
+	std::time_t				connexion_creation_timestamp()	const	{ return m_connexion_creation_timestamp; }
+	std::time_t				time_connexion_open()			const	{ return time(NULL) - m_connexion_creation_timestamp; }
 
 	std::string				get_modes_as_str()	const;
 	std::string 			get_user_flags()	const;
@@ -175,6 +178,7 @@ private:
 	long		m_idle;
 	timeval		m_last_ping_timestamp;
 	long		m_ping;
+	std::time_t	m_connexion_creation_timestamp;
 };
 
 inline       Channel&	get_channel_reference(const User::ChannelIterator& channel_it)		{ return *(*channel_it); }
