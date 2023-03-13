@@ -85,15 +85,6 @@ private:
 	std::string					try_parse_middle();
 	std::string					try_parse_trailing();
 
-	// Wildcard
-	std::string	try_parse_mask();
-	std::string	try_parse_wildone();
-	std::string	try_parse_wildmany();
-	std::string	try_parse_nowild();
-	std::string	try_parse_noesc();
-	std::string	try_parse_matchone();
-	std::string	try_parse_matchmany();
-
 	// Hostname
 	std::string	try_parse_host();
 	std::string	try_parse_hostname();
