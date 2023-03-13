@@ -159,6 +159,7 @@ private:
 	// Message function prototype
 	static std::map<std::string, command_function>	m_commands;
 	static std::map<std::string, command_function>	m_connection_commands;
+	static std::map<std::string, std::size_t>		m_command_stats;
 };
 
 inline Channel&			get_channel_reference(const Server::ChannelIterator& channel_it)		{ return *(channel_it->second); }

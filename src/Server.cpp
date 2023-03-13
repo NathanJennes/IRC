@@ -31,6 +31,7 @@ Server::UserVector								Server::m_users;
 Server::OldUserVector							Server::m_old_users;
 Server::ChannelMap								Server::m_channels;
 std::map<std::string, Server::command_function>	Server::m_commands;
+std::map<std::string, std::size_t>				Server::m_command_stats;
 
 const std::size_t	Server::m_awaylen = 50;
 const std::size_t	Server::m_chan_name_len = 50;
@@ -255,6 +256,7 @@ void Server::execute_command(User &user, const Command &cmd)
 					return;
 				}
 			}
+			m_command_stats[command_name]++;
 			command_it->second(user, cmd);
 		}
 		else if (m_commands.find(command_name) != m_commands.end())
@@ -265,9 +267,10 @@ void Server::execute_command(User &user, const Command &cmd)
 	}
 
 	command_it = m_commands.find(command_name);
-	if (command_it != m_commands.end())
+	if (command_it != m_commands.end()) {
+		m_command_stats[command_name]++;
 		command_it->second(user, cmd);
-	else if (m_connection_commands.find(command_name) != m_connection_commands.end())
+	} else if (m_connection_commands.find(command_name) != m_connection_commands.end())
 		reply(user, ERR_ALREADYREGISTERED(user));
 	else
 		reply(user, ERR_UNKNOWNCOMMAND(user, command_name));
