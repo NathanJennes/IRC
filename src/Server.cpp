@@ -276,7 +276,7 @@ void Server::execute_command(User &user, const Command &cmd)
 void Server::reply(User& user, const std::string &msg)
 {
 	CORE_TRACE("REPLYING TO %s:%d [%s]", user.ip().c_str(), user.port(), msg.c_str());
-	user.update_write_buffer(msg + "\r\n");
+	user.queue_command_for_sending(msg + "\r\n");
 }
 
 void Server::broadcast(const std::string &msg)

@@ -85,11 +85,13 @@ public:
 	      ChannelVector&	channels()					{ return m_channels; }
 	const ChannelVector&	channels()			const	{ return m_channels; }
 
-	const std::string&		read_buffer()			const	{ return m_readbuf; }
-	const std::string&		write_buffer()			const	{ return m_writebuf; }
-	std::size_t				data_sent_size()		const	{ return m_data_sent_size; }
-	std::size_t				data_received_size()	const	{ return m_data_received_size; }
-	const std::string&		away_message()			const	{ return m_away_message; }
+	const std::string&		read_buffer()				const	{ return m_readbuf; }
+	const std::string&		write_buffer()				const	{ return m_writebuf; }
+	std::size_t				data_sent_size()			const	{ return m_data_sent_size; }
+	std::size_t				data_received_size()		const	{ return m_data_received_size; }
+	std::size_t				sent_messages_count()		const	{ return m_sent_messages_count; }
+	std::size_t				received_messages_count()	const	{ return m_received_messages_count; }
+	const std::string&		away_message()				const	{ return m_away_message; }
 
 	bool					is_away()			const	{ return m_is_afk; }
 	bool					is_invisible()		const	{ return m_is_invisible; }
@@ -114,7 +116,7 @@ public:
 	void	set_server_name(const std::string& name)	{ m_server_name = name; }
 	void	set_is_negociating_capabilities(bool value)	{ m_is_negociating_capabilities = value; }
 
-	void	update_write_buffer(const std::string& str)	{ m_writebuf.append(str); }
+	void	queue_command_for_sending(const std::string& str)	{ m_writebuf.append(str); m_sent_messages_count++; }
 
 	void	disconnect() 								{ m_is_disconnected = true; }
 	void	set_is_readable(bool is_readable)			{ m_is_readable = is_readable; }
@@ -154,6 +156,8 @@ private:
 	std::string	m_writebuf;
 	std::size_t	m_data_sent_size;
 	std::size_t	m_data_received_size;
+	std::size_t	m_sent_messages_count;
+	std::size_t	m_received_messages_count;
 
 	std::string	m_ip;
 	uint16_t	m_port;

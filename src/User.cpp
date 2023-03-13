@@ -13,7 +13,7 @@
 
 User::User(int fd, const std::string& ip, uint16_t port) :
 		m_nickname("*"), m_nickname_upper("*"), m_hostname("localhost"),
-		m_data_sent_size(0), m_data_received_size(0),
+		m_data_sent_size(0), m_data_received_size(0), m_sent_messages_count(0), m_received_messages_count(0),
 		m_ip(ip), m_port(port), m_fd(fd),
 		m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
@@ -89,6 +89,8 @@ std::string User::get_next_command_str()
 
 	CORE_TRACE("INCOMING FROM %s[%s]", debug_name(), command.c_str());
 	CORE_DEBUG("User %s command buffer left: %s", debug_name(), m_readbuf.c_str());
+
+	m_received_messages_count++;
 	return command;
 }
 
