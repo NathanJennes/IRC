@@ -605,6 +605,12 @@ void Server::reply_list_of_channel_invite_to_user(User &user)
 
 void Server::add_to_old_users_list(User &user)
 {
+	// If the user disconnecting was already known by the server,
+	//  delete its old entry (i.e. just update it)
+	OldUserIterator entry = std::find(m_old_users.begin(), m_old_users.end(), user);
+	if (entry != m_old_users.end())
+		m_old_users.erase(entry);
+
 	m_old_users.push_back(OldUserInfo(time(NULL), user));
 	if (m_old_users.size() > 5000)
 		m_old_users.erase(m_old_users.begin());
