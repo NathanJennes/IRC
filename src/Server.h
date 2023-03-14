@@ -101,6 +101,7 @@ public:
 	static       ServerInfo& 	info() 					{ return m_server_info; }
 	static       size_t&		unknown_connections()	{ return m_unknown_connections; }
 	static       bool			is_running()			{ return m_is_running; }
+	static       std::time_t	start_timestamp()		{ return m_start_timestamp; }
 	static const std::string&	password()				{ return m_password; }
 	static       std::string	supported_tokens(User& user);
 
@@ -146,6 +147,7 @@ private:
 	static ChannelMap			m_channels;
 
 	static bool					m_is_running;
+	static std::time_t			m_start_timestamp;
 
 	static const int			m_server_backlog;
 	static const int			m_timeout;

@@ -21,6 +21,7 @@ const int			Server::m_timeout = 20;
 ServerInfo			Server::m_server_info;
 int					Server::m_server_socket;
 bool				Server::m_is_running = true;
+std::time_t			Server::m_start_timestamp;
 std::string			Server::m_password;
 
 std::vector<pollfd>	Server::m_pollfds;
@@ -102,6 +103,7 @@ bool Server::initialize(uint16_t port)
 	m_server_info.initialize();
 
 	m_is_running = true;
+	m_start_timestamp = time(NULL);
 
 	return true;
 }
