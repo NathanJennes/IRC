@@ -10,11 +10,13 @@
 #include "Utils.h"
 #include "log.h"
 
+#define SERVER_VERSION "ft_irc-v0.6"
+
 void ServerInfo::initialize()
 {
 	m_name = "localhost";
 	m_description = ">> The GigaChat IRC server !!! <<";
-	m_version = "ft_irc-v0.5";
+	m_version = SERVER_VERSION;
 	m_network_name = "GigaChat";
 	m_server_location = "Lyon, France";
 	m_hosting_location = "Lyon, France";
