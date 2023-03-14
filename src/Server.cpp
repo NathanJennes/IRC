@@ -36,6 +36,12 @@ std::map<std::string, std::size_t>				Server::m_command_stats;
 
 const std::size_t	Server::m_awaylen = 50;
 const std::size_t	Server::m_chan_name_len = 50;
+const std::size_t	Server::m_hostlen = 63;
+const std::size_t	Server::m_kicklen = 120;
+const std::size_t	Server::m_max_lists_entries = 20;
+const std::size_t	Server::m_nicklen = 9;
+const std::size_t	Server::m_userlen = 10;
+const std::size_t	Server::m_topiclen = 80;
 
 std::map<std::string, Server::command_function>	Server::m_connection_commands;
 

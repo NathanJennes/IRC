@@ -162,6 +162,13 @@ private:
 	// Config
 	static const std::size_t	m_awaylen;
 	static const std::size_t	m_chan_name_len;
+	static const std::size_t	m_hostlen;
+	static const std::size_t	m_kicklen;
+	static const std::size_t	m_max_lists_entries;
+	static const std::size_t	m_nicklen;
+	static const std::size_t	m_userlen;
+	static const std::size_t	m_topiclen;
+
 
 	// Message function prototype
 	static std::map<std::string, command_function>	m_commands;
