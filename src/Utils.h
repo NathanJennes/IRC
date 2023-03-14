@@ -9,6 +9,7 @@
 #include <sstream>
 
 std::string	to_upper(const std::string& str);
+std::string to_lower(const std::string& str);
 bool 		is_number(const std::string& str);
 bool 		is_number(char *str);
 

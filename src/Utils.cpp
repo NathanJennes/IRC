@@ -13,11 +13,23 @@ std::string to_upper(const std::string& str)
 	std::string str_to_upper(str);
 	for (std::size_t i = 0; i < str.size(); i++) {
 		if (str[i] >= 'a' && str[i] <= 'z')
-			str_to_upper[i] = str[i] - (char)32;
+			str_to_upper[i] = static_cast<char>(str[i] - 32);
 		else
 			str_to_upper[i] = str[i];
 	}
 	return str_to_upper;
+}
+
+std::string to_lower(const std::string& str)
+{
+	std::string str_to_lower(str);
+	for (std::size_t i = 0; i < str.size(); i++) {
+		if (str[i] >= 'A' && str[i] <= 'Z')
+			str_to_lower[i] = static_cast<char>(str[i] + 32);
+		else
+			str_to_lower[i] = str[i];
+	}
+	return str_to_lower;
 }
 
 bool is_number(const std::string& str)
