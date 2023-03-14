@@ -1011,7 +1011,10 @@ int kill(User& user, const Command& command)
 		return 0;
 	}
 
-	// TODO: check if user is a server operator
+	if (!user.is_operator()) {
+		Server::reply(user, ERR_NOPRIVILEGES(user));
+		return 0;
+	}
 
 	const std::string& nickname = params[0];
 	const std::string& comment = params[1];
