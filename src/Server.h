@@ -64,6 +64,11 @@ public:
 	static void shutdown();
 	static void signal_handler(int signal);
 
+	/// Operators configuration
+	static const std::string& operator_name() 		{ return m_oper_username; }
+	static const std::string& operator_password()	{ return m_oper_password; }
+	static const std::string& operator_host() 		{ return m_oper_host; }
+
 	/// Replies
 	static void broadcast(const std::string& msg);
 	static void broadcast(User& user_to_avoid, const std::string &msg);
@@ -125,6 +130,7 @@ public:
 
 private:
 	// Member functions
+	static bool		initialize_operator_credential();
 	static void		initialize_command_functions();
 	static void		accept_new_connections();
 	static void		poll_events();
@@ -145,6 +151,10 @@ private:
 	static ServerInfo			m_server_info;
 	static int					m_server_socket;
 	static std::string			m_password;
+
+	static std::string			m_oper_username;
+	static std::string			m_oper_password;
+	static std::string			m_oper_host;
 
 	static std::vector<pollfd>	m_pollfds;
 	static UserVector			m_users;

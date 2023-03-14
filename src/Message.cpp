@@ -121,13 +121,31 @@ int oper(User& user, const Command& command)
 	// Command: OPER
 	// Parameters: <name> <password>
 
+	if (user.is_operator()) {
+		Server::reply(user, RPL_MESSAGE(user, "381", ":You are already an IRC operator"));
+		Server::reply(user, RPL_UMODEIS(user));
+		return 0;
+	}
+
 	if (command.get_parameters().size() < 2) {
 		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
 		return 1;
 	}
 
-	// TODO: implement
+	if (user.hostname() != Server::operator_host()) {
+		Server::reply(user, ERR_NOOPERHOST(user));
+		return 1;
+	}
 
+	if (command.get_parameters()[0] != Server::operator_name() ||
+	    command.get_parameters()[1] != Server::operator_password()) {
+		Server::reply(user, ERR_PASSWDMISMATCH(user));
+		return 1;
+	}
+
+	user.set_is_operator(true);
+	Server::reply(user, RPL_YOUREOPER(user));
+	Server::reply(user, RPL_UMODEIS(user));
 	return 0;
 }
 

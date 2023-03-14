@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 #include "Server.h"
 #include "log.h"
 #include "Numerics.h"
@@ -23,6 +24,10 @@ int					Server::m_server_socket;
 bool				Server::m_is_running = true;
 std::time_t			Server::m_start_timestamp;
 std::string			Server::m_password;
+
+std::string			Server::m_oper_password;
+std::string			Server::m_oper_username;
+std::string			Server::m_oper_host;
 
 std::vector<pollfd>	Server::m_pollfds;
 
@@ -69,6 +74,11 @@ void Server::signal_handler(int signal)
 
 bool Server::initialize(uint16_t port)
 {
+	if (!initialize_operator_credential()) {
+		CORE_ERROR("Couldn't initialize operator credential");
+		return false;
+	}
+
 	m_server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_server_socket < 0) {
 		CORE_ERROR("socket: %s", strerror(errno));
@@ -260,7 +270,7 @@ void Server::execute_command(User &user, const Command &cmd)
 			if (user.need_password() && cmd.get_command() == "NICK") {
 				user.check_password();
 				if (user.need_password()) {
-					reply(user, ":Access denied, need password"); //TODO: get the real error
+					Server::reply(user, ERR_PASSWDMISMATCH(user));
 					user.disconnect();
 					return;
 				}
@@ -549,19 +559,19 @@ std::string Server::supported_tokens(User& user)
 {
 	std::string tokens;
 
-	tokens += "AWAYLEN=" + to_string(m_awaylen) + " "; //TODO: check for awaylen when receiving AWAY command
+	tokens += "AWAYLEN=" + to_string(m_awaylen) + " ";
 	tokens += "CASEMAPPING=ascii ";
-	tokens += "CHANLIMIT=&#:80";
+	tokens += "CHANLIMIT=&#: "; // Unlimited if no value.
 	tokens += "CHANMODES=beI,,kl,mnst ";
 	tokens += "CHANNELLEN=" + to_string(m_chan_name_len) + " ";
 	tokens += "CHANTYPES=#& ";
 	tokens += "ELIST=UCT ";
 	tokens += "EXCEPTS=e ";
-	tokens += "EXTBAN=,";
-	tokens += "HOSTLEN=50 "; //TODO: check for hostnames bigger than 50 characters
+//	tokens += "EXTBAN= "; // Optional
+	tokens += "HOSTLEN=" + to_string(m_hostlen) + " "; //TODO: check for hostnames bigger than 50 characters
 	tokens += "INVEX=I ";
-	tokens += "KICKLEN=100 "; //TODO: truncate kick reasons if it is bigger than 100 characters
-	tokens += "MAXLIST=beI ";
+	tokens += "KICKLEN=" + to_string(m_kicklen) + " "; //TODO: truncate kick reasons if it is bigger than 100 characters
+	tokens += "MAXLIST=beI:" + to_string(m_max_lists_entries) + " "; //TODO: check for maxlist addding users to the lists
 
 	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));
 
@@ -569,17 +579,17 @@ std::string Server::supported_tokens(User& user)
 
 	tokens.clear();
 
-	tokens += "MAXTARGETS= ";
-	tokens += "MODES=9 ";
-	tokens += "NETWORK=FT_IRC";
-	tokens += "NICKLEN= ";
-	tokens += "PREFIX=~&@%+ ";
-//	tokens += "SAFELIST= ";
-	tokens += "SILENCE= ";
-	tokens += "STATUSMSG=@+ ";
-	tokens += "TARGMAX= ";
-	tokens += "TOPICLEN= ";
-	tokens += "USERLEN= ";
+//	tokens += "MAXTARGETS= "; // Optional
+//	tokens += "MODES=9 "; // optional
+	tokens += "NETWORK=GigaChat ";
+	tokens += "NICKLEN=" + to_string(m_nicklen) + " "; //TODO: check for nicknames bigger than 30 characters
+	tokens += "PREFIX=(ov)@%+ ";
+//	tokens += "SAFELIST= "; // Maybe ??
+//	tokens += "SILENCE= "; // Optional - SILENCE command not implemented
+	tokens += "STATUSMSG= ";
+//	tokens += "TARGMAX= "; // optional
+	tokens += "TOPICLEN=" + to_string(m_topiclen) + " "; //TODO: check for topic length when receiving TOPIC command
+	tokens += "USERLEN=" + to_string(m_userlen) + " "; //TODO: check for usernames lenght when receiving USER command
 
 	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));
 
@@ -730,4 +740,33 @@ void Server::change_user_nickname(User &user, const std::string &new_nickname)
 {
 	add_to_old_users_list(user);
 	user.set_nickname(new_nickname);
+}
+
+bool Server::initialize_operator_credential()
+{
+	std::ifstream file("config/IRCd.config", std::ios::in);
+
+	if (file.bad())
+		return false;
+
+	std::string line;
+	while (std::getline(file, line)) {
+		if (line.empty() || line[0] == '#')
+			continue;
+
+		ParamSplitter<'='> splitter(line);
+		std::string param = splitter.next_param();
+		if (param == "authorised_host") {
+			m_oper_host = splitter.next_param();
+			CORE_DEBUG("m_oper_host: %s", m_oper_host.c_str());
+		} else if (param == "oper_name") {
+			m_oper_username = splitter.next_param();
+			CORE_DEBUG("m_oper_username: %s", m_oper_username.c_str());
+		} else if (param == "oper_pass") {
+			m_oper_password = splitter.next_param();
+			CORE_DEBUG("m_oper_password: %s", m_oper_password.c_str());
+		}
+	}
+
+	return true;
 }
