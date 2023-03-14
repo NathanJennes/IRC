@@ -145,6 +145,7 @@ void Server::initialize_command_functions()
 	m_commands.insert(std::make_pair("INFO", info_cmd));
 	m_commands.insert(std::make_pair("LUSERS", lusers));
 	m_commands.insert(std::make_pair("STATS", stats));
+	m_commands.insert(std::make_pair("KILL", kill));
 
 	// User queries
 	m_commands.insert(std::make_pair("WHO", who));
@@ -503,6 +504,11 @@ void Server::remove_user(User &user)
 		return ;
 	}
 
+	for (User::ChannelIterator channel_it = user.channels().begin(); channel_it != user.channels().end(); channel_it++) {
+		Channel& channel = get_channel_reference(channel_it);
+		channel.remove_user(user);
+	}
+
 	add_to_old_users_list(user);
 
 	m_users.erase(user_it);
@@ -522,6 +528,11 @@ void Server::remove_channel(Channel &channel)
 	if (channel_it == m_channels.end()) {
 		CORE_WARN("Trying to remove a channel that doesn't belong to the server's channel list");
 		return ;
+	}
+
+	for (Channel::UserIterator user_it = channel.users().begin(); user_it != channel.users().end(); user_it++) {
+		User& user = get_user_reference(user_it);
+		user.remove_channel(channel);
 	}
 
 	m_channels.erase(channel_it);

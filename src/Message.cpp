@@ -975,3 +975,47 @@ int stats(User& user, const Command& command)
 	Server::reply(user, RPL_ENDOFSTATS(user, query[0]));
 	return 0;
 }
+
+int kill(User& user, const Command& command)
+{
+	//  https://www.rfc-editor.org/rfc/rfc2812#section-3.7.1
+	//  Command: KILL
+	//  Parameters: <nickname> <comment>
+
+	const std::vector<std::string>& params = command.get_parameters();
+
+	if (params.size() < 2) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	// TODO: check if user is a server operator
+
+	const std::string& nickname = params[0];
+	const std::string& comment = params[1];
+	Server::UserIterator target_it = Server::find_user(nickname);
+	if (!Server::user_exists(target_it)) {
+		Server::reply(user, ERR_NOSUCHNICK(user, nickname));
+		return 0;
+	}
+
+	User& target = get_user_reference(target_it);
+	Server::reply(target, USER_SOURCE("KILL", user) + " " + target.nickname() + " " + comment);
+	Server::reply(target, USER_SOURCE("QUIT", target) + " :Quit: Killed (" + user.nickname() + "(" + comment + "))");
+	for (Server::UserIterator user_it = Server::users().begin(); user_it != Server::users().end(); user_it++) {
+		User& other_user = get_user_reference(user_it);
+		if (other_user == target)
+			continue ;
+
+		for (User::ChannelIterator channel_it = target.channels().begin(); channel_it != target.channels().end(); channel_it++) {
+			if (std::find(other_user.channels().begin(), other_user.channels().end(), *channel_it) != other_user.channels().end()) {
+				Server::reply(other_user, USER_SOURCE("QUIT", target) + " :Quit: Killed (" + user.nickname() + "(" + comment + "))");
+				break ;
+			}
+		}
+	}
+
+	Server::reply(target, SERVER_SOURCE("ERROR", user) + " :Closing Link: " + Server::info().name() + " (Killed (" + user.nickname() + "(" + comment + ")))");
+	target.disconnect();
+	return 0;
+}
