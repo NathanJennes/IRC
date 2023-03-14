@@ -18,7 +18,7 @@ User::User(int fd, const std::string& ip, uint16_t port) :
 		m_is_disconnected(false),
 		m_is_readable(false), m_is_writable(false),
 		m_is_registered(false), m_is_negociating_capabilities(false), m_need_password(true),
-		m_is_afk(false), m_is_operator(false), m_is_invisible(false), m_can_receive_wallop(false), m_can_receive_notice(false),
+		m_is_afk(false), m_is_operator(false), m_is_invisible(false), m_can_receive_notice(false),
 		m_signon_timestamp(), m_last_idle_timestamp(), m_idle(0), m_last_ping_timestamp(), m_ping(0), m_connexion_creation_timestamp(time(NULL))
 {
 }
@@ -189,11 +189,8 @@ std::string User::get_modes_as_str() const
 		modes += "o";
 	if (is_invisible())
 		modes += "i";
-	if (can_get_wallop())
-		modes += "w";
-	if (can_get_notice()) // obsolete
+	if (can_get_notice())
 		modes += "s";
-	// TODO: add r mode (restricted user connection)
 	return modes;
 }
 
@@ -218,12 +215,6 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 			case 'i':
 				if (is_invisible() != mode.is_adding) {
 					m_is_invisible = mode.is_adding;
-					updated = true;
-				}
-				break;
-			case 'w':
-				if (can_get_wallop() != mode.is_adding) {
-					m_can_receive_wallop = mode.is_adding;
 					updated = true;
 				}
 				break;

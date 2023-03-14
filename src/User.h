@@ -93,11 +93,10 @@ public:
 	std::size_t				received_messages_count()	const	{ return m_received_messages_count; }
 	const std::string&		away_message()				const	{ return m_away_message; }
 
-	bool					is_away()			const	{ return m_is_afk; }
-	bool					is_invisible()		const	{ return m_is_invisible; }
-	bool					is_operator()		const	{ return m_is_operator; }
-	bool					can_get_wallop()	const	{ return m_can_receive_wallop; }
-	bool					can_get_notice()	const	{ return m_can_receive_notice; }
+	bool					is_away()					const	{ return m_is_afk; }
+	bool					is_invisible()				const	{ return m_is_invisible; }
+	bool					is_operator()				const	{ return m_is_operator; }
+	bool					can_get_notice()			const	{ return m_can_receive_notice; }
 
 	const std::string&		signon()						const	{ return m_signon_timestamp; }
 	const std::string		seconde_idle()					const	{ return to_string<long>(m_idle); }
@@ -127,7 +126,6 @@ public:
 	void	set_is_away(bool is_afk)					{ m_is_afk = is_afk; }
 	void	set_is_invisible(bool is_invisible)			{ m_is_invisible = is_invisible; }
 	void	set_is_operator(bool is_operator)			{ m_is_operator = is_operator; }
-	void	set_can_receive_wallop(bool can_receive)	{ m_can_receive_wallop = can_receive; }
 	void	set_can_receive_notice(bool can_receive)	{ m_can_receive_notice = can_receive; }
 
 	friend bool operator==(const User& lhs, const User& rhs) {
@@ -174,11 +172,10 @@ private:
 	ChannelVector	m_channels;
 
 	std::string m_away_message;
-	bool		m_is_afk;
 
+	bool		m_is_afk;				// +a
 	bool		m_is_operator;			// +o
 	bool		m_is_invisible;			// +i
-	bool		m_can_receive_wallop;	// +w
 	bool		m_can_receive_notice;	// +s
 
 	std::string	m_signon_timestamp;
