@@ -31,7 +31,7 @@ bool User::receive_message()
 	while (total_bytes_read < MAX_MESSAGE_LENGTH) {
 		ssize_t bytes_read = read(m_fd, buffer + total_bytes_read, MAX_MESSAGE_LENGTH - total_bytes_read);
 
-		if (bytes_read < 0 && errno != EAGAIN) {
+		if (bytes_read < 0) {
 			CORE_ERROR(std::strerror(errno));
 			return false;
 		}
@@ -55,7 +55,7 @@ bool User::send_message()
 	while (total_bytes_write < m_writebuf.size()) {
 		ssize_t bytes_write = write(fd(), m_writebuf.c_str() + total_bytes_write, m_writebuf.size() - total_bytes_write);
 
-		if (bytes_write < 0 && errno != EAGAIN) {
+		if (bytes_write < 0) {
 			CORE_ERROR(std::strerror(errno));
 			return false;
 		}
