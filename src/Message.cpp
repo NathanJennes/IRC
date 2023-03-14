@@ -668,8 +668,14 @@ int motd(User& user, const Command& command)
 	}
 
 	std::stringstream motd(Server::info().motd());
-	std::string line;
 
+	if (motd.str().empty()) {
+		CORE_TRACE_IRC_ERR("User %s sent a MOTD request but the MOTD is empty", user.debug_name());
+		Server::reply(user, ERR_NOMOTD(user));
+		return 1;
+	}
+
+	std::string line;
 	Server::reply(user, RPL_MOTDSTART(user));
 	while (std::getline(motd, line)) {
 		CORE_DEBUG("MOTD line: %s", line.c_str());
