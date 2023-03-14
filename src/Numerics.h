@@ -46,7 +46,7 @@
 #define RPL_GLOBALUSERS(user, current, max)				(SERVER_SOURCE("266", user) + " " + current + " " + max + " :Current global users " + current + ", max " + max)
 #define RPL_WHOISCERTFP(user, target)					//NO SSL connection for now
 
-#define RPL_NONE										(" :Unknown format")
+#define RPL_NONE										(" :Undefined format")
 #define RPL_AWAY(user, target)							(SERVER_SOURCE("301", user) + " " + target.nickname() + " :" + target.away_message())
 #define RPL_USERHOST									// TODO : Implement function to return a list of userhost
 #define RPL_UNAWAY(user)								(SERVER_SOURCE("305", user) + " :You are no longer marked as being away")
@@ -82,8 +82,8 @@
 #define RPL_VERSION(user, comment)						(SERVER_SOURCE("351", user) + " " + Server::info().version() + " " + Server::info().name() + " :" + comment)
 
 // TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
-#define RPL_NAMREPLY(user, channel, channel_user, channel_user_perms)	(SERVER_SOURCE("353", user) + " " + channel.status() + " " + channel.name() + " :" + channel_user_perms.get_highest_prefix() + channel_user.nickname())
-#define RPL_ENDOFNAMES(user, channel)					(SERVER_SOURCE("366", user) + " " + channel + " :End of /NAMES list.")
+#define RPL_NAMREPLY(user, chan, chan_user, chan_user_perms)	(SERVER_SOURCE("353", user) + " " + chan.status() + " " + chan.name() + " :" + chan_user_perms.get_highest_prefix() + chan_user.nickname())
+#define RPL_ENDOFNAMES(user, channel)							(SERVER_SOURCE("366", user) + " " + channel + " :End of /NAMES list.")
 
 #define RPL_LINKS 364
 
@@ -96,7 +96,10 @@
 #define RPL_ENDOFINFO(user)								(SERVER_SOURCE("374", user) + " :End of /INFO list.")
 #define RPL_MOTDSTART(user)								(SERVER_SOURCE("375", user) + " :- " + Server::info().name() + " Message of the day - ")
 #define RPL_ENDOFMOTD(user)								(SERVER_SOURCE("376", user) + " :End of /MOTD command.")
+
 #define ERR_UNKNOWNERROR(ERRCODE)						(" " + ERRCODE + " :Unknown error")
+
+#define RPL_YOUREOPER(user)								(SERVER_SOURCE("381", user) + " :You are now an IRC operator")
 #define RPL_TIME(user, Server_name, time)				(SERVER_SOURCE("391", user) + " " + Server_name + " " + time + " :")
 #define ERR_NOSUCHNICK(user, nickname)					(SERVER_SOURCE("401", user) + " " + nickname + " :No such nick")
 #define ERR_NOSUCHSERVER(user, servername)				(SERVER_SOURCE("402", user) + " " + servername + " :No such server")
@@ -109,7 +112,7 @@
 #define ERR_NOTEXTTOSEND(user)							(SERVER_SOURCE("412", user) + " :No text to send")
 #define ERR_INPUTTOOLONG(user)							(SERVER_SOURCE("414", user) + " :Input too long")
 #define ERR_UNKNOWNCOMMAND(user, command)				(SERVER_SOURCE("421", user) + " " + command + " :Unknown command")
-#define ERR_NOMOTD(user)								(SERVER_SOURCE(user, "422") + " :MOTD File is missing")
+#define ERR_NOMOTD(user)								(SERVER_SOURCE("422", user) + " :MOTD File is missing")
 #define ERR_NONICKNAMEGIVEN(user)						(SERVER_SOURCE("431", user) + " :No nickname given")
 #define ERR_ERRONEUSNICKNAME(user, new_nick)			(SERVER_SOURCE("431", user) + " " + new_nick + " :Erroneous nickname")
 #define ERR_NICKNAMEINUSE(user, new_nick)				(SERVER_SOURCE("432", user) + " " + new_nick + " :Nickname is already in use")
@@ -132,7 +135,7 @@
 #define ERR_CHANOPRIVSNEEDED(user, channel)				(SERVER_SOURCE("482", user) + " " + channel.name() + " :You're not channel operator")
 
 #define ERR_CANTKILLSERVER								(" :You cant kill a server!")
-#define ERR_NOOPERHOST									(" :No O-lines for your host")
+#define ERR_NOOPERHOST(user)							(SERVER_SOURCE("491", user) + " :No O-lines for your host")
 
 #define ERR_UMODEUNKNOWNFLAG(user, mode)				(SERVER_SOURCE("501", user), + " :Unknown MODE flag " + mode)
 #define ERR_USERSDONTMATCH(user)						(SERVER_SOURCE("502", user), + " :Can't change mode for other users")
