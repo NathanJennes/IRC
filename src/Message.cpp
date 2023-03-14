@@ -695,10 +695,8 @@ int motd(User& user, const Command& command)
 
 	std::string line;
 	Server::reply(user, RPL_MOTDSTART(user));
-	while (std::getline(motd, line)) {
-		CORE_DEBUG("MOTD line: %s", line.c_str());
+	while (std::getline(motd, line))
 		Server::reply(user, RPL_MOTD(user, line));
-	}
 	Server::reply(user, RPL_ENDOFMOTD(user));
 
 	return 0;
@@ -974,7 +972,7 @@ int stats(User& user, const Command& command)
 	switch (query[0]) {
 		case 'l': {
 			for (Server::UserIterator user_it = Server::users().begin(); user_it != Server::users().end(); user_it++) {
-				Server::reply(user, RPL_STATSLINKINFO(user));
+				Server::reply(user, RPL_STATSLINKINFO(user, get_user_reference(user_it)));
 			}
 		} break;
 		case 'm': {

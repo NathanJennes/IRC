@@ -20,7 +20,7 @@
 #define RPL_CREATED(user)								(SERVER_SOURCE("003", user) + " :This server was created " + Server::info().creation_date())
 #define RPL_MYINFO(user)								(SERVER_SOURCE("004", user) + " " + Server::info().name() + " " + Server::info().version() + " " + "<user modes>" + " " + "<channel modes>" +  " " + "<channel mode param>") //TODO : add user and channel modes
 #define RPL_ISUPPORT(user)								Server::supported_tokens(user)
-#define RPL_STATSLINKINFO(user)							(SERVER_SOURCE("211", user) + " " + user.nickname() + "[" + user.username() + "@" + user.ip() + "] " \
+#define RPL_STATSLINKINFO(origin, user)					(SERVER_SOURCE("211", origin) + " " + user.nickname() + "[" + user.username() + "@" + user.ip() + "] " \
 														+ to_string(user.write_buffer().size()) + " " + to_string(user.sent_messages_count()) + " " + to_string(user.data_sent_size() / 1000) \
 														+ " " + to_string(user.received_messages_count()) + " " + to_string(user.data_received_size() / 1000) \
 														+ " " + to_string(user.time_connexion_open()))

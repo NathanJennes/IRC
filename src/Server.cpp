@@ -391,7 +391,7 @@ void Server::reply_welcome_user(User &user)
 	reply(user, RPL_YOURHOST(user));
 	reply(user, RPL_CREATED(user));
 	reply(user, RPL_MYINFO(user));
-	reply(user, RPL_ISUPPORT(user));
+	RPL_ISUPPORT(user);
 	motd(user, Command(""));
 }
 

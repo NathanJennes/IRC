@@ -26,47 +26,36 @@ User::User(int fd, const std::string& ip, uint16_t port) :
 bool User::receive_message()
 {
 	char buffer[MAX_MESSAGE_LENGTH + 1];
-	size_t total_bytes_read = 0;
+	ssize_t bytes_read = read(m_fd, buffer, MAX_MESSAGE_LENGTH);
 
-	while (total_bytes_read < MAX_MESSAGE_LENGTH) {
-		ssize_t bytes_read = read(m_fd, buffer + total_bytes_read, MAX_MESSAGE_LENGTH - total_bytes_read);
+	if (bytes_read < 0)
+		CORE_ERROR(std::strerror(errno));
 
-		if (bytes_read < 0) {
-			CORE_ERROR(std::strerror(errno));
-			return false;
-		}
+	if (bytes_read <= 0)
+		return false;
 
-		if (bytes_read <= 0)
-			break;
-
-		total_bytes_read += static_cast<size_t>(bytes_read);
-	}
-	buffer[total_bytes_read] = 0;
+	buffer[bytes_read] = 0;
 	m_readbuf.append(buffer);
-	m_data_received_size += static_cast<size_t>(total_bytes_read);
+	m_data_received_size += static_cast<size_t>(bytes_read);
 
 	return true;
 }
 
 bool User::send_message()
 {
-	size_t total_bytes_write = 0;
+	if (m_writebuf.empty())
+		return true;
 
-	while (total_bytes_write < m_writebuf.size()) {
-		ssize_t bytes_write = write(fd(), m_writebuf.c_str() + total_bytes_write, m_writebuf.size() - total_bytes_write);
+	ssize_t bytes_write = write(fd(), m_writebuf.c_str(), m_writebuf.size());
 
-		if (bytes_write < 0) {
-			CORE_ERROR(std::strerror(errno));
-			return false;
-		}
+	if (bytes_write < 0)
+		CORE_ERROR(std::strerror(errno));
 
-		if (bytes_write <= 0)
-			break;
+	if (bytes_write <= 0)
+		return false;
 
-		total_bytes_write += static_cast<size_t>(bytes_write);
-	}
 	m_writebuf.clear();
-	m_data_sent_size += total_bytes_write;
+	m_data_sent_size += static_cast<size_t>(bytes_write);
 
 	return true;
 }
