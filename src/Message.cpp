@@ -931,3 +931,47 @@ int lusers(User& user, const Command& command)
 	return 0;
 
 }
+
+int stats(User& user, const Command& command)
+{
+	//  https://www.rfc-editor.org/rfc/rfc2812#section-3.4.4
+	//  Command: STATS
+	//  Parameters: [ <query> [ <target> ] ]
+
+	const std::vector<std::string>& params = command.get_parameters();
+
+	if (params.empty() || params[0].empty()) {
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		return 0;
+	}
+
+	const std::string& query = params[0];
+
+	switch (query[0]) {
+		case 'l': {
+			for (Server::UserIterator user_it = Server::users().begin(); user_it != Server::users().end(); user_it++) {
+				Server::reply(user, RPL_STATSLINKINFO(user));
+			}
+		} break;
+		case 'm': {
+			for (Server::CommandStatsIterator command_it = Server::commands_stats().begin();
+				 command_it != Server::commands_stats().end(); command_it++) {
+				if (command_it->second != 0) {
+					Server::reply(user, RPL_STATSCOMMANDS(user, command_it));
+				}
+			}
+		} break;
+		case 'o': {
+			// TODO: implement
+		} break;
+		case 'u': {
+			std::time_t uptime = time(NULL) - Server::start_timestamp();
+			Server::reply(user, RPL_STATSUPTIME(user, uptime));
+		} break;
+		default:
+			break;
+	}
+
+	Server::reply(user, RPL_ENDOFSTATS(user, query[0]));
+	return 0;
+}

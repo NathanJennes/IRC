@@ -20,7 +20,15 @@
 #define RPL_CREATED(user)								(SERVER_SOURCE("003", user) + " :This server was created " + Server::info().creation_date())
 #define RPL_MYINFO(user)								(SERVER_SOURCE("004", user) + " " + Server::info().name() + " " + Server::info().version() + " " + "<user modes>" + " " + "<channel modes>" +  " " + "<channel mode param>") //TODO : add user and channel modes
 #define RPL_ISUPPORT(user)								Server::supported_tokens(user)
+#define RPL_STATSLINKINFO(user)							(SERVER_SOURCE("211", user) + " " + user.nickname() + "[" + user.username() + "@" + user.ip() + "] " \
+														+ to_string(user.write_buffer().size()) + " " + to_string(user.sent_messages_count()) + " " + to_string(user.data_sent_size() / 1000) \
+														+ " " + to_string(user.received_messages_count()) + " " + to_string(user.data_received_size() / 1000) \
+														+ " " + to_string(user.time_connexion_open()))
+#define RPL_STATSCOMMANDS(user, command_stats)			(SERVER_SOURCE("212", user) + " " + command_stats->first + " " + to_string(command_stats->second) + " 0 :0")
+#define RPL_ENDOFSTATS(user, query_char)				(SERVER_SOURCE("219", user) + " " + query_char + " :End of STATS report")
 #define RPL_UMODEIS(user)								(SERVER_SOURCE("221", user) + " " + user.get_modes_as_str())
+
+#define RPL_STATSUPTIME(user, seconds)					(SERVER_SOURCE("242", user) + " :Server Up " + to_string(seconds / 86400) + " days " + to_string(seconds / 3600) + ":" + to_string(seconds / 60) + ":" + to_string(seconds % 60))
 
 #define RPL_LUSERCLIENT(user, current, nbr_invisible)	(SERVER_SOURCE("251", user) + " :There are " + current + " users and " + nbr_invisible + " invisible on 1 server")
 #define RPL_LUSEROP(user, nbr_operator)					(SERVER_SOURCE("252", user) + " " + nbr_operator + " :IRC operator(s) online")

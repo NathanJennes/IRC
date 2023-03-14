@@ -48,13 +48,15 @@ public:
 	typedef int (*command_function)(User&, const Command&);
 	typedef std::map<std::string, command_function>::iterator	CommandIterator;
 
-	typedef std::vector<OldUserInfo>		OldUserVector;
-	typedef OldUserVector::iterator			OldUserIterator;
-	typedef std::vector<User*>				UserVector;
-	typedef UserVector::iterator			UserIterator;
-	typedef std::map<std::string, Channel*>	ChannelMap;
-	typedef ChannelMap::iterator			ChannelIterator;
-	typedef ChannelMap::const_iterator		ConstChannelIterator;
+	typedef std::vector<OldUserInfo>			OldUserVector;
+	typedef OldUserVector::iterator				OldUserIterator;
+	typedef std::vector<User*>					UserVector;
+	typedef UserVector::iterator				UserIterator;
+	typedef std::map<std::string, Channel*>		ChannelMap;
+	typedef ChannelMap::iterator				ChannelIterator;
+	typedef ChannelMap::const_iterator			ConstChannelIterator;
+	typedef std::map<std::string, std::size_t>	CommandStatsMap;
+	typedef CommandStatsMap::const_iterator		CommandStatsIterator;
 
 	/// Server management
 	static bool initialize(uint16_t port);
@@ -118,6 +120,9 @@ public:
 	static const std::size_t&	awaylen()				{ return m_awaylen; }
 	static const std::size_t&	chan_name_len()			{ return m_chan_name_len; }
 
+	/// Stats
+	static const CommandStatsMap&	commands_stats()	{ return m_command_stats; }
+
 private:
 	// Member functions
 	static void		initialize_command_functions();
@@ -161,7 +166,7 @@ private:
 	// Message function prototype
 	static std::map<std::string, command_function>	m_commands;
 	static std::map<std::string, command_function>	m_connection_commands;
-	static std::map<std::string, std::size_t>		m_command_stats;
+	static CommandStatsMap							m_command_stats;
 };
 
 inline Channel&			get_channel_reference(const Server::ChannelIterator& channel_it)		{ return *(channel_it->second); }
