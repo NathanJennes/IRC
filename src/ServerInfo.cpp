@@ -25,6 +25,9 @@ void ServerInfo::initialize()
 	m_admin_name = "cybattis njennes";
 	m_admin_email = "support@gigachat.net";
 	m_max_connected_users = 0;
+	m_user_modes = "aois";
+	m_channel_modes = "bismntloveI";
+	m_channel_modes_params = "bkloveI";
 }
 
 bool ServerInfo::get_server_motd(const std::string& path)
