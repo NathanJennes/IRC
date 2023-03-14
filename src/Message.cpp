@@ -984,7 +984,7 @@ int stats(User& user, const Command& command)
 			}
 		} break;
 		case 'o': {
-			// TODO: implement
+			Server::reply(user, RPL_STATSOLINE(user));
 		} break;
 		case 'u': {
 			std::time_t uptime = time(NULL) - Server::start_timestamp();

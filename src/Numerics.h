@@ -29,7 +29,7 @@
 #define RPL_UMODEIS(user)								(SERVER_SOURCE("221", user) + " " + user.get_modes_as_str())
 
 #define RPL_STATSUPTIME(user, seconds)					(SERVER_SOURCE("242", user) + " :Server Up " + to_string(seconds / 86400) + " days " + to_string(seconds / 3600) + ":" + to_string(seconds / 60) + ":" + to_string(seconds % 60))
-
+#define RPL_STATSOLINE(user)							(SERVER_SOURCE("243", user) + " O *@127.0.0.1 * " + Server::operator_name())
 #define RPL_LUSERCLIENT(user, current, nbr_invisible)	(SERVER_SOURCE("251", user) + " :There are " + current + " users and " + nbr_invisible + " invisible on 1 server")
 #define RPL_LUSEROP(user, nbr_operator)					(SERVER_SOURCE("252", user) + " " + nbr_operator + " :IRC operator(s) online")
 #define RPL_LUSERUNKNOWN(user, unknown)					(SERVER_SOURCE("253", user) + " " + unknown + " :unknown connection(s)")
