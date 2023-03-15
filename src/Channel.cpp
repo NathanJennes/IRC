@@ -442,7 +442,7 @@ bool Channel::is_user_in_invite_list(const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
 	for (ConstNicknameIterator nickname_it = m_invite_list.begin(); nickname_it != m_invite_list.end(); nickname_it++) {
-		if (user_nickname_upper == *nickname_it)
+		if (user_nickname_upper == to_upper(*nickname_it))
 			return true;
 	}
 	return false;
@@ -457,7 +457,7 @@ bool Channel::is_user_in_invite_list_exemptions(const std::string &user_nickname
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
 	for (ConstNicknameIterator nickname_it = m_invite_exemptions.begin(); nickname_it != m_invite_exemptions.end(); nickname_it++) {
-		if (user_nickname_upper == *nickname_it)
+		if (user_nickname_upper == to_upper(*nickname_it))
 			return true;
 	}
 	return false;
@@ -472,7 +472,7 @@ bool Channel::is_user_in_banlist(const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
 	for (ConstNicknameIterator nickname_it = m_ban_list.begin(); nickname_it != m_ban_list.end(); nickname_it++) {
-		if (user_nickname_upper == *nickname_it)
+		if (user_nickname_upper == to_upper(*nickname_it))
 			return true;
 	}
 	return false;
@@ -487,7 +487,7 @@ bool Channel::is_user_in_ban_exemptions(const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
 	for (ConstNicknameIterator nickname_it = m_ban_exemptions.begin(); nickname_it != m_ban_exemptions.end(); nickname_it++) {
-		if (user_nickname_upper == *nickname_it)
+		if (user_nickname_upper == to_upper(*nickname_it))
 			return true;
 	}
 	return false;
@@ -501,11 +501,14 @@ void Channel::add_to_banlist(const User &user)
 void Channel::add_to_banlist(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	if (std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname) == m_ban_list.end()) {
-		m_ban_list.push_back(user_nickname_upper);
-		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "+b " + user_nickname));
+	for (ConstNicknameIterator nickname_it = m_ban_list.begin(); nickname_it != m_ban_list.end(); nickname_it++) {
+		if (user_nickname_upper == to_upper(*nickname_it)) {
+			CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+			return;
+		}
 	}
-	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+	m_ban_list.push_back(user_nickname);
+	Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "+b " + user_nickname));
 }
 
 void Channel::remove_from_banlist(const User &user)
@@ -516,12 +519,14 @@ void Channel::remove_from_banlist(const User &user)
 void Channel::remove_from_banlist(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	NicknameIterator entry = std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname_upper);
-	if (entry != m_ban_list.end()) {
-		m_ban_list.erase(entry);
-		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-b " + user_nickname));
+	for (ConstNicknameIterator entry = m_ban_list.begin(); entry != m_ban_list.end(); entry++) {
+		if (user_nickname_upper == to_upper(*entry)) {
+			m_ban_list.erase(entry);
+			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-b " + user_nickname));
+			return;
+		}
 	}
-	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
+	CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
 void Channel::add_to_ban_exemptions(const User &user)
@@ -532,11 +537,14 @@ void Channel::add_to_ban_exemptions(const User &user)
 void Channel::add_to_ban_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	if (std::find(m_ban_exemptions.begin(), m_ban_exemptions.end(), user_nickname_upper) == m_ban_exemptions.end()) {
-		m_ban_exemptions.push_back(user_nickname_upper);
-		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "+e " + user_nickname));
+	for (ConstNicknameIterator nickname_it = m_ban_exemptions.begin(); nickname_it != m_ban_exemptions.end(); nickname_it++) {
+		if (user_nickname_upper == to_upper(*nickname_it)) {
+			CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban exemption list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+			return;
+		}
 	}
-	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban exemption list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+	m_ban_exemptions.push_back(user_nickname);
+	Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "+e " + user_nickname));
 }
 
 void Channel::remove_from_ban_exemptions(const User &user)
@@ -547,12 +555,14 @@ void Channel::remove_from_ban_exemptions(const User &user)
 void Channel::remove_from_ban_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	NicknameIterator entry = std::find(m_ban_exemptions.begin(), m_ban_exemptions.end(), user_nickname_upper);
-	if (entry != m_ban_exemptions.end()) {
-		m_ban_exemptions.erase(entry);
-		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-e " + user_nickname));
+	for (ConstNicknameIterator entry = m_ban_exemptions.begin(); entry != m_ban_exemptions.end(); entry++) {
+		if (user_nickname_upper == to_upper(*entry)) {
+			m_ban_exemptions.erase(entry);
+			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-e " + user_nickname));
+			return;
+		}
 	}
-	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban exemption list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
+	CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban exemption list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
 void Channel::add_to_invitelist(const User &user)
@@ -563,9 +573,12 @@ void Channel::add_to_invitelist(const User &user)
 void Channel::add_to_invitelist(const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	if (std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname_upper) == m_invite_list.end())
-		m_invite_list.push_back(user_nickname_upper);
-	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the invite list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+	for (ConstNicknameIterator nickname_it = m_invite_list.begin(); nickname_it != m_invite_list.end(); nickname_it++) {
+		if (user_nickname_upper == to_upper(*nickname_it)) {
+			CORE_TRACE_IRC_ERR("Failed to add [%s] to the invite list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+			return;
+		}
+	}
 }
 
 void Channel::remove_from_invitelist(const User &user)
@@ -576,10 +589,13 @@ void Channel::remove_from_invitelist(const User &user)
 void Channel::remove_from_invitelist(const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	NicknameIterator entry = std::find(m_invite_list.begin(), m_invite_list.end(), user_nickname_upper);
-	if (entry != m_invite_list.end())
-		m_invite_list.erase(entry);
-	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
+	for (ConstNicknameIterator entry = m_invite_list.begin(); entry != m_invite_list.end(); entry++) {
+		if (user_nickname_upper == to_upper(*entry)) {
+			m_invite_list.erase(entry);
+			return;
+		}
+	}
+	CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
 void Channel::add_to_invite_list_exemptions(const User &user)
@@ -590,11 +606,14 @@ void Channel::add_to_invite_list_exemptions(const User &user)
 void Channel::add_to_invite_list_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	if (std::find(m_invite_exemptions.begin(), m_invite_exemptions.end(), user_nickname_upper) == m_invite_exemptions.end()) {
-		m_invite_exemptions.push_back(user_nickname_upper);
-		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "+I " + user_nickname));
+	for (ConstNicknameIterator nickname_it = m_invite_exemptions.begin(); nickname_it != m_invite_exemptions.end(); nickname_it++) {
+		if (user_nickname_upper == to_upper(*nickname_it)) {
+			CORE_TRACE_IRC_ERR("Failed to add [%s] to the invite exemption list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+			return;
+		}
 	}
-	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the invite list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
+	m_invite_exemptions.push_back(user_nickname);
+	Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "+I " + user_nickname));
 }
 
 void Channel::remove_from_invite_list_exemptions(const User &user)
@@ -605,12 +624,14 @@ void Channel::remove_from_invite_list_exemptions(const User &user)
 void Channel::remove_from_invite_list_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	NicknameIterator entry = std::find(m_invite_exemptions.begin(), m_invite_exemptions.end(), user_nickname_upper);
-	if (entry != m_invite_exemptions.end()) {
-		m_invite_exemptions.erase(entry);
-		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-I " + user_nickname));
+	for (ConstNicknameIterator entry = m_invite_exemptions.begin(); entry != m_invite_exemptions.end(); entry++) {
+		if (user_nickname_upper == to_upper(*entry)) {
+			m_invite_exemptions.erase(entry);
+			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-I " + user_nickname));
+			return;
+		}
 	}
-	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
+	CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
 bool Channel::is_name_valid(const std::string &channel_name)
