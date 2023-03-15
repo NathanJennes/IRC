@@ -500,6 +500,11 @@ void Channel::add_to_banlist(const User &user)
 
 void Channel::add_to_banlist(const User &user, const std::string &user_nickname)
 {
+	if (m_ban_list.size() >= Server::max_user_lists()) {
+		CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban exemption list of channel [%s] because the list is full.", user_nickname.c_str(), m_name.c_str());
+		return;
+	}
+
 	std::string user_nickname_upper = to_upper(user_nickname);
 	for (ConstNicknameIterator nickname_it = m_ban_list.begin(); nickname_it != m_ban_list.end(); nickname_it++) {
 		if (user_nickname_upper == to_upper(*nickname_it)) {
@@ -536,6 +541,11 @@ void Channel::add_to_ban_exemptions(const User &user)
 
 void Channel::add_to_ban_exemptions(const User &user, const std::string &user_nickname)
 {
+	if (m_ban_exemptions.size() >= Server::max_user_lists()) {
+		CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban exemption list of channel [%s] because the list is full.", user_nickname.c_str(), m_name.c_str());
+		return;
+	}
+
 	std::string user_nickname_upper = to_upper(user_nickname);
 	for (ConstNicknameIterator nickname_it = m_ban_exemptions.begin(); nickname_it != m_ban_exemptions.end(); nickname_it++) {
 		if (user_nickname_upper == to_upper(*nickname_it)) {
@@ -579,6 +589,7 @@ void Channel::add_to_invitelist(const std::string &user_nickname)
 			return;
 		}
 	}
+	m_invite_list.push_back(user_nickname);
 }
 
 void Channel::remove_from_invitelist(const User &user)
@@ -605,6 +616,11 @@ void Channel::add_to_invite_list_exemptions(const User &user)
 
 void Channel::add_to_invite_list_exemptions(const User &user, const std::string &user_nickname)
 {
+	if (m_invite_list.size() >= Server::max_user_lists()) {
+		CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban exemption list of channel [%s] because the list is full.", user_nickname.c_str(), m_name.c_str());
+		return;
+	}
+
 	std::string user_nickname_upper = to_upper(user_nickname);
 	for (ConstNicknameIterator nickname_it = m_invite_exemptions.begin(); nickname_it != m_invite_exemptions.end(); nickname_it++) {
 		if (user_nickname_upper == to_upper(*nickname_it)) {

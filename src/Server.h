@@ -127,6 +127,7 @@ public:
 	static std::size_t	kicklen()						{ return m_kicklen; }
 	static std::size_t	topiclen()						{ return m_topiclen; }
 	static std::size_t	userlen()						{ return m_userlen; }
+	static std::size_t	max_user_lists()				{ return m_max_lists_entries; }
 
 	/// Stats
 	static const CommandStatsMap&	commands_stats()	{ return m_command_stats; }
