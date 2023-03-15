@@ -577,7 +577,6 @@ std::string Server::supported_tokens(User& user)
 	tokens += "CHANTYPES=#& ";
 	tokens += "ELIST=UCT ";
 	tokens += "EXCEPTS=e ";
-//	tokens += "EXTBAN= "; // Optional
 	tokens += "INVEX=I ";
 	tokens += "KICKLEN=" + to_string(m_kicklen) + " ";
 	tokens += "MAXLIST=beI:" + to_string(m_max_lists_entries) + " "; //TODO: check for maxlist addding users to the lists
@@ -591,10 +590,6 @@ std::string Server::supported_tokens(User& user)
 	tokens += "NETWORK=GigaChat ";
 	tokens += "NICKLEN=9 ";
 	tokens += "PREFIX=(ov)@+ ";
-//	tokens += "SAFELIST= "; // Maybe ??
-//	tokens += "SILENCE= "; // Optional - SILENCE command not implemented
-	tokens += "STATUSMSG= ";
-//	tokens += "TARGMAX= "; // optional
 	tokens += "TOPICLEN=" + to_string(m_topiclen) + " "; //TODO: check for topic length when receiving TOPIC command
 	tokens += "USERLEN=" + to_string(m_userlen) + " "; //TODO: check for usernames lenght when receiving USER command
 
