@@ -590,7 +590,7 @@ std::string Server::supported_tokens(User& user)
 	tokens += "NETWORK=GigaChat ";
 	tokens += "NICKLEN=9 ";
 	tokens += "PREFIX=(ov)@+ ";
-	tokens += "TOPICLEN=" + to_string(m_topiclen) + " "; //TODO: check for topic length when receiving TOPIC command
+	tokens += "TOPICLEN=" + to_string(m_topiclen) + " ";
 	tokens += "USERLEN=" + to_string(m_userlen) + " "; //TODO: check for usernames lenght when receiving USER command
 
 	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));

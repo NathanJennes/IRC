@@ -216,7 +216,10 @@ std::string Channel::get_modes_as_str(User& user) const
 
 void Channel::set_topic(const std::string &topic, const User& user)
 {
-	m_topic = topic;
+	if (topic.size() > Server::topiclen())
+		m_topic = topic.substr(0, Server::topiclen());
+	else
+		m_topic = topic;
 	m_last_user_to_modify_topic = user.source();
 	m_topic_modification_date = time(NULL);
 }
