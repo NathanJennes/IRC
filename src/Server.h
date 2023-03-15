@@ -99,7 +99,6 @@ public:
 
 	/// Channel management
 	static Channel&			create_new_channel(User& first_user, const std::string& channel_name);
-	static void				remove_channel(Channel& channel);
 	static bool				channel_exists(const std::string& channel_name);
 	static bool				channel_exists(const ChannelIterator& channel);
 	static ChannelIterator	find_channel(const std::string& channel_name);

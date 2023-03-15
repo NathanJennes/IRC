@@ -234,9 +234,6 @@ void Channel::remove_user(User &user)
 	UserIterator user_it = m_users.find(&user);
 	if (has_user(user_it))
 		m_users.erase(user_it);
-
-	if (m_users.empty())
-		Server::remove_channel(*this);
 }
 
 void Channel::remove_user(const std::string &user_nickname)
