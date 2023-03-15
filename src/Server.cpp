@@ -499,8 +499,8 @@ void Server::reply_part_user_from_channel(User &user, Channel &channel, const st
 
 void Server::reply_part_user_from_channels(User &user, const std::string& reason)
 {
-	for (User::ChannelIterator channel_it = user.channels().begin(); channel_it != user.channels().end(); channel_it++)
-		reply_part_user_from_channel(user, get_channel_reference(channel_it), reason);
+	while (!user.channels().empty())
+		reply_part_user_from_channel(user, get_channel_reference(user.channels().begin()), reason);
 }
 
 User& Server::create_new_user(int fd, const std::string &ip, uint16_t port)
