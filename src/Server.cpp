@@ -41,7 +41,6 @@ std::map<std::string, std::size_t>				Server::m_command_stats;
 
 const std::size_t	Server::m_awaylen = 50;
 const std::size_t	Server::m_chan_name_len = 50;
-const std::size_t	Server::m_hostlen = 63;
 const std::size_t	Server::m_kicklen = 120;
 const std::size_t	Server::m_max_lists_entries = 20;
 const std::size_t	Server::m_nicklen = 9;
@@ -579,7 +578,6 @@ std::string Server::supported_tokens(User& user)
 	tokens += "ELIST=UCT ";
 	tokens += "EXCEPTS=e ";
 //	tokens += "EXTBAN= "; // Optional
-	tokens += "HOSTLEN=" + to_string(m_hostlen) + " "; //TODO: check for hostnames bigger than 50 characters
 	tokens += "INVEX=I ";
 	tokens += "KICKLEN=" + to_string(m_kicklen) + " "; //TODO: truncate kick reasons if it is bigger than 100 characters
 	tokens += "MAXLIST=beI:" + to_string(m_max_lists_entries) + " "; //TODO: check for maxlist addding users to the lists
