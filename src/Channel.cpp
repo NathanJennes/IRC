@@ -524,7 +524,7 @@ void Channel::remove_from_banlist(const User &user)
 void Channel::remove_from_banlist(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	for (ConstNicknameIterator entry = m_ban_list.begin(); entry != m_ban_list.end(); entry++) {
+	for (NicknameIterator entry = m_ban_list.begin(); entry != m_ban_list.end(); entry++) {
 		if (user_nickname_upper == to_upper(*entry)) {
 			m_ban_list.erase(entry);
 			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-b " + user_nickname));
@@ -565,7 +565,7 @@ void Channel::remove_from_ban_exemptions(const User &user)
 void Channel::remove_from_ban_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	for (ConstNicknameIterator entry = m_ban_exemptions.begin(); entry != m_ban_exemptions.end(); entry++) {
+	for (NicknameIterator entry = m_ban_exemptions.begin(); entry != m_ban_exemptions.end(); entry++) {
 		if (user_nickname_upper == to_upper(*entry)) {
 			m_ban_exemptions.erase(entry);
 			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-e " + user_nickname));
@@ -600,7 +600,7 @@ void Channel::remove_from_invitelist(const User &user)
 void Channel::remove_from_invitelist(const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	for (ConstNicknameIterator entry = m_invite_list.begin(); entry != m_invite_list.end(); entry++) {
+	for (NicknameIterator entry = m_invite_list.begin(); entry != m_invite_list.end(); entry++) {
 		if (user_nickname_upper == to_upper(*entry)) {
 			m_invite_list.erase(entry);
 			return;
@@ -640,7 +640,7 @@ void Channel::remove_from_invite_list_exemptions(const User &user)
 void Channel::remove_from_invite_list_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	for (ConstNicknameIterator entry = m_invite_exemptions.begin(); entry != m_invite_exemptions.end(); entry++) {
+	for (NicknameIterator entry = m_invite_exemptions.begin(); entry != m_invite_exemptions.end(); entry++) {
 		if (user_nickname_upper == to_upper(*entry)) {
 			m_invite_exemptions.erase(entry);
 			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-I " + user_nickname));

@@ -125,7 +125,6 @@ bool Server::initialize(uint16_t port)
 void Server::initialize_command_functions()
 {
 	// register commands
-	m_connection_commands.insert(std::make_pair("AUTH", auth));
 	m_connection_commands.insert(std::make_pair("CAP", cap));
 	m_connection_commands.insert(std::make_pair("NICK", nick));
 	m_connection_commands.insert(std::make_pair("PASS", pass));
@@ -351,8 +350,10 @@ void Server::check_for_empty_channels()
 {
 	for (ChannelIterator channel_it = m_channels.begin(), next_it = channel_it; channel_it != m_channels.end(); channel_it = next_it) {
 		next_it++;
-		if (get_channel_reference(channel_it).user_count() == 0)
+		if (get_channel_reference(channel_it).user_count() == 0) {
+			delete channel_it->second;
 			m_channels.erase(channel_it);
+		}
 	}
 }
 
@@ -534,23 +535,6 @@ Channel& Server::create_new_channel(User &first_user, const std::string &channel
 	Channel *new_channel = new Channel(first_user, channel_name);
 	m_channels[to_upper(channel_name)] = new_channel;
 	return *new_channel;
-}
-
-void Server::remove_channel(Channel &channel)
-{
-	ChannelIterator channel_it = m_channels.find(channel.name_to_upper());
-	if (channel_it == m_channels.end()) {
-		CORE_WARN("Trying to remove a channel that doesn't belong to the server's channel list");
-		return ;
-	}
-
-	for (Channel::UserIterator user_it = channel.users().begin(); user_it != channel.users().end(); user_it++) {
-		User& user = get_user_reference(user_it);
-		user.remove_channel(channel);
-	}
-
-	m_channels.erase(channel_it);
-	delete &channel;
 }
 
 void Server::reply_channel_list_to_user(User &user)

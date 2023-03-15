@@ -11,18 +11,6 @@
 #include "ParamSplitter.h"
 #include "ConditionalChannelList.h"
 
-int auth(User& user, const Command& command)
-{
-	// https://modern.ircdocs.horse/#auth-message
-	// Command: AUTH
-	// Parameters: <mechanism> [<initial-response>]n
-
-	(void)command;
-	(void)user;
-	//TODO: to implement.
-	return 0;
-}
-
 int cap(User& user, const Command& command)
 {
 	// https://modern.ircdocs.horse/#cap-message

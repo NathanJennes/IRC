@@ -49,7 +49,7 @@
 
 #define RPL_NONE										(" :Undefined format")
 #define RPL_AWAY(user, target)							(SERVER_SOURCE("301", user) + " " + target.nickname() + " :" + target.away_message())
-#define RPL_USERHOST									// TODO : Implement function to return a list of userhost
+#define RPL_USERHOST
 #define RPL_UNAWAY(user)								(SERVER_SOURCE("305", user) + " :You are no longer marked as being away")
 #define RPL_NOWAWAY(user)								(SERVER_SOURCE("306", user) + " :You have been marked as being away")
 #define RPL_WHOREPLY(user, target, channel, flags)		(SERVER_SOURCE("352", user) + " " + channel + " " + target.username() + " " + target.hostname() + " " + Server::info().name() + " " + target.nickname() + " " + flags + " :" + "0 " + target.realname())
@@ -82,7 +82,6 @@
 #define RPL_ENDOFEXCEPTLIST(user, channel)				(SERVER_SOURCE("349", user) + " " + channel.name() + " :End of channel exception list")
 #define RPL_VERSION(user, comment)						(SERVER_SOURCE("351", user) + " " + Server::info().version() + " " + Server::info().name() + " :" + comment)
 
-// TODO: channel.type() is not what is asked for: https://modern.ircdocs.horse/#rplversion-351
 #define RPL_NAMREPLY(user, chan, chan_user, chan_user_perms)	(SERVER_SOURCE("353", user) + " " + chan.status() + " " + chan.name() + " :" + chan_user_perms.get_highest_prefix() + chan_user.nickname())
 #define RPL_ENDOFNAMES(user, channel)							(SERVER_SOURCE("366", user) + " " + channel + " :End of /NAMES list.")
 
