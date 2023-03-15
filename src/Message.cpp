@@ -865,11 +865,6 @@ int away(User& user, const Command& command)
 	// Command: AWAY
 	// Parameters: [<away message>]
 
-	if (!command.get_parameters().empty() && command.get_parameters()[0].size() > Server::awaylen()) {
-		Server::reply(user, ERR_INPUTTOOLONG(user));
-		return 1;
-	}
-
 	if (command.get_parameters().empty() && user.is_away()) {
 		user.set_away_msg("");
 		user.set_is_away(false);
@@ -878,7 +873,13 @@ int away(User& user, const Command& command)
 	}
 
 	if (!command.get_parameters().empty() && !user.is_away()) {
-		user.set_away_msg(command.get_parameters()[0]);
+		if (command.get_parameters()[0].size() > Server::awaylen()) {
+			std::string msg = command.get_parameters()[0].substr(0, Server::awaylen());
+			user.set_away_msg(msg);
+		}
+		else
+			user.set_away_msg(command.get_parameters()[0]);
+
 		user.set_is_away(true);
 		Server::reply(user, RPL_NOWAWAY(user));
 	}
