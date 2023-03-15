@@ -590,7 +590,7 @@ std::string Server::supported_tokens(User& user)
 
 	tokens += "NETWORK=GigaChat ";
 	tokens += "NICKLEN=9 ";
-	tokens += "PREFIX=(ov)@%+ ";
+	tokens += "PREFIX=(ov)@+ ";
 //	tokens += "SAFELIST= "; // Maybe ??
 //	tokens += "SILENCE= "; // Optional - SILENCE command not implemented
 	tokens += "STATUSMSG= ";
