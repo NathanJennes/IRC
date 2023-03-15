@@ -125,7 +125,6 @@ bool Server::initialize(uint16_t port)
 void Server::initialize_command_functions()
 {
 	// register commands
-	m_connection_commands.insert(std::make_pair("AUTH", auth));
 	m_connection_commands.insert(std::make_pair("CAP", cap));
 	m_connection_commands.insert(std::make_pair("NICK", nick));
 	m_connection_commands.insert(std::make_pair("PASS", pass));
