@@ -17,7 +17,6 @@
 #include "UserQueries.h"
 
 #define MAX_MESSAGE_LENGTH 512
-#define MAX_NICKNAME_LENGTH 9
 
 class Channel;
 struct Mask;

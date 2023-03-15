@@ -43,8 +43,7 @@ const std::size_t	Server::m_awaylen = 50;
 const std::size_t	Server::m_chan_name_len = 50;
 const std::size_t	Server::m_kicklen = 120;
 const std::size_t	Server::m_max_lists_entries = 20;
-const std::size_t	Server::m_nicklen = 9;
-const std::size_t	Server::m_userlen = 10;
+const std::size_t	Server::m_userlen = 20;
 const std::size_t	Server::m_topiclen = 80;
 
 std::map<std::string, Server::command_function>	Server::m_connection_commands;
@@ -591,7 +590,7 @@ std::string Server::supported_tokens(User& user)
 	tokens += "NICKLEN=9 ";
 	tokens += "PREFIX=(ov)@+ ";
 	tokens += "TOPICLEN=" + to_string(m_topiclen) + " ";
-	tokens += "USERLEN=" + to_string(m_userlen) + " "; //TODO: check for usernames lenght when receiving USER command
+	tokens += "USERLEN=" + to_string(m_userlen) + " ";
 
 	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));
 

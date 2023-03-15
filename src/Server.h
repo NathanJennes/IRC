@@ -126,6 +126,7 @@ public:
 	static std::size_t	chan_name_len()					{ return m_chan_name_len; }
 	static std::size_t	kicklen()						{ return m_kicklen; }
 	static std::size_t	topiclen()						{ return m_topiclen; }
+	static std::size_t	userlen()						{ return m_userlen; }
 
 	/// Stats
 	static const CommandStatsMap&	commands_stats()	{ return m_command_stats; }
@@ -176,7 +177,6 @@ private:
 	static const std::size_t	m_chan_name_len;
 	static const std::size_t	m_kicklen;
 	static const std::size_t	m_max_lists_entries;
-	static const std::size_t	m_nicklen;
 	static const std::size_t	m_userlen;
 	static const std::size_t	m_topiclen;
 

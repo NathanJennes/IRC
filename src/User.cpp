@@ -289,7 +289,7 @@ bool User::is_nickname_valid(const std::string &nickname)
 
 bool User::is_username_valid(const std::string &username)
 {
-	if (username.empty())
+	if (username.empty() || username.size() > Server::userlen())
 		return false;
 
 	if (username[0] == ':')
