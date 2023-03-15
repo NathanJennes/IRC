@@ -588,10 +588,8 @@ std::string Server::supported_tokens(User& user)
 
 	tokens.clear();
 
-//	tokens += "MAXTARGETS= "; // Optional
-//	tokens += "MODES=9 "; // optional
 	tokens += "NETWORK=GigaChat ";
-	tokens += "NICKLEN=" + to_string(m_nicklen) + " "; //TODO: check for nicknames bigger than 30 characters
+	tokens += "NICKLEN=9 ";
 	tokens += "PREFIX=(ov)@%+ ";
 //	tokens += "SAFELIST= "; // Maybe ??
 //	tokens += "SILENCE= "; // Optional - SILENCE command not implemented
