@@ -11,7 +11,8 @@
 #define USER_SOURCE(command_or_numeric, user)			(":" + (user).source() + " " + command_or_numeric)
 
 #define RPL_CAP(user, command, msg) 					(SERVER_SOURCE("CAP", user) + " " + command + " :" + msg)
-#define RPL_MODE(user, msg) 							(USER_SOURCE("MODE", user) + " " + (user).nickname() + " " + msg)
+#define RPL_MODE_USER(user, msg) 						(USER_SOURCE("MODE", user) + " " + (user).nickname() + " " + msg)
+#define RPL_MODE_CHANNEL(user, channel, msg)			(USER_SOURCE("MODE", user) + " " + channel + " " + msg)
 #define RPL_MESSAGE(user, command, msg) 				(SERVER_SOURCE(command, user) + " " + msg)
 
 // RPL CODES

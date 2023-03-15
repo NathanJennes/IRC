@@ -245,7 +245,7 @@ bool User::update_mode(const std::vector<ModeParam>& mode_params)
 	if (plus_modes_update.empty() && minus_modes_update.empty())
 		return false;
 
-	Server::reply(*this, RPL_MODE(*this, plus_modes_update + minus_modes_update));
+	Server::reply(*this, RPL_MODE_USER(*this, plus_modes_update + minus_modes_update));
 	return true;
 }
 
@@ -345,7 +345,7 @@ std::string User::get_user_flags() const
 	return flags;
 }
 
-// TODO: to fix
+// TODO: fix masks
 bool User::has_mask(std::vector<Mask> masks) const
 {
 	std::vector<Mask>::iterator it = masks.begin();
