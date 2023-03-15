@@ -612,7 +612,7 @@ void Channel::remove_from_invite_list_exemptions(const User &user, const std::st
 
 bool Channel::is_name_valid(const std::string &channel_name)
 {
-	if (channel_name.empty())
+	if (channel_name.empty() || channel_name.size() > Server::chan_name_len())
 		return false;
 
 	if (!is_channel_type_char(channel_name[0]))

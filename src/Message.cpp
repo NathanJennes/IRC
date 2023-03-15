@@ -301,14 +301,9 @@ int join(User& user, const Command& command)
 		std::string requested_channel_name = channel_splitter.next_param();
 		std::string current_key = key_splitter.next_param();
 
-		if (requested_channel_name.length() > Server::chan_name_len()) {
-			Server::reply(user, ERR_ILLCHANNAME(user, requested_channel_name));
-			continue;
-		}
-
 		// Check if the requested channel name is valid
 		if (!Channel::is_name_valid(requested_channel_name)) {
-			Server::reply(user, ERR_NOSUCHCHANNEL(user, requested_channel_name));
+			Server::reply(user, ERR_ILLCHANNAME(user, requested_channel_name));
 			continue ;
 		}
 
