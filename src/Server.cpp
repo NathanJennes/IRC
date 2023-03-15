@@ -579,7 +579,7 @@ std::string Server::supported_tokens(User& user)
 	tokens += "EXCEPTS=e ";
 //	tokens += "EXTBAN= "; // Optional
 	tokens += "INVEX=I ";
-	tokens += "KICKLEN=" + to_string(m_kicklen) + " "; //TODO: truncate kick reasons if it is bigger than 100 characters
+	tokens += "KICKLEN=" + to_string(m_kicklen) + " ";
 	tokens += "MAXLIST=beI:" + to_string(m_max_lists_entries) + " "; //TODO: check for maxlist addding users to the lists
 
 	Server::reply(user, RPL_MESSAGE(user, "005", tokens + ":are supported by this server"));

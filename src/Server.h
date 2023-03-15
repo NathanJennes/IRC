@@ -122,8 +122,9 @@ public:
 	static void set_password(const std::string& password)	{ m_password = password; }
 
 	/// Config
-	static const std::size_t&	awaylen()				{ return m_awaylen; }
-	static const std::size_t&	chan_name_len()			{ return m_chan_name_len; }
+	static std::size_t	awaylen()						{ return m_awaylen; }
+	static std::size_t	chan_name_len()					{ return m_chan_name_len; }
+	static std::size_t	kicklen()						{ return m_kicklen; }
 
 	/// Stats
 	static const CommandStatsMap&	commands_stats()	{ return m_command_stats; }

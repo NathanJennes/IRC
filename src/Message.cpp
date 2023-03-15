@@ -647,8 +647,11 @@ int kick(User& user, const Command& command)
 
 	// Get the kick reason
 	std::string kick_reason = "The user didn't give a reason";
-	if (params.size() == 3)
+	if (params.size() == 3) {
 		kick_reason = params[2];
+		if (kick_reason.size() > Server::kicklen())
+			kick_reason.erase(Server::kicklen());
+	}
 
 	// Get the users
 	ParamSplitter<','> splitter(command, 1);
