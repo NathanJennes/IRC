@@ -33,24 +33,15 @@ public:
 
 		std::string get_highest_prefix() const;
 
-		void set_is_founder(bool new_value)		{ m_is_founder = new_value; };
-		void set_is_protected(bool new_value)	{ m_is_protected = new_value; };
 		void set_is_operator(bool new_value)	{ m_is_operator = new_value; };
-		void set_is_halfop(bool new_value)		{ m_is_halfop = new_value; };
 		void set_has_voice(bool new_value)		{ m_has_voice = new_value; };
 
-		bool	is_founder()	const			{ return m_is_founder; };
-		bool	is_protected()	const			{ return m_is_protected; };
-		bool	is_operator()	const			{ return m_is_operator; };
-		bool	is_halfop()		const			{ return m_is_halfop; };
-		bool	has_voice()		const			{ return m_has_voice; };
+		bool is_operator()	const				{ return m_is_operator; };
+		bool has_voice()	const				{ return m_has_voice; };
 
 	private:
-		bool	m_is_founder;
-		bool	m_is_protected;
-		bool	m_is_operator;
-		bool	m_is_halfop;
-		bool	m_has_voice;
+		bool m_is_operator;
+		bool m_has_voice;
 	};
 
 	explicit Channel(User& user, const std::string& name);
@@ -84,22 +75,19 @@ public:
 	ConstUserIterator	find_user(const std::string& user_nickname) const;
 
 	void set_user_limit(size_t limit) { m_user_limit = limit; }
+
 	void add_user(User& user);
 	void remove_user(User& user);
 	void remove_user(const std::string& user_nickname);
+
 	bool has_user(User& user) const;
 	bool has_user(const std::string& user_nickname) const;
 	bool has_user(const UserIterator& user_it) const;
-	void set_user_founder(User& user, bool value);
-	void set_user_founder(const std::string& user_nickname, bool value);
-	void set_user_protected(User& user, bool value);
-	void set_user_protected(const std::string& user_nickname, bool value);
-	void set_user_operator(User& user, bool value);
-	void set_user_operator(const std::string& user_nickname, bool value);
-	void set_user_halfop(User& user, bool value);
-	void set_user_halfop(const std::string& user_nickname, bool value);
+
+	void set_user_operator_permission(User& user, bool value);
+	void set_user_operator_permission(User &user, const std::string &user_nickname, bool value);
 	void set_user_voice_permission(User& user, bool value);
-	void set_user_voice_permission(const std::string& user_nickname, bool value);
+	void set_user_voice_permission(User &user, const std::string &user_nickname, bool value);
 
 	/// Modes
 	bool update_mode(User &user, const std::vector<ModeParam> &mode_params);
@@ -113,30 +101,30 @@ public:
 	bool is_user_in_invite_list(User& user);
 	bool is_user_in_invite_list(const std::string& user_nickname);
 	void add_to_invitelist(const User& user);
-	void add_to_invitelist(const std::string& user_nickname);
+	void add_to_invitelist(const std::string &user_nickname);
 	void remove_from_invitelist(const User& user);
-	void remove_from_invitelist(const std::string& user_nickname);
+	void remove_from_invitelist(const std::string &user_nickname);
 
 	bool is_user_in_banlist(User& user);
 	bool is_user_in_banlist(const std::string& user_nickname);
 	void add_to_banlist(const User& user);
-	void add_to_banlist(const std::string& user_nickname);
+	void add_to_banlist(const User &user, const std::string &user_nickname);
 	void remove_from_banlist(const User& user);
-	void remove_from_banlist(const std::string& user_nickname);
+	void remove_from_banlist(const User &user, const std::string &user_nickname);
 
 	bool is_user_in_ban_exemptions(User& user);
 	bool is_user_in_ban_exemptions(const std::string& user_nickname);
 	void add_to_ban_exemptions(const User& user);
-	void add_to_ban_exemptions(const std::string& user_nickname);
+	void add_to_ban_exemptions(const User &user, const std::string &user_nickname);
 	void remove_from_ban_exemptions(const User& user);
-	void remove_from_ban_exemptions(const std::string& user_nickname);
+	void remove_from_ban_exemptions(const User &user, const std::string &user_nickname);
 
 	bool is_user_in_invite_list_exemptions(User& user);
 	bool is_user_in_invite_list_exemptions(const std::string& user_nickname);
 	void add_to_invite_list_exemptions(const User& user);
-	void add_to_invite_list_exemptions(const std::string& user_nickname);
+	void add_to_invite_list_exemptions(const User &user, const std::string &user_nickname);
 	void remove_from_invite_list_exemptions(const User& user);
-	void remove_from_invite_list_exemptions(const std::string& user_nickname);
+	void remove_from_invite_list_exemptions(const User &user, const std::string &user_nickname);
 
 	bool is_user_allowed_to_send_messages(const User& user);
 
@@ -165,12 +153,8 @@ public:
 	const std::vector<std::string>&	ban_exemptions()				const { return m_ban_exemptions; }
 	std::string						get_modes_as_str(User& user)	const;
 
-	bool	is_user_founder(const User& user) const;
-	bool	is_user_founder(const std::string &user_nickname) const;
 	bool	is_user_operator(const User& user) const;
 	bool	is_user_operator(const std::string &user_nickname) const;
-	bool	is_user_halfop(const User& user) const;
-	bool	is_user_halfop(const std::string &user_nickname) const;
 	bool	is_user_has_voice(const User& user) const;
 	bool	is_user_has_voice(const std::string &user_nickname) const;
 
@@ -216,10 +200,10 @@ private:
 	bool	m_no_outside_messages;		// +n
 };
 
-inline const User&		get_user_reference(const Channel::ConstUserIterator& user_it)	{ return *(user_it->first); }
-inline User&			get_user_reference(const Channel::UserIterator& user_it)		{ return *(user_it->first); }
+inline const User&						get_user_reference(const Channel::ConstUserIterator& user_it)		{ return *(user_it->first); }
+inline       User&						get_user_reference(const Channel::UserIterator& user_it)			{ return *(user_it->first); }
 
-inline Channel::UserPermissions&		get_user_perms_reference(const Channel::UserIterator& user_it)		{ return user_it->second; }
+inline       Channel::UserPermissions&	get_user_perms_reference(const Channel::UserIterator& user_it)		{ return user_it->second; }
 inline const Channel::UserPermissions&	get_user_perms_reference(const Channel::ConstUserIterator& user_it)	{ return user_it->second; }
 
 #endif //CHANNEL_H

@@ -7,8 +7,6 @@
 #include "Mode.h"
 #include <algorithm>
 
-static const std::string my_modes = "beIkl";
-
 std::vector<ModeParam> parse_channel_modes(const Command& command)
 {
 	std::vector<ModeParam> modes;
@@ -35,7 +33,8 @@ std::vector<ModeParam> parse_channel_modes(const Command& command)
 
 		mode_param.is_adding = value;
 		mode_param.mode = cmd_parameter[j];
-		if (std::find(my_modes.begin(), my_modes.end(), mode_param.mode) != my_modes.end()
+		if (std::find(Server::info().channel_modes_params().begin(), Server::info().channel_modes_params().end(), mode_param.mode)
+			!= Server::info().channel_modes_params().end()
 			&& param + 1 < command.get_parameters().size())
 			mode_param.arg = command.get_parameters()[++param];
 		modes.push_back(mode_param);
@@ -113,7 +112,7 @@ int mode(User& user, const Command& command)
 		}
 
 		// update channel mode
-		if (channel.is_user_operator(user.nickname()) || channel.is_user_halfop(user.nickname())) {
+		if (channel.is_user_operator(user.nickname())) {
 			std::vector<ModeParam> mode_params = parse_channel_modes(command);
 			channel.update_mode(user, mode_params);
 			return 0;

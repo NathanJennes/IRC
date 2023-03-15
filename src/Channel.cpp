@@ -11,19 +11,12 @@
 #include "Numerics.h"
 
 Channel::UserPermissions::UserPermissions()
-: m_is_founder(false), m_is_protected(false),
-  m_is_operator(false), m_is_halfop(false), m_has_voice(false) {}
+: m_is_operator(false), m_has_voice(false) {}
 
 std::string Channel::UserPermissions::get_highest_prefix() const
 {
-//	if (m_is_founder)
-//		return CHANNEL_USER_PREFIX_FOUNDER;
-	if (m_is_protected)
-		return CHANNEL_USER_PREFIX_PROTECTED;
-	else if (m_is_operator)
+	if (m_is_operator)
 		return CHANNEL_USER_PREFIX_OPERATOR;
-	else if (m_is_halfop)
-		return CHANNEL_USER_PREFIX_HALFOP;
 	else if (m_has_voice)
 		return CHANNEL_USER_PREFIX_VOICE;
 	return "";
@@ -52,8 +45,7 @@ Channel::Channel(User& user, const std::string &name) :
 
 	add_user(user);
 	user.add_channel(*this);
-	set_user_founder(user, true);
-	set_user_operator(user, true);
+	set_user_operator_permission(user, true);
 }
 
 bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
@@ -69,14 +61,13 @@ bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 		switch (mode_param.mode) {
 			case 'b':
 				if (mode_param.arg.empty()) {
-					CORE_TRACE("User %s requested ban list for channel %s", user.nickname().c_str(), m_name.c_str());
 					Server::reply_channel_ban_list_to_user(user, *this);
 					break;
 				}
 				if (mode_param.is_adding)
-					add_to_banlist(mode_param.arg);
+					add_to_banlist(user, mode_param.arg);
 				else if (!mode_param.is_adding)
-					remove_from_banlist(mode_param.arg);
+					remove_from_banlist(user, mode_param.arg);
 				break;
 			case 'e':
 				if (mode_param.arg.empty()) {
@@ -84,9 +75,9 @@ bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 					break;
 				}
 				if (mode_param.is_adding)
-					add_to_ban_exemptions(mode_param.arg);
+					add_to_ban_exemptions(user, mode_param.arg);
 				else if (!mode_param.is_adding)
-					remove_from_ban_exemptions(mode_param.arg);
+					remove_from_ban_exemptions(user, mode_param.arg);
 				break;
 			case 'I':
 				if (mode_param.arg.empty()) {
@@ -94,9 +85,9 @@ bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 					break;
 				}
 				if (mode_param.is_adding)
-					add_to_invite_list_exemptions(mode_param.arg);
+					add_to_invite_list_exemptions(user, mode_param.arg);
 				else if (!mode_param.is_adding)
-					remove_from_invite_list_exemptions(mode_param.arg);
+					remove_from_invite_list_exemptions(user, mode_param.arg);
 				break;
 			case 'i':
 				if (is_invite_only() && !mode_param.is_adding) {
@@ -127,35 +118,41 @@ bool Channel::update_mode(User &user, const std::vector<ModeParam> &mode_params)
 					m_user_limit = static_cast<size_t>(value);
 					updated = true;
 				}
-				else if (is_user_limited() && !mode_param.is_adding) {
+				else if (is_user_limited() != mode_param.is_adding) {
 					m_is_user_limited = false;
 					m_user_limit = 0;
 					updated = true;
 				}
 				break;
 			case 'n':
-				if (no_outside_messages() && !mode_param.is_adding) {
+				if (no_outside_messages() != mode_param.is_adding) {
 					m_no_outside_messages = mode_param.is_adding;
 					updated = true;
 				}
 				break;
 			case 'm':
-				if (is_moderated() && !mode_param.is_adding) {
+				if (is_moderated() != mode_param.is_adding) {
 					m_is_moderated = mode_param.is_adding;
 					updated = true;
 				}
 				break;
 			case 's':
-				if (is_secret() && !mode_param.is_adding) {
+				if (is_secret() != mode_param.is_adding) {
 					m_is_secret = mode_param.is_adding;
 					updated = true;
 				}
 				break;
 			case 't':
-				if (is_topic_protected() && !mode_param.is_adding) {
+				if (is_topic_protected() != mode_param.is_adding) {
 					m_is_topic_protected = mode_param.is_adding;
 					updated = true;
 				}
+				break;
+			case 'o':
+				set_user_operator_permission(user, mode_param.arg, mode_param.is_adding);
+				break;
+			case 'v':
+				set_user_voice_permission(user, mode_param.arg, mode_param.is_adding);
 				break;
 			default:
 				Server::reply(user, ERR_UNKNOWNMODE(user, mode_param.mode));
@@ -264,45 +261,7 @@ bool Channel::has_user(const UserMap::iterator &user_it) const
 	return user_it != m_users.end();
 }
 
-void Channel::set_user_founder(User& user, bool value)
-{
-	if (!has_user(user)) {
-		CORE_WARN("Trying to modify permissions on a user not present in a channel");
-		return;
-	}
-
-	m_users.at(&user).set_is_founder(value);
-}
-
-void Channel::set_user_founder(const std::string& user_nickname, bool value)
-{
-	if (!has_user(user_nickname))
-		return ;
-
-	UserIterator user_it = find_user(user_nickname);
-	get_user_perms_reference(user_it).set_is_founder(value);
-}
-
-void Channel::set_user_protected(User& user, bool value)
-{
-	if (!has_user(user)) {
-		CORE_WARN("Trying to modify permissions on a user not present in a channel");
-		return;
-	}
-
-	m_users.at(&user).set_is_protected(value);
-}
-
-void Channel::set_user_protected(const std::string& user_nickname, bool value)
-{
-	if (!has_user(user_nickname))
-		return ;
-
-	UserIterator user_it = find_user(user_nickname);
-	get_user_perms_reference(user_it).set_is_protected(value);
-}
-
-void Channel::set_user_operator(User& user, bool value)
+void Channel::set_user_operator_permission(User& user, bool value)
 {
 	if (!has_user(user)) {
 		CORE_WARN("Trying to modify permissions on a user not present in a channel");
@@ -312,32 +271,22 @@ void Channel::set_user_operator(User& user, bool value)
 	m_users.at(&user).set_is_operator(value);
 }
 
-void Channel::set_user_operator(const std::string& user_nickname, bool value)
+void Channel::set_user_operator_permission(User &user, const std::string &user_nickname, bool value)
 {
-	if (!has_user(user_nickname))
-		return ;
-
-	UserIterator user_it = find_user(user_nickname);
-	get_user_perms_reference(user_it).set_is_operator(value);
-}
-
-void Channel::set_user_halfop(User& user, bool value)
-{
-	if (!has_user(user)) {
+	if (!has_user(user_nickname)) {
 		CORE_WARN("Trying to modify permissions on a user not present in a channel");
+		Server::reply(user, ERR_NOSUCHNICK(user, user_nickname));
 		return;
 	}
 
-	m_users.at(&user).set_is_halfop(value);
-}
-
-void Channel::set_user_halfop(const std::string& user_nickname, bool value)
-{
-	if (!has_user(user_nickname))
-		return ;
-
-	UserIterator user_it = find_user(user_nickname);
-	get_user_perms_reference(user_it).set_is_halfop(value);
+	UserPermissions& target = find_user(user_nickname)->second;
+	if (target.is_operator() != value) {
+		target.set_is_operator(value);
+		if (value)
+			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(),  + "+o " + user_nickname));
+		else
+			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(),  + "-o " + user_nickname));
+	}
 }
 
 void Channel::set_user_voice_permission(User& user, bool value)
@@ -350,13 +299,22 @@ void Channel::set_user_voice_permission(User& user, bool value)
 	m_users.at(&user).set_has_voice(value);
 }
 
-void Channel::set_user_voice_permission(const std::string& user_nickname, bool value)
+void Channel::set_user_voice_permission(User &user, const std::string &user_nickname, bool value)
 {
-	if (!has_user(user_nickname))
-		return ;
+	if (!has_user(user_nickname)) {
+		CORE_WARN("Trying to modify permissions on a user not present in a channel");
+		Server::reply(user, ERR_NOSUCHNICK(user, user_nickname));
+		return;
+	}
 
-	UserIterator user_it = find_user(user_nickname);
-	get_user_perms_reference(user_it).set_has_voice(value);
+	UserPermissions& target = find_user(user_nickname)->second;
+	if (target.has_voice() != value) {
+		target.set_has_voice(value);
+		if (value)
+			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(),  + "+v " + user_nickname));
+		else
+			Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(),  + "-v " + user_nickname));
+	}
 }
 
 Channel::UserIterator Channel::find_user(const std::string &user_nickname)
@@ -379,19 +337,6 @@ Channel::ConstUserIterator Channel::find_user(const std::string &user_nickname) 
 	return m_users.end();
 }
 
-bool Channel::is_user_founder(const User &user) const
-{
-	return is_user_founder(user.nickname());
-}
-
-bool Channel::is_user_founder(const std::string &user_nickname) const
-{
-	ConstUserIterator it = find_user(user_nickname);
-	if (it != m_users.end())
-		return get_user_perms_reference(it).is_founder();
-	return false;
-}
-
 bool Channel::is_user_operator(const User &user) const
 {
 	return is_user_operator(user.nickname());
@@ -402,19 +347,6 @@ bool Channel::is_user_operator(const std::string &user_nickname) const
 	ConstUserIterator it = find_user(user_nickname);
 	if (it != m_users.end())
 		return get_user_perms_reference(it).is_operator();
-	return false;
-}
-
-bool Channel::is_user_halfop(const User &user) const
-{
-	return is_user_halfop(user.nickname());
-}
-
-bool Channel::is_user_halfop(const std::string &user_nickname) const
-{
-	ConstUserIterator it = find_user(user_nickname);
-	if (it != m_users.end())
-		return get_user_perms_reference(it).is_halfop();
 	return false;
 }
 
@@ -560,55 +492,63 @@ bool Channel::is_user_in_ban_exemptions(const std::string &user_nickname)
 
 void Channel::add_to_banlist(const User &user)
 {
-	add_to_banlist(user.nickname());
+	add_to_banlist(user, user.nickname());
 }
 
-void Channel::add_to_banlist(const std::string &user_nickname)
+void Channel::add_to_banlist(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	if (std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname) == m_ban_list.end())
+	if (std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname) == m_ban_list.end()) {
 		m_ban_list.push_back(user_nickname_upper);
+		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "+b " + user_nickname));
+	}
 	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
 }
 
 void Channel::remove_from_banlist(const User &user)
 {
-	remove_from_banlist(user.nickname());
+	remove_from_banlist(user, user.nickname());
 }
 
-void Channel::remove_from_banlist(const std::string &user_nickname)
+void Channel::remove_from_banlist(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
 	NicknameIterator entry = std::find(m_ban_list.begin(), m_ban_list.end(), user_nickname_upper);
-	if (entry != m_ban_list.end())
+	if (entry != m_ban_list.end()) {
 		m_ban_list.erase(entry);
+		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-b " + user_nickname));
+	}
 	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
 void Channel::add_to_ban_exemptions(const User &user)
 {
-	add_to_ban_exemptions(user.nickname());
+	add_to_ban_exemptions(user, user.nickname());
 }
 
-void Channel::add_to_ban_exemptions(const std::string &user_nickname)
+void Channel::add_to_ban_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	if (std::find(m_ban_exemptions.begin(), m_ban_exemptions.end(), user_nickname_upper) == m_ban_exemptions.end())
+	if (std::find(m_ban_exemptions.begin(), m_ban_exemptions.end(), user_nickname_upper) == m_ban_exemptions.end()) {
 		m_ban_exemptions.push_back(user_nickname_upper);
+		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "+e " + user_nickname));
+	}
 	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the ban exemption list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
 }
 
 void Channel::remove_from_ban_exemptions(const User &user)
 {
-	remove_from_ban_exemptions(user.nickname());
+	remove_from_ban_exemptions(user, user.nickname());
 }
 
-void Channel::remove_from_ban_exemptions(const std::string &user_nickname)
+void Channel::remove_from_ban_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
 	NicknameIterator entry = std::find(m_ban_exemptions.begin(), m_ban_exemptions.end(), user_nickname_upper);
-	if (entry != m_ban_exemptions.end())
+	if (entry != m_ban_exemptions.end()) {
 		m_ban_exemptions.erase(entry);
+		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-e " + user_nickname));
+	}
 	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the ban exemption list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
@@ -641,28 +581,32 @@ void Channel::remove_from_invitelist(const std::string &user_nickname)
 
 void Channel::add_to_invite_list_exemptions(const User &user)
 {
-	add_to_invite_list_exemptions(user.nickname());
+	add_to_invite_list_exemptions(user, user.nickname());
 }
 
-void Channel::add_to_invite_list_exemptions(const std::string &user_nickname)
+void Channel::add_to_invite_list_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
-	if (std::find(m_invite_exemptions.begin(), m_invite_exemptions.end(), user_nickname_upper) == m_invite_exemptions.end())
+	if (std::find(m_invite_exemptions.begin(), m_invite_exemptions.end(), user_nickname_upper) == m_invite_exemptions.end()) {
 		m_invite_exemptions.push_back(user_nickname_upper);
+		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "+I " + user_nickname));
+	}
 	else CORE_TRACE_IRC_ERR("Failed to add [%s] to the invite list of channel [%s] because it was already present.", user_nickname.c_str(), m_name.c_str());
 }
 
 void Channel::remove_from_invite_list_exemptions(const User &user)
 {
-	remove_from_invite_list_exemptions(user.nickname());
+	remove_from_invite_list_exemptions(user, user.nickname());
 }
 
-void Channel::remove_from_invite_list_exemptions(const std::string &user_nickname)
+void Channel::remove_from_invite_list_exemptions(const User &user, const std::string &user_nickname)
 {
 	std::string user_nickname_upper = to_upper(user_nickname);
 	NicknameIterator entry = std::find(m_invite_exemptions.begin(), m_invite_exemptions.end(), user_nickname_upper);
-	if (entry != m_invite_exemptions.end())
+	if (entry != m_invite_exemptions.end()) {
 		m_invite_exemptions.erase(entry);
+		Server::broadcast_to_channel(*this, RPL_MODE_CHANNEL(user, name(), "-I " + user_nickname));
+	}
 	else CORE_TRACE_IRC_ERR("Failed to remove [%s] from the invite list of channel [%s] because it was not present.", user_nickname.c_str(), m_name.c_str());
 }
 
@@ -698,8 +642,7 @@ bool Channel::is_user_allowed_to_send_messages(const User &user)
 
 	if (m_is_moderated) {
 		UserPermissions &user_perms = get_user_perms_reference(user_it);
-		if (!user_perms.has_voice() && !user_perms.is_protected() && !user_perms.is_halfop() && !user_perms.is_operator() &&
-			!user_perms.is_founder())
+		if (!user_perms.has_voice() && !user_perms.is_operator())
 			return false;
 	}
 
@@ -720,8 +663,6 @@ std::string Channel::get_user_prefix(const User& user) const
 
 	if (is_user_operator(user))
 		flags += "@";
-	if (is_user_halfop(user))
-		flags += "%";
 	if (is_user_has_voice(user))
 		flags += "+";
 
