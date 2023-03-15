@@ -45,8 +45,8 @@ int cap(User& user, const Command& command)
 			user.set_is_negociating_capabilities(true);
 	}
 	else if (command.get_parameters()[0] == "REQ") {
-		// TODO: check if capabilities are valid and if they are supported
-		Server::reply(user, RPL_CAP(user, "ACK", ""));
+		if (command.get_parameters()[1] == "multi-prefix")
+			Server::reply(user, RPL_CAP(user, "ACK", "multi-prefix"));
 		if (!user.is_registered())
 			user.set_is_negociating_capabilities(true);
 	}
@@ -464,7 +464,7 @@ int topic(User& user, const Command& command)
 	if (params.size() > 1) {
 		// Check if the user can modify the topic
 		if (channel.is_topic_protected()
-			&& !channel.is_user_operator(user) && !channel.is_user_halfop(user)) {
+			&& !channel.is_user_operator(user)) {
 			Server::reply(user, ERR_CHANOPRIVSNEEDED(user, channel));
 			return 0;
 		}
