@@ -601,8 +601,7 @@ void Server::reply_channel_ban_list_to_user(User &user, const Channel &channel)
 {
 	CORE_TRACE("Channel ban list size %d", channel.ban_list().size());
 	for (size_t i = 0; i < channel.ban_list().size(); i++) {
-		std::string ban = channel.ban_list()[i];
-		Server::reply(user, RPL_BANLIST(user, channel, ban));
+		Server::reply(user, RPL_BANLIST(user, channel, channel.ban_list()[i]));
 	}
 	Server::reply(user, RPL_ENDOFBANLIST(user, channel));
 }
@@ -610,8 +609,7 @@ void Server::reply_channel_ban_list_to_user(User &user, const Channel &channel)
 void Server::reply_channel_ban_exempt_list_to_user(User &user, const Channel &channel)
 {
 	for (size_t i = 0; i < channel.ban_exemptions().size(); i++) {
-		std::string ban_exept = channel.ban_exemptions()[i];
-		Server::reply(user, RPL_EXCEPTLIST(user, channel, ban_exept));
+		Server::reply(user, RPL_EXCEPTLIST(user, channel, channel.ban_exemptions()[i]));
 	}
 	Server::reply(user, RPL_ENDOFEXCEPTLIST(user, channel));
 }
@@ -619,8 +617,7 @@ void Server::reply_channel_ban_exempt_list_to_user(User &user, const Channel &ch
 void Server::reply_channel_invite_exempt_list_to_user(User &user, const Channel &channel)
 {
 	for (size_t i = 0; i < channel.invite_exemptions().size(); i++) {
-		std::string invite_exept = channel.invite_exemptions()[i];
-		Server::reply(user, RPL_INVEXLIST(user, channel, invite_exept));
+		Server::reply(user, RPL_INVEXLIST(user, channel, channel.invite_exemptions()[i]));
 	}
 	Server::reply(user, RPL_ENDOFINVEXLIST(user, channel));
 }
