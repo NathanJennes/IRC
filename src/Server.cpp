@@ -265,7 +265,7 @@ void Server::execute_command(User &user, const Command &cmd)
 	if (!user.is_registered()) {
 		command_it = m_connection_commands.find(command_name);
 		if (command_it != m_connection_commands.end()) {
-			if (user.need_password() && cmd.get_command() == "NICK") {
+			if (user.need_password() && to_upper(cmd.get_command()) == "NICK") {
 				user.check_password();
 				if (user.need_password()) {
 					Server::reply(user, ERR_PASSWDMISMATCH(user));
