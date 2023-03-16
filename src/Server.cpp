@@ -392,6 +392,7 @@ void Server::reply_welcome_user(User &user)
 	reply(user, RPL_MYINFO(user));
 	RPL_ISUPPORT(user);
 	motd(user, Command(""));
+	mode(user, Command("MODE " + user.nickname() + "\r\n"));
 }
 
 void Server::try_reply_list_channel_members_to_user(User &user, const std::string &channel_name)
