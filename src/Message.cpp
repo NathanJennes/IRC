@@ -150,10 +150,12 @@ int pass(User& user, const Command& command)
 	}
 
 	if (command.get_parameters().empty()) {
-		Server::reply(user, ERR_NEEDMOREPARAMS(user, command));
+		Server::reply(user, ERR_NEEDMOREPARAMS(user, command)); //TODO: not received by client
 		user.disconnect();
 		return 1;
 	}
+
+	// TODO: check password here
 
 	user.set_password(command.get_parameters()[0]);
 	return 0;
@@ -206,6 +208,7 @@ int user(User& user, const Command& command)
 	// Command: USER
 	// Parameters: <username> 0 * <realname>
 
+	//TODO: NICK message received first is not specified in the RFC
 	if (user.nickname().empty()) {
 		CORE_TRACE_IRC_ERR("A PASS message was received but the user doesn't have a nickname yet");
 		return 1;
