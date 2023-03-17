@@ -290,7 +290,6 @@ int join(User& user, const Command& command)
 	while (!channel_splitter.reached_end()) {
 		// Get the next channel name to join and the corresponding key
 		std::string requested_channel_name = channel_splitter.next_param();
-		std::string current_key = key_splitter.next_param();
 
 		// Check if the requested channel name is valid
 		if (!Channel::is_name_valid(requested_channel_name)) {
@@ -334,8 +333,9 @@ int join(User& user, const Command& command)
 
 		// If the channel requires a key
 		if (channel.is_key_protected()) {
+			std::string current_key = key_splitter.next_param();
 			// If the user didn't provide a key, send an error and continue
-			if (key_splitter.reached_end()) {
+			if (current_key.empty()) {
 				CORE_TRACE_IRC_ERR("User %s failed to connect to channel %s because it didn't provide a key.", user.debug_name(), channel.name().c_str());
 				Server::reply(user, ERR_BADCHANNELKEY(user, channel.name()));
 				continue ;
