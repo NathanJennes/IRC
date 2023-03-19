@@ -369,19 +369,22 @@ bool Channel::is_user_has_voice(const std::string &user_nickname) const
 void Channel::send_topic_to_user_if_set(User &user)
 {
 	if (!m_topic.empty())
-		send_topic_to_user(user);
+		send_topic_to_user(user, false);
 }
 
-void Channel::send_topic_to_user(User &user)
+void Channel::send_topic_to_user(User &user, bool topic_updated)
 {
 	// If the topic was never set, do not send a topic
 	if (m_topic_modification_date == 0)
 		return ;
 
 	if (m_topic.empty())
-		Server::reply(user, RPL_NOTOPIC(m_last_user_to_modify_topic, *this));
+		Server::reply(user, RPL_NOTOPIC(user, *this));
 	else {
-		Server::reply(user, RPL_TOPIC(m_last_user_to_modify_topic, *this));
+		if (topic_updated)
+			Server::reply(user, RPL_SETTOPIC(user.nickname(), *this));
+		else
+			Server::reply(user, RPL_TOPIC(user, *this));
 		Server::reply(user, RPL_TOPICWHOTIME(user, *this));
 	}
 }
@@ -389,7 +392,7 @@ void Channel::send_topic_to_user(User &user)
 void Channel::broadcast_topic()
 {
 	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++)
-		send_topic_to_user(get_user_reference(user_it));
+		send_topic_to_user(get_user_reference(user_it), true);
 }
 
 void Channel::broadcast_topic(User &user_to_avoid)
@@ -397,7 +400,7 @@ void Channel::broadcast_topic(User &user_to_avoid)
 	for (UserIterator user_it = m_users.begin(); user_it != m_users.end(); user_it++) {
 		User& user = get_user_reference(user_it);
 		if (user != user_to_avoid)
-			send_topic_to_user(user);
+			send_topic_to_user(user, true);
 	}
 }
 

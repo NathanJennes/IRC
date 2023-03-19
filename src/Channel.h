@@ -65,7 +65,7 @@ public:
 	void set_key(const std::string& key)							{ m_key = key; }
 
 	/// Replies
-	void send_topic_to_user(User& user);
+	void send_topic_to_user(User& user, bool topic_updated);
 	void send_topic_to_user_if_set(User& user);
 	void broadcast_topic();
 	void broadcast_topic(User& user_to_avoid);

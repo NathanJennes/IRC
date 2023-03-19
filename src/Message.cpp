@@ -466,7 +466,7 @@ int topic(User& user, const Command& command)
 	}
 
 	// Notify the user of the channel's topic
-	channel.send_topic_to_user(user);
+	channel.send_topic_to_user(user, false);
 
 	return 0;
 }
@@ -704,7 +704,7 @@ int version(User& user, const Command& command)
 		return 1;
 	}
 
-	Server::reply(user, RPL_VERSION(user, ""));
+	Server::reply(user, RPL_VERSION(user, "Welcome to the GigaChat IRC Server"));
 	Server::reply(user, RPL_ISUPPORT(user));
 	return 0;
 }
