@@ -310,6 +310,9 @@ int join(User& user, const Command& command)
 
 		Channel& channel = get_channel_reference(server_channel_it);
 
+		if (channel.has_user(user))
+			continue ;
+
 		// If channel is invite-only
 		if (channel.is_invite_only()) {
 			// If the user is not invited and is not exempted from the invite-list,
