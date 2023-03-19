@@ -155,8 +155,6 @@ int pass(User& user, const Command& command)
 		return 1;
 	}
 
-	// TODO: check password here
-
 	user.set_password(command.get_parameters()[0]);
 	return 0;
 }

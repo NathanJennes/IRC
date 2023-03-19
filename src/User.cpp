@@ -92,11 +92,7 @@ std::string User::source() const
 bool User::check_password()
 {
 	if (!Server::password().empty() && m_password != Server::password())
-	{
-		Server::reply(*this, ERR_PASSWDMISMATCH((*this)));
-		disconnect();
 		return false;
-	}
 	m_need_password = false;
 	CORE_DEBUG("User %s succesfully gave password", debug_name());
 	return true;
