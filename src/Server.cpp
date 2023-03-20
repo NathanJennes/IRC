@@ -624,6 +624,9 @@ void Server::reply_list_of_channel_invite_to_user(User &user)
 
 void Server::add_to_old_users_list(User &user)
 {
+	if (!user.is_registered())
+		return ;
+
 	// If the user disconnecting was already known by the server,
 	//  delete its old entry (i.e. just update it)
 	OldUserIterator entry = std::find(m_old_users.begin(), m_old_users.end(), user);
@@ -668,6 +671,8 @@ void Server::store_user_list_to_file()
 	std::time_t now = time(NULL);
 	for (UserIterator user_it = m_users.begin(); file.good() && user_it != m_users.end(); user_it++) {
 		User& user = get_user_reference(user_it);
+		if (!user.is_registered())
+			continue ;
 		file << user.nickname() << ";" << user.username() << ";" << user.realname();
 		file << ";" << user.ip() << ";" << now << std::endl;
 	}
