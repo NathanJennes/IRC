@@ -22,8 +22,8 @@ void initialize_signals()
 
 int main(int argc, char* argv[])
 {
-	if (argc != 3) {
-		CORE_ERROR("Error: wrong number of arguments.\nUsage: ./irc_server <port> <password>");
+	if (argc < 2) {
+		CORE_ERROR("Error: wrong number of arguments.\nUsage: ./irc_server <port> (<password>)");
 		return 1;
 	}
 
@@ -33,8 +33,8 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	if (std::strlen(argv[2]) == 0) {
-		CORE_ERROR("Error: Password can't be empty.\nUsage: ./irc_server <port> <password>");
+	if (argc >= 3 && std::strlen(argv[2]) == 0) {
+		CORE_ERROR("Error: Password can't be empty.\nUsage: ./irc_server <port> (<password>)");
 		return 1;
 	}
 
@@ -45,7 +45,9 @@ int main(int argc, char* argv[])
 		Server::shutdown();
 		return 1;
 	}
-	Server::set_password(argv[2]);
+
+	if (argc >= 3)
+		Server::set_password(argv[2]);
 
 	CORE_INFO("Server is running on port %d", port);
 
