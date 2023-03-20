@@ -54,7 +54,7 @@ bool User::send_message()
 	if (bytes_write <= 0)
 		return false;
 
-	m_writebuf.clear();
+	m_writebuf.erase(0, static_cast<size_t>(bytes_write));
 	m_data_sent_size += static_cast<size_t>(bytes_write);
 
 	return true;
